@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="brass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3dc98"/>
+      <stop offset="0.5" stop-color="#d9a83f"/>
+      <stop offset="1" stop-color="#8c5f16"/>
+    </linearGradient>
+    <linearGradient id="brassDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c48d28"/>
+      <stop offset="1" stop-color="#5e3f0c"/>
+    </linearGradient>
+    <linearGradient id="gem" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dffaff"/>
+      <stop offset="0.45" stop-color="#3dd3ea"/>
+      <stop offset="1" stop-color="#0a6f82"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3dd3ea" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#3dd3ea" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="wood" cx="0.5" cy="0.4" r="0.7">
+      <stop offset="0" stop-color="#4a321b"/>
+      <stop offset="1" stop-color="#170e08"/>
+    </radialGradient>
+  </defs>
+  <circle cx="256" cy="256" r="236" fill="url(#wood)" stroke="url(#brassDark)" stroke-width="6"/>
+  <circle cx="256" cy="256" r="220" fill="none" stroke="#c48d28" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="4 10"/>
+  <circle cx="256" cy="256" r="150" fill="url(#glow)"/>
+  <path d="M238.03 109.10 L242.88 80.49 L269.12 80.49 L273.97 109.10 L295.61 113.40 L311.04 88.83 L335.29 98.87 L328.82 127.16 L347.17 139.41 L370.83 122.62 L389.38 141.17 L372.59 164.83 L384.84 183.18 L413.13 176.71 L423.17 200.96 L398.60 216.39 L402.90 238.03 L431.51 242.88 L431.51 269.12 L402.90 273.97 L398.60 295.61 L423.17 311.04 L413.13 335.29 L384.84 328.82 L372.59 347.17 L389.38 370.83 L370.83 389.38 L347.17 372.59 L328.82 384.84 L335.29 413.13 L311.04 423.17 L295.61 398.60 L273.97 402.90 L269.12 431.51 L242.88 431.51 L238.03 402.90 L216.39 398.60 L200.96 423.17 L176.71 413.13 L183.18 384.84 L164.83 372.59 L141.17 389.38 L122.62 370.83 L139.41 347.17 L127.16 328.82 L98.87 335.29 L88.83 311.04 L113.40 295.61 L109.10 273.97 L80.49 269.12 L80.49 242.88 L109.10 238.03 L113.40 216.39 L88.83 200.96 L98.87 176.71 L127.16 183.18 L139.41 164.83 L122.62 141.17 L141.17 122.62 L164.83 139.41 L183.18 127.16 L176.71 98.87 L200.96 88.83 L216.39 113.40 Z M368 256 A112 112 0 1 0 144 256 A112 112 0 1 0 368 256 Z" fill="url(#brass)" fill-rule="evenodd" stroke="#5e3f0c" stroke-width="4" stroke-linejoin="round"/>
+  <g stroke="url(#brassDark)" stroke-width="18" stroke-linecap="round">
+    <line x1="256" y1="150" x2="256" y2="362"/>
+    <line x1="150" y1="256" x2="362" y2="256"/>
+    <line x1="181" y1="181" x2="331" y2="331"/>
+    <line x1="331" y1="181" x2="181" y2="331"/>
+  </g>
+  <circle cx="256" cy="256" r="78" fill="#24170d" stroke="url(#brass)" stroke-width="8"/>
+  <g transform="translate(256 256)">
+    <polygon points="0,-58 50,-18 30,50 -30,50 -50,-18" fill="url(#gem)" stroke="#06222b" stroke-width="3" stroke-linejoin="round"/>
+    <polyline points="-50,-18 -18,-10 0,-58 18,-10 50,-18 18,-10 30,50 0,4 -30,50 -18,-10" fill="none" stroke="#dffaff" stroke-opacity="0.7" stroke-width="2" stroke-linejoin="round"/>
+    <polygon points="-18,-10 0,4 18,-10 0,-58" fill="#ffffff" fill-opacity="0.18"/>
+  </g>
+  <g transform="translate(392 396)">
+    <path d="M-8.13 -41.21 L-6.19 -51.63 L6.19 -51.63 L8.13 -41.21 L17.64 -38.11 L25.34 -45.41 L35.36 -38.13 L30.80 -28.56 L36.68 -20.46 L47.19 -21.84 L51.02 -10.06 L41.70 -5.00 L41.70 5.00 L51.02 10.06 L47.19 21.84 L36.68 20.46 L30.80 28.56 L35.36 38.13 L25.34 45.41 L17.64 38.11 L8.13 41.21 L6.19 51.63 L-6.19 51.63 L-8.13 41.21 L-17.64 38.11 L-25.34 45.41 L-35.36 38.13 L-30.80 28.56 L-36.68 20.46 L-47.19 21.84 L-51.02 10.06 L-41.70 5.00 L-41.70 -5.00 L-51.02 -10.06 L-47.19 -21.84 L-36.68 -20.46 L-30.80 -28.56 L-35.36 -38.13 L-25.34 -45.41 L-17.64 -38.11 Z M22 0 A22 22 0 1 0 -22 0 A22 22 0 1 0 22 0 Z" fill="url(#brass)" fill-rule="evenodd" stroke="#5e3f0c" stroke-width="3" stroke-linejoin="round"/>
+    <circle r="22" fill="#24170d"/>
+    <text x="0" y="1" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="28" fill="#3dd3ea" text-anchor="middle" dominant-baseline="middle">4</text>
+  </g>
+</svg>
