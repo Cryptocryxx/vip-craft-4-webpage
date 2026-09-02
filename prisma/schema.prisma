@@ -1,0 +1,103 @@
+// VIP Craft 4 – Datenbankschema (SQLite via Prisma 7 + better-sqlite3 Adapter)
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------------------------------------------------------------------------
+// Auth.js (NextAuth) Modelle – siehe https://authjs.dev/getting-started/adapters/prisma
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+
+  // VIP Craft spezifisch
+  minecraftName String?  @unique
+  whitelisted   Boolean  @default(false)
+  role          String   @default("PLAYER") // PLAYER | ADMIN
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  accounts    Account[]
+  sessions    Session[]
+  suggestions Suggestion[]
+  votes       Vote[]
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ---------------------------------------------------------------------------
+// Vorschlags-Board (Mod-Vorschläge, Bugs, Features) mit Upvotes
+// ---------------------------------------------------------------------------
+
+model Suggestion {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  type      String // MOD | BUG | FEATURE
+  status    String   @default("OPEN") // OPEN | PLANNED | DONE | REJECTED
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+}
+
+model Vote {
+  userId       String
+  suggestionId String
+  createdAt    DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, suggestionId])
+}
