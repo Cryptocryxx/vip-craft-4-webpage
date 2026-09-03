@@ -3,6 +3,7 @@ import { FeatureGrid } from "@/components/home/FeatureGrid";
 import { Hero } from "@/components/home/Hero";
 import { HowToJoin } from "@/components/home/HowToJoin";
 import { MenuCards } from "@/components/home/MenuCards";
+import { IntroVideo } from "@/components/intro/IntroVideo";
 import { getSiteSettings } from "@/lib/settings";
 
 export default async function HomePage() {
@@ -10,6 +11,7 @@ export default async function HomePage() {
 
   return (
     <>
+      <IntroVideo src="/IntroVipCraft4.mp4" />
       <Hero serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
       <MenuCards />
       <HowToJoin serverIp={settings.serverIp} discordInvite={settings.discordInvite} />

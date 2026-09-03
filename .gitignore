@@ -52,3 +52,6 @@ prisma/*.db-shm
 
 # prisma generated client
 /src/generated/
+
+# Intro-Video: 20 MB, bewusst NICHT im Repo (siehe README, Abschnitt Intro).
+/public/IntroVipCraft4.mp4

@@ -32,9 +32,33 @@ export const metadata: Metadata = {
   keywords: ["Minecraft", "Create Mod", "Server", "VIP Craft", "Uni", "Community"],
 };
 
+/**
+ * Entscheidet noch vor dem ersten Bildaufbau, ob das Intro laufen soll.
+ *
+ * Muss synchron im <head> stehen: Erst danach weiss das CSS, ob es die Seite
+ * hinter einer schwarzen Flaeche verstecken soll. Wuerde das erst React
+ * erledigen, saehen Wiederkehrer kurz Schwarz und Erstbesucher kurz die Seite.
+ */
+const introSkript = `(function(){try{
+  if(location.pathname!=="/")return;
+  if(localStorage.getItem("vipcraft:intro-gesehen"))return;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  document.documentElement.dataset.intro="pending";
+}catch(e){}})();`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="de" className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}>
+    <html
+      lang="de"
+      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
+      // Das Intro-Skript setzt data-intro noch vor der Hydration. React kennt
+      // das Attribut aus dem Server-HTML nicht und meldet sonst einen
+      // Hydration-Mismatch – hier ist die Abweichung gewollt.
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: introSkript }} />
+      </head>
       <body className="flex min-h-full flex-col">
         <AnnouncementBanner />
         <Header />

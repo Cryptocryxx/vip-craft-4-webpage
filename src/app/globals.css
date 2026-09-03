@@ -301,3 +301,22 @@
     @apply border-t border-white/5 transition-colors hover:bg-white/[0.03];
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Intro beim ersten Besuch (siehe components/intro/IntroVideo.tsx)
+
+   Das Attribut setzt ein kleines Skript im <head>, bevor irgendetwas gezeichnet
+   wird. Die schwarze Flaeche ueberbrueckt die Zeitspanne, bis React das Video
+   eingehaengt hat – sonst blitzt fuer einen Moment die Startseite auf.
+   --------------------------------------------------------------------------- */
+html[data-intro="pending"] {
+  overflow: hidden;
+}
+
+html[data-intro="pending"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: #000;
+}

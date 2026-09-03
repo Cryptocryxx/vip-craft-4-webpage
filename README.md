@@ -69,6 +69,38 @@ solcher angezeigt und blockiert niemanden -- eine Stoerung bei Discord darf kein
 abwuergen. Im Kontrollraum ist der Zustand pro Antrag sichtbar; Annehmen bleibt trotzdem
 moeglich, die Entscheidung liegt beim Team.
 
+## Intro-Video
+
+Beim allerersten Besuch der Startseite laeuft `public/IntroVipCraft4.mp4` formatfuellend
+ueber der Seite. In der letzten Sekunde -- waehrend das Logo durch die Kamera fliegt --
+wird die Einblendung transparent und gibt die Website frei.
+
+Ob es laeuft, entscheidet ein winziges Skript im `<head>` (siehe `layout.tsx`) noch vor dem
+ersten Bildaufbau. Ohne das saehen Wiederkehrer kurz Schwarz aufblitzen und Erstbesucher
+kurz die Seite. Weil das Skript ein Attribut am `<html>` setzt, bevor React hydriert,
+traegt `<html>` ein `suppressHydrationWarning` -- die Abweichung ist gewollt.
+
+Uebersprungen wird das Intro bei aktiviertem `prefers-reduced-motion`, auf allen Seiten
+ausser der Startseite, und sobald es einmal gelaufen ist (`localStorage`-Merker
+`vipcraft:intro-gesehen`). Escape und der Ueberspringen-Knopf beenden es jederzeit.
+
+Die Ausblendung laeuft ueber die Web Animations API statt ueber eine CSS-Transition:
+`animate()` wird vom Compositor ausgefuehrt und bleibt auch dann weich, wenn der
+Hauptthread mit dem Dekodieren beschaeftigt ist. Zusaetzlich zu `finished` gibt es eine
+feste Frist, denn in einem Hintergrund-Tab laufen Animationen gar nicht -- ohne die Frist
+bliebe die schwarze Flaeche stehen. Laedt das Video nicht, wird das Intro einfach
+uebersprungen.
+
+**Die Datei liegt bewusst nicht im Repo** (`.gitignore`), weil 20 MB dauerhaft in der
+Git-Historie blieben. Sie muss einmalig auf den Server, zum Beispiel:
+
+```bash
+scp public/IntroVipCraft4.mp4 <user>@<host>:~/vip-craft-4-webpage/public/
+```
+
+Ein `git pull` fasst die Datei nicht an, sie ueberlebt also jedes Deploy. Fehlt sie,
+faellt das Intro stillschweigend aus und die Startseite erscheint sofort.
+
 ## Whitelist-Ablauf
 
 1. Spieler meldet sich mit Discord an. Beim Login wird **automatisch ein Whitelist-Antrag** angelegt
