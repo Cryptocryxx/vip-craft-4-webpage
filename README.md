@@ -254,7 +254,7 @@ Auf dem Produktivhost zusaetzlich in die `.env`:
 
 | Variable | Wert | Warum |
 | --- | --- | --- |
-| `AUTH_TRUST_HOST` | `true` | Ohne das verweigert Auth.js den Login hinter einem Proxy |
+| `AUTH_URL` | `https://<domain>` | **Pflicht.** Fehlt sie (und auch `AUTH_TRUST_HOST`), traut Auth.js dem Host-Header nicht: Jeder Login endet auf `?error=Configuration`, weitergeleitet wird nach `localhost:3000`. Grund ist die trustHost-Vorgabe in `@auth/core`, die ausserhalb von Vercel in Produktion `false` ist. |
 | `SERVER_WATCHDOG` | `true` | Nur hier, nicht auf Entwicklungsrechnern |
 
 In der Discord-Anwendung muss unter *OAuth2 → Redirects* die Produktions-URL stehen:
