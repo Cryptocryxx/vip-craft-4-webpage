@@ -2,7 +2,7 @@ import { AeronauticsHighlight } from "@/components/home/AeronauticsHighlight";
 import { FeatureGrid } from "@/components/home/FeatureGrid";
 import { Hero } from "@/components/home/Hero";
 import { HowToJoin } from "@/components/home/HowToJoin";
-import { Teasers } from "@/components/home/Teasers";
+import { MenuCards } from "@/components/home/MenuCards";
 import { getSiteSettings } from "@/lib/settings";
 
 export default async function HomePage() {
@@ -11,10 +11,10 @@ export default async function HomePage() {
   return (
     <>
       <Hero serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
-      <Teasers />
+      <MenuCards />
+      <HowToJoin serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
       <AeronauticsHighlight />
       <FeatureGrid />
-      <HowToJoin serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
     </>
   );
 }
