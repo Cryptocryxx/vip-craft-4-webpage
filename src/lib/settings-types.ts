@@ -7,7 +7,7 @@ import { siteConfig } from "@/lib/config";
 export type SiteSettings = {
   /** Adresse, die im Header-Widget geprüft und über den Join-Button kopiert wird. */
   serverIp: string;
-  /** URL der Squaremap-Instanz (wird als iframe eingebettet). */
+  /** URL der BlueMap-Instanz (wird als iframe eingebettet). */
   mapUrl: string;
   /** Discord-Einladungslink. */
   discordInvite: string;

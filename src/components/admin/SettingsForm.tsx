@@ -46,7 +46,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         <label>
           <span className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">Karten-URL</span>
           <input name="mapUrl" type="url" defaultValue={settings.mapUrl} required className="input font-mono" />
-          <span className="mt-1 block text-xs text-cream/45">Squaremap-Instanz für die Map-Seite.</span>
+          <span className="mt-1 block text-xs text-cream/45">BlueMap-Instanz für die Map-Seite.</span>
         </label>
 
         <label>
