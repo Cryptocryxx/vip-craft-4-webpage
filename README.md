@@ -238,6 +238,59 @@ Ohne hinterlegte Zugangsdaten funktioniert die Seite weiter: Die Kanäle werden 
 und auf der Streams-Seite erscheint ein entsprechender Hinweis. Netzwerkfehler und ungültige Zugangsdaten werden
 abgefangen und protokolliert, ohne die Seite zu beeinträchtigen.
 
+## Deployment (Linux, hinter einem Reverse Proxy)
+
+Reihenfolge ist wichtig: Die `.env` muss vor `npm ci` existieren, weil `postinstall`
+bereits `prisma generate` aufruft.
+
+```bash
+cp .env.example .env        # ausfuellen, siehe unten
+npm ci
+npm run db:push             # legt die SQLite-Datei an (nicht im Repo)
+npm run build
+```
+
+Auf dem Produktivhost zusaetzlich in die `.env`:
+
+| Variable | Wert | Warum |
+| --- | --- | --- |
+| `AUTH_TRUST_HOST` | `true` | Ohne das verweigert Auth.js den Login hinter einem Proxy |
+| `SERVER_WATCHDOG` | `true` | Nur hier, nicht auf Entwicklungsrechnern |
+
+In der Discord-Anwendung muss unter *OAuth2 → Redirects* die Produktions-URL stehen:
+`https://<domain>/api/auth/callback/discord`.
+
+### Dauerhaft laufen lassen (pm2)
+
+```bash
+pm2 start ecosystem.config.cjs
+pm2 save && pm2 startup     # einmalig, damit es den Reboot ueberlebt
+```
+
+Die Konfiguration startet bewusst **eine** Instanz im fork-Modus. Im Cluster-Modus
+liefe der Watchdog mehrfach, und nach einem Absturz wuerden alle Instanzen
+gleichzeitig einen Startbefehl an Crafty schicken. Ausserdem vertraegt die
+SQLite-Datei keine nebenlaeufigen Schreiber.
+
+Laufender Betrieb:
+
+```bash
+pm2 logs vipcraft       # u. a. die Watchdog-Meldungen
+pm2 restart vipcraft    # nach einem Deploy
+pm2 status
+```
+
+Nach jedem `git pull` gehoert `npm ci && npm run build && pm2 restart vipcraft`
+zusammen -- ein Restart allein serviert weiter den alten Build.
+
+### Reverse Proxy (Caddy)
+
+```
+vip4.example.de {
+    reverse_proxy localhost:3000
+}
+```
+
 ## Projektstruktur
 
 ```
