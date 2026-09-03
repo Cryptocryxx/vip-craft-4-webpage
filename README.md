@@ -19,6 +19,7 @@ npm run dev                 # http://localhost:3000
 | `DATABASE_URL` | SQLite-Pfad, z. B. `file:./prisma/dev.db` |
 | `AUTH_SECRET` | Zufälliges Secret für Auth.js (`npx auth secret` oder `openssl rand -base64 32`) |
 | `AUTH_DISCORD_ID` / `AUTH_DISCORD_SECRET` | Client-ID/-Secret der Discord-OAuth-App |
+| `DISCORD_GUILD_ID` | Server-ID fuer die Mitgliedschaftspruefung; leer = Pruefung aus |
 | `ADMIN_DISCORD_IDS` | Optional: kommagetrennte Discord-User-IDs, die beim Login automatisch Admin werden |
 | `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | Optional: Zugangsdaten der Twitch-Anwendung für den Live-Status |
 | `CRAFTY_URL` / `CRAFTY_TOKEN` / `CRAFTY_SERVER_ID` | Crafty Controller – Statistiken lesen und Whitelist-Befehle senden |
@@ -47,6 +48,26 @@ weitere Admin-Rollen im Kontrollraum unter _Spieler_.
 | `npm run db:push` | Prisma-Schema in die SQLite-DB schreiben (Prototyping) |
 | `npm run db:studio` | Prisma Studio für direkte Datenbank-Eingriffe |
 | `npm run crafty:check` | Crafty-Verbindung prüfen (`-- --command` testet zusätzlich einen Konsolenbefehl) |
+
+## Discord-Mitgliedschaft
+
+Ein Whitelist-Antrag gilt erst als vollstaendig, wenn der Account im Discord-Server ist.
+Geprueft wird ueber den OAuth-Scope `guilds.members.read`: Der erlaubt genau eine Abfrage --
+die Mitgliedschaft des angemeldeten Nutzers in **einem** bestimmten Server. Bewusst nicht
+`guilds`, der die komplette Serverliste preisgeben wuerde.
+
+Konfiguriert wird das ueber `DISCORD_GUILD_ID`. Fehlt die Variable, ist die Pruefung
+abgeschaltet und der Schritt taucht nirgends auf -- niemand wird ausgebremst.
+
+Geprueft wird an zwei Stellen: bei jeder Anmeldung (dort ist das Token frisch) und wenn
+jemand im Dashboard auf „Erneut pruefen" klickt, nachdem er beigetreten ist. Fuer den
+zweiten Fall wird das gespeicherte Token bei Bedarf ueber den Refresh-Token erneuert.
+
+Das Ergebnis kennt drei Zustaende, nicht zwei: Mitglied, nicht Mitglied, und
+*nicht feststellbar* (Discord antwortet nicht, Token zu alt). Der dritte Fall wird als
+solcher angezeigt und blockiert niemanden -- eine Stoerung bei Discord darf keinen Antrag
+abwuergen. Im Kontrollraum ist der Zustand pro Antrag sichtbar; Annehmen bleibt trotzdem
+moeglich, die Entscheidung liegt beim Team.
 
 ## Whitelist-Ablauf
 

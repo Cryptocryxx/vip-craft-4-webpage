@@ -152,7 +152,10 @@ export default function DatenschutzPage() {
         wir zu keinem Zeitpunkt. Discord verarbeitet den Anmeldevorgang eigenverantwortlich; hierbei werden
         insbesondere Ihre IP-Adresse und Angaben zu Ihrem Gerät an Discord übermittelt.
       </p>
-      <p>Nach erfolgreicher Anmeldung erhalten und speichern wir aus dem Bereich „identify“ und „email“ folgende Daten:</p>
+      <p>
+        Nach erfolgreicher Anmeldung erhalten und speichern wir aus den Bereichen „identify“, „email“ und
+        „guilds.members.read“ folgende Daten:
+      </p>
       <ul>
         <li>Ihre Discord-Benutzerkennung</li>
         <li>Ihren Discord-Anzeigenamen</li>
@@ -162,7 +165,15 @@ export default function DatenschutzPage() {
           technische Zugriffsmerkmale der Anmeldung (Zugriffs- und Erneuerungstoken, Gültigkeitsdauer, Umfang der
           Berechtigung)
         </li>
+        <li>die Information, ob Sie Mitglied unseres Discord-Servers sind, sowie den Zeitpunkt dieser Prüfung</li>
       </ul>
+      <p>
+        Die Berechtigung „guilds.members.read“ erlaubt uns ausschließlich die Abfrage Ihrer Mitgliedschaft in{" "}
+        <strong>unserem</strong> Discord-Server. Eine Liste weiterer Server, denen Sie angehören, erhalten wir dadurch
+        nicht. Gespeichert wird lediglich, ob Sie Mitglied sind, und wann wir das zuletzt geprüft haben. Die Prüfung
+        erfolgt bei der Anmeldung sowie dann, wenn Sie sie in Ihrem Dashboard selbst auslösen. Sie dient dazu,
+        festzustellen, ob Ihr Whitelist-Antrag vollständig ist.
+      </p>
       <p>
         Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, da die Anmeldung Voraussetzung für die Nutzung des geschützten
         Bereichs und für die Bearbeitung Ihres Whitelist-Antrags ist. Da Discord auch in den Vereinigten Staaten

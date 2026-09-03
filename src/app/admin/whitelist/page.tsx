@@ -1,5 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 import { ApplicationReviewCard } from "@/components/admin/ApplicationReviewCard";
+import { discordCheckEnabled } from "@/lib/discord";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { listApplications } from "@/lib/whitelist";
@@ -26,7 +27,7 @@ export default async function AdminWhitelistPage() {
         ) : (
           <div className="grid gap-4 xl:grid-cols-2">
             {pending.map((application) => (
-              <ApplicationReviewCard key={application.id} application={application} />
+              <ApplicationReviewCard key={application.id} application={application} discordRequired={discordCheckEnabled} />
             ))}
           </div>
         )}
@@ -42,7 +43,7 @@ export default async function AdminWhitelistPage() {
           />
           <div className="grid gap-4 xl:grid-cols-2">
             {handled.map((application) => (
-              <ApplicationReviewCard key={application.id} application={application} />
+              <ApplicationReviewCard key={application.id} application={application} discordRequired={discordCheckEnabled} />
             ))}
           </div>
         </section>

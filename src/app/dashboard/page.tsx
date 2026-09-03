@@ -10,6 +10,7 @@ import { SuggestionBoard } from "@/components/dashboard/SuggestionBoard";
 import { WhitelistStatus } from "@/components/dashboard/WhitelistStatus";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { discordCheckEnabled } from "@/lib/discord";
 import { prisma } from "@/lib/prisma";
 import { getSiteSettings } from "@/lib/settings";
 import { listShopsForUser } from "@/lib/shops";
@@ -90,6 +91,9 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               serverIp={settings.serverIp}
               application={application}
               whitelistOpen={settings.whitelistOpen}
+              discordJoined={user.discordJoined}
+              discordInvite={settings.discordInvite}
+              discordRequired={discordCheckEnabled}
             />
           </div>
         </div>

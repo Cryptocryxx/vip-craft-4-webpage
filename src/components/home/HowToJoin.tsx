@@ -1,4 +1,4 @@
-import { Download, Rocket, Route, ShieldCheck } from "lucide-react";
+import { Download, Rocket, Route, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
@@ -14,6 +14,12 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string; disco
       description:
         "Ein Klick auf „Login“ – dabei wird automatisch dein Whitelist-Antrag angelegt. Gamertag eintragen, fertig.",
       icon: ShieldCheck,
+    },
+    {
+      title: "Discord beitreten",
+      description:
+        "Der Antrag ist erst vollständig, wenn du im Discord bist. Wir prüfen das automatisch – dort läuft die Absprache und dort bekommst du Bescheid.",
+      icon: Users,
     },
     {
       title: "Modpack installieren",
@@ -38,10 +44,10 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string; disco
           <SectionHeading
             eyebrow="Bauplan: So kommst du drauf"
             icon={Route}
-            title="In drei Schritten auf den Server"
+            title="In vier Schritten auf den Server"
             className="mb-10"
           />
-          <ol className="relative grid gap-8 md:grid-cols-3">
+          <ol className="relative grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => {
               const Icon = step.icon;
               return (

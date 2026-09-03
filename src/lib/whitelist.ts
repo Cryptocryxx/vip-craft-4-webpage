@@ -18,6 +18,7 @@ const applicantSelect = {
   minecraftName: true,
   whitelisted: true,
   role: true,
+  discordJoined: true,
 } as const;
 
 type ApplicationRow = {
@@ -37,6 +38,7 @@ type ApplicationRow = {
     minecraftName: string | null;
     whitelisted: boolean;
     role: string;
+    discordJoined: boolean;
   };
   reviewer: { id: string; name: string | null } | null;
 };

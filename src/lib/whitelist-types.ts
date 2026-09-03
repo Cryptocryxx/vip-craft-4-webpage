@@ -19,6 +19,8 @@ export type ApplicantSummary = {
   minecraftName: string | null;
   whitelisted: boolean;
   role: string;
+  /** Im Discord-Server? Siehe lib/discord.ts */
+  discordJoined: boolean;
 };
 
 export type WhitelistApplicationDTO = {

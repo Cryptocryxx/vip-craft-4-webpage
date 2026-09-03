@@ -19,10 +19,18 @@ const statusTone: Record<ApplicationStatus, BadgeTone> = {
   REJECTED: "rose",
 };
 
-export function ApplicationReviewCard({ application }: { application: WhitelistApplicationDTO }) {
+export function ApplicationReviewCard({
+  application,
+  discordRequired = false,
+}: {
+  application: WhitelistApplicationDTO;
+  /** Ohne DISCORD_GUILD_ID wird nicht geprüft – dann sagt die Karte dazu nichts. */
+  discordRequired?: boolean;
+}) {
   const [state, formAction, pending] = useActionState(reviewApplicationAction, initialState);
   const { applicant } = application;
   const isPending = application.status === "PENDING";
+  const discordFehlt = discordRequired && !applicant.discordJoined;
   const displayName = applicant.name ?? applicant.minecraftName ?? "Unbekannt";
 
   return (
@@ -48,6 +56,12 @@ export function ApplicationReviewCard({ application }: { application: WhitelistA
             {application.status === "PENDING" && <Clock className="size-3" />}
             {applicationStatusLabels[application.status]}
           </Badge>
+          {discordRequired &&
+            (applicant.discordJoined ? (
+              <Badge tone="emerald">Im Discord</Badge>
+            ) : (
+              <Badge tone="rose">Nicht im Discord</Badge>
+            ))}
           {applicant.role === "ADMIN" && <Badge tone="brass">Admin</Badge>}
         </div>
       </div>
@@ -137,6 +151,13 @@ export function ApplicationReviewCard({ application }: { application: WhitelistA
       {isPending && !application.minecraftName && (
         <p className="mt-2 text-xs text-brass-200/80">
           Annehmen ist erst möglich, wenn der Spieler seinen Gamertag eingetragen hat.
+        </p>
+      )}
+
+      {isPending && discordFehlt && (
+        <p className="mt-2 text-xs text-brass-200/80">
+          Der Antrag gilt als unvollständig: Wir sehen den Account nicht im Discord. Geprüft wird beim Login und wenn
+          der Spieler im Dashboard auf &bdquo;Erneut prüfen&ldquo; klickt. Annehmen geht trotzdem – die Entscheidung liegt bei euch.
         </p>
       )}
     </Panel>

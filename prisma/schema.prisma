@@ -26,6 +26,11 @@ model User {
   whitelisted   Boolean  @default(false)
   role          String   @default("PLAYER") // PLAYER | ADMIN
 
+  /// Ist der Account im Discord-Server? Geprüft über den OAuth-Scope
+  /// guilds.members.read, siehe lib/discord.ts
+  discordJoined    Boolean   @default(false)
+  discordCheckedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
