@@ -9,7 +9,6 @@ Next.js 16 (App Router) · Tailwind CSS 4 · Auth.js/NextAuth (Discord) · Prism
 npm install                 # installiert Abhängigkeiten und generiert den Prisma-Client
 cp .env.example .env        # Werte eintragen (siehe unten)
 npm run db:push             # SQLite-Datenbank anlegen
-npm run db:seed             # Demo-User, Anträge und Vorschläge einspielen (optional)
 npm run dev                 # http://localhost:3000
 ```
 
@@ -46,7 +45,6 @@ weitere Admin-Rollen im Kontrollraum unter _Spieler_.
 | `npm run lint` | ESLint |
 | `npm run typecheck` | Route-Typen generieren + `tsc --noEmit` |
 | `npm run db:push` | Prisma-Schema in die SQLite-DB schreiben (Prototyping) |
-| `npm run db:seed` | Seed-Daten (`prisma/seed.ts`) |
 | `npm run db:studio` | Prisma Studio für direkte Datenbank-Eingriffe |
 | `npm run crafty:check` | Crafty-Verbindung prüfen (`-- --command` testet zusätzlich einen Konsolenbefehl) |
 
@@ -185,27 +183,33 @@ Gelesen wird alle fünf Minuten neu.
 Abgedeckt sind Spielzeit, abgebaute Blöcke und Eisen, hergestellte Andesit-Legierung, Laufstrecke, Tode,
 Creeper-Tode und erlittener Schaden. **Nicht** abgedeckt, weil Vanilla es nicht erfasst: Tode nach Schadensquelle
 (etwa Lava), Create-Zugkilometer und exakt platzierte Blöcke. Dafür bräuchte es Scoreboard-Objectives und ein
-kleines Datapack. Kategorien ohne Werte blendet die Seite automatisch aus; ohne Crafty-Konfiguration zeigt sie
-Beispieldaten.
+kleines Datapack. Kategorien ohne Werte blendet die Seite automatisch aus; ohne Crafty-Konfiguration bleibt die
+Rangliste leer.
 
 ## API-Routen
 
 | Route | Beschreibung |
 | --- | --- |
 | `GET /api/server-status` | Proxy zu `api.mcsrvstat.us/3/<ip>`, 60 s gecacht |
-| `GET /api/leaderboards?kind=fame\|shame` | Rankings (Mock) |
-| `GET /api/economy` | Reichste Spieler & Shops (Mock) |
-| `GET /api/schematics?q=&tag=` | Schematic-Liste (Mock) |
+| `GET /api/leaderboards?kind=fame\|shame` | Rankings aus den Statistikdateien des Servers |
+| `GET /api/economy` | Umlauf & reichste Spieler aus den Numismatics-Bankkonten (Beträge in Spurs) |
+| `GET /api/schematics?q=&tag=` | Schematic-Liste (noch ohne Speicher, daher leer) |
 | `GET /api/schematics/[id]/download` | `.nbt`-Download (aktuell leere, gültige NBT-Struktur als Platzhalter) |
 | `GET /api/streamers` | Verknüpfte Twitch-Kanäle inkl. Live-Status aus der Twitch-API |
-| `GET /api/stats/me` | Persönliche Ingame-Stats des eingeloggten Users (Mock, aus Gamertag abgeleitet) |
+| `GET /api/stats/me` | Persönliche Ingame-Stats des eingeloggten Users aus `world/stats` |
 | `GET/POST /api/suggestions` | Vorschläge lesen / anlegen (DB, Login erforderlich) |
 | `POST /api/suggestions/[id]/vote` | Upvote setzen/entfernen (DB) |
 | `/api/auth/*` | Auth.js (Discord OAuth) |
 
-Die verbleibenden Mock-Daten liegen in `src/lib/mock/` und sind so geschnitten, dass sie später 1:1 durch Abfragen
-an die **Vanilla-Statistikdateien** des Servers (Leaderboards, persönliche Stats) und einen Datei-Speicher
-(Schematics) ersetzt werden können.
+Erfundene Beispieldaten gibt es nicht mehr: Was keine echte Quelle hat, bleibt leer und sagt das auch.
+Betroffen sind aktuell der Event-Kalender (geplant: Sync mit den Discord-Events), die Server-Timeline
+(wird von Hand gepflegt) und die Schematic-Galerie (braucht noch ein Prisma-Modell plus Dateispeicher).
+Die zugehörigen Typen liegen in `src/lib/event-types.ts`, `timeline-types.ts` und `schematic-types.ts`.
+
+### Währung
+
+Numismatics rechnet intern in **Spurs**, angezeigt wird auf der Website in **Cog** – ein Cog sind 64 Spurs.
+Die Umrechnung und alle Münzwerte stehen in [`src/lib/currency.ts`](src/lib/currency.ts).
 
 > **Hinweis:** Frühere Fassungen dieses Dokuments nannten das Plugin *Plan (Player Analytics)* als geplante Quelle.
 > Das war falsch: Plan unterstützt Spigot/Paper, Sponge, Velocity und Fabric, **aber kein Forge/NeoForge**. Da dieser
@@ -237,10 +241,10 @@ abgefangen und protokolliert, ohne die Seite zu beeinträchtigen.
 ## Projektstruktur
 
 ```
-prisma/               Schema (Auth.js, WhitelistApplication, Suggestion, Vote, Setting) + Seed
+prisma/               Schema (Auth.js, WhitelistApplication, Suggestion, Vote, Shop, ServerEvent, Setting)
 src/app/              Routen (App Router), Admin-Bereich und API-Handler
 src/components/       UI-Bausteine, nach Bereich gruppiert (layout, home, dashboard, admin, …)
-src/lib/              Konfiguration, Prisma-Client, Server Actions, Whitelist- und Settings-Logik, Mock-Daten
+src/lib/              Konfiguration, Prisma-Client, Server Actions, Whitelist-, Shop-, Settings- und Watchdog-Logik
 src/auth.ts           Auth.js-Konfiguration inkl. signIn-Event (Antrag + Admin-Bootstrap)
 src/app/globals.css   Design-Tokens (Holz / Messing / Diamant) und Komponenten-Klassen
 ```
@@ -257,7 +261,7 @@ dekorative Zahnräder drehen sich langsam (`animate-gear-spin`). Display-Schrift
 ## Offene Punkte / Nächste Schritte
 
 - Scoreboard-Objectives plus Datapack für die Kategorien, die Vanilla nicht erfasst (Lava-Tode, Zugkilometer)
-- Economy aus den Create-Numismatics-Weltdaten lesen (Crafty-Dateizugriff steht bereits)
 - Whitelist-Entscheidungen per Discord-Webhook an den Spieler melden
 - Schematic-Upload mit Datei-Speicher und echtem Download-Zähler
-- Events/Timeline aus der Datenbank statt aus Mock-Dateien
+- Event-Kalender aus den Discord-Events synchronisieren
+- Server-Timeline im Kontrollraum pflegbar machen

@@ -96,7 +96,9 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
 
         <PersonalStats />
 
-        <ShopManagerCard shops={shops} />
+        <div id="shops" className="scroll-mt-24">
+          <ShopManagerCard shops={shops} />
+        </div>
 
         <SuggestionBoard suggestions={suggestions} currentUserId={user.id} />
       </Container>

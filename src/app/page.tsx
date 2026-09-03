@@ -1,3 +1,4 @@
+import { AeronauticsHighlight } from "@/components/home/AeronauticsHighlight";
 import { FeatureGrid } from "@/components/home/FeatureGrid";
 import { Hero } from "@/components/home/Hero";
 import { HowToJoin } from "@/components/home/HowToJoin";
@@ -11,6 +12,7 @@ export default async function HomePage() {
     <>
       <Hero serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
       <Teasers />
+      <AeronauticsHighlight />
       <FeatureGrid />
       <HowToJoin serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
     </>

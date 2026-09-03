@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getPlayerStats } from "@/lib/mock/player-stats";
 import { loadPlayerStats } from "@/lib/stats-source";
 
 /**
  * GET /api/stats/me – persönliche Ingame-Statistiken des eingeloggten Users.
- * Quelle sind die Vanilla-Statistikdateien des Servers (über Crafty).
- * Ohne Crafty-Konfiguration werden Beispielwerte aus dem Gamertag abgeleitet.
+ * Quelle sind ausschließlich die Vanilla-Statistikdateien des Servers (über
+ * Crafty). Gibt es dort keinen Eintrag, kommt `stats: null` zurück – lieber
+ * nichts anzeigen als ausgedachte Zahlen.
  */
 export async function GET() {
   const session = await auth();
@@ -48,22 +48,5 @@ export async function GET() {
   }
 
   // Kein Eintrag: entweder Crafty nicht konfiguriert oder der Spieler war noch nie online.
-  const mock = getPlayerStats(user.minecraftName);
-  return NextResponse.json({
-    linked: true as const,
-    source: "mock",
-    stats: {
-      player: mock.player,
-      playtimeHours: mock.playtimeHours,
-      blocksMined: mock.blocksMined,
-      blocksPlaced: mock.blocksPlaced,
-      ironMined: mock.ironMined,
-      deaths: mock.deaths,
-      mobKills: 0,
-      deathsByCreeper: 0,
-      walkedKm: mock.trainDistanceKm,
-      andesiteAlloyCrafted: mock.andesiteAlloyCrafted,
-      damageTaken: 0,
-    },
-  });
+  return NextResponse.json({ linked: true as const, source: "none", stats: null });
 }

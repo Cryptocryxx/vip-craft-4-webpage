@@ -79,7 +79,7 @@ export function ShopManagerCard({ shops }: { shops: ShopDTO[] }) {
       <div className="space-y-3 p-4 sm:p-6">
         {shops.length === 0 ? (
           <p className="flex items-center gap-2 py-4 text-sm text-cream/55">
-            <Store className="size-4" /> Noch kein Shop eingetragen. Trag deinen ein, damit er auf der Wirtschaftsseite auftaucht.
+            <Store className="size-4" /> Noch kein Shop eingetragen. Trag deinen ein, damit er unter „Shops“ für alle auftaucht.
           </p>
         ) : (
           shops.map((shop) => <ShopRow key={shop.id} shop={shop} />)

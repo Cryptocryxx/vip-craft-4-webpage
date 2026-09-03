@@ -152,7 +152,7 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
           eyebrow="Alle Kanäle"
           icon={Tv}
           title="Die Sendeplätze des Servers"
-          description="Alle verknüpften Twitch-Kanäle aus der Community. Folge ihnen, dann verpasst du keinen Zug-Unfall."
+          description="Alle verknüpften Twitch-Kanäle aus der Community. Folge ihnen, dann verpasst du keinen Absturz."
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...live, ...offline].map((streamer) => (

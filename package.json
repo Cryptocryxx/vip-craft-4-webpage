@@ -9,7 +9,6 @@
     "lint": "eslint",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
-    "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "typecheck": "next typegen && tsc --noEmit",
     "crafty:check": "tsx scripts/crafty-check.ts"

@@ -1,13 +1,13 @@
 import "server-only";
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
-import { getLeaderboards as getMockLeaderboards, type Leaderboard } from "@/lib/mock/leaderboards";
+import type { Leaderboard } from "@/lib/leaderboard-types";
 import { loadAllPlayerStats, type PlayerStatsEntry } from "@/lib/stats-source";
 import type { ParsedStats } from "@/lib/minecraft-stats";
 
 export type LeaderboardResult = {
   boards: Leaderboard[];
-  /** "live" = aus den Statistikdateien des Servers, "mock" = Beispieldaten. */
-  source: "live" | "mock";
+  /** "live" = aus den Statistikdateien des Servers, "unavailable" = keine Daten. */
+  source: "live" | "unavailable";
 };
 
 type BoardSpec = {
@@ -21,11 +21,7 @@ type BoardSpec = {
   format?: (value: number) => string;
 };
 
-/**
- * Nur Kategorien, die Vanilla tatsächlich erfasst. Die Mock-Daten kennen
- * zusätzlich Lava-Tode und Create-Zugkilometer – dafür gibt es in den
- * Statistikdateien keine Entsprechung.
- */
+/** Nur Kategorien, die Vanilla tatsächlich in world/stats erfasst. */
 const specs: BoardSpec[] = [
   {
     id: "playtime",
@@ -123,12 +119,12 @@ function buildBoard(spec: BoardSpec, players: PlayerStatsEntry[]): Leaderboard {
   };
 }
 
-/** Leaderboards aus echten Serverdaten, mit Rückfall auf die Beispieldaten. */
+/** Leaderboards aus echten Serverdaten. Ohne Daten bleibt die Liste leer. */
 export async function getLeaderboardData(kind?: "fame" | "shame"): Promise<LeaderboardResult> {
   const players = await loadAllPlayerStats();
 
   if (!players || players.length === 0) {
-    return { boards: getMockLeaderboards(kind), source: "mock" };
+    return { boards: [], source: "unavailable" };
   }
 
   const boards = specs
@@ -138,7 +134,7 @@ export async function getLeaderboardData(kind?: "fame" | "shame"): Promise<Leade
     .filter((board) => board.entries.length > 0);
 
   if (boards.length === 0) {
-    return { boards: getMockLeaderboards(kind), source: "mock" };
+    return { boards: [], source: "unavailable" };
   }
 
   return { boards, source: "live" };

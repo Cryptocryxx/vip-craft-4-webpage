@@ -34,8 +34,8 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string; discordInv
           </h1>
 
           <p className="mt-5 max-w-xl text-lg text-cream/75 sm:text-xl">
-            {siteConfig.tagline}. Baue Fabriken, verlege Zugstrecken quer durch die Welt und lass gemeinsam mit anderen
-            Studis die Zahnräder rattern.
+            {siteConfig.tagline}. Baue Fabriken, schraub dir ein Flugzeug zusammen, das wirklich fliegt, und lass
+            gemeinsam mit anderen Studis die Zahnräder rattern.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">

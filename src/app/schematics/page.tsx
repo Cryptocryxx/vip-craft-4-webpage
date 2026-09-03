@@ -6,7 +6,7 @@ import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
-import { getAllTags, getSchematics } from "@/lib/mock/schematics";
+import { getAllTags, getSchematics } from "@/lib/schematic-types";
 import { getSiteSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {

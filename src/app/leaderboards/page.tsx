@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { SPURS_PER_COG } from "@/lib/currency";
 import { getEconomyData } from "@/lib/economy-source";
 import { getLeaderboardData } from "@/lib/leaderboard-source";
 
@@ -51,10 +52,10 @@ export default async function LeaderboardsPage() {
             description={
               fame.source === "live"
                 ? "Live aus den Statistikdateien des Servers – die Top 10 jeder Kategorie."
-                : "Beispieldaten, solange der Server noch nicht angebunden ist."
+                : "Sobald der Server Statistiken geschrieben hat, stehen hier die Top 10 jeder Kategorie."
             }
           />
-          <LeaderboardTabs boards={fame.boards} tone="fame" source={fame.source} />
+          <LeaderboardTabs boards={fame.boards} tone="fame" />
         </section>
 
         <section id="hall-of-shame" className="scroll-mt-24">
@@ -65,26 +66,20 @@ export default async function LeaderboardsPage() {
             description={
               shame.source === "live"
                 ? "Wer zählt, verliert. Tode, Creeper und eingesteckter Schaden – direkt vom Server."
-                : "Beispieldaten, solange der Server noch nicht angebunden ist."
+                : "Tode, Creeper und eingesteckter Schaden – sobald es etwas zu zählen gibt."
             }
           />
-          <LeaderboardTabs boards={shame.boards} tone="shame" source={shame.source} />
+          <LeaderboardTabs boards={shame.boards} tone="shame" />
         </section>
 
         <section id="economy" className="scroll-mt-24">
           <SectionHeading
             eyebrow="Wirtschaft"
             icon={Coins}
-            title="Spurs, Shops & Sparfüchse"
-            description={
-              economy.source === "live" && economy.shopsSource === "live"
-                ? "Währung ist der Spur aus Create: Numismatics. Reichste Spieler live von den Bankkonten des Servers, Shops von Spielern eingetragen."
-                : economy.source === "live"
-                  ? "Währung ist der Spur aus Create: Numismatics. Reichste Spieler live von den Bankkonten des Servers, Shops sind noch Beispieldaten."
-                  : "Währung ist der Spur aus Create: Numismatics. Hier siehst du, wer am meisten gehortet hat und wo gerade gehandelt wird."
-            }
+            title="Cogs & Sparfüchse"
+            description={`Bezahlt wird mit Create: Numismatics. Gerechnet wird in Cog – ein Cog sind ${SPURS_PER_COG} Spurs. Hier siehst du, wie viel Geld im Umlauf ist und wer am meisten davon gehortet hat.`}
           />
-          <EconomyOverview data={economy.overview} source={economy.source} shopsSource={economy.shopsSource} />
+          <EconomyOverview data={economy.overview} source={economy.source} />
         </section>
       </Container>
     </>

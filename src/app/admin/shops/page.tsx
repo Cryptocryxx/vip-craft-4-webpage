@@ -13,7 +13,7 @@ export default async function AdminShopsPage() {
         eyebrow="Wirtschaft"
         icon={Store}
         title={`${shops.length} ${shops.length === 1 ? "Shop" : "Shops"}`}
-        description="Shops tragen Spieler im Dashboard ein und sind sofort auf der Wirtschaftsseite sichtbar – ohne Freigabe. Hier lassen sich unangemessene Einträge entfernen."
+        description="Shops tragen Spieler im Dashboard ein und sind sofort im Shop-Bereich sichtbar – ohne Freigabe. Hier lassen sich unangemessene Einträge entfernen."
         className="mb-5"
       />
       <Panel className="overflow-hidden">

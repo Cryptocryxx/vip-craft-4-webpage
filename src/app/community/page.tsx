@@ -7,8 +7,8 @@ import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { getUpcomingEvents } from "@/lib/mock/events";
-import { milestones } from "@/lib/mock/timeline";
+import { getUpcomingEvents } from "@/lib/event-types";
+import { milestones } from "@/lib/timeline-types";
 import { getSiteSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
