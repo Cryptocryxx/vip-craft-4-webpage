@@ -6,8 +6,8 @@ Next.js 16 (App Router) · Tailwind CSS 4 · Auth.js/NextAuth (Discord) · Prism
 ## Schnellstart
 
 ```bash
+cp .env.example .env        # zuerst! Werte eintragen (siehe unten)
 npm install                 # installiert Abhängigkeiten und generiert den Prisma-Client
-cp .env.example .env        # Werte eintragen (siehe unten)
 npm run db:push             # SQLite-Datenbank anlegen
 npm run dev                 # http://localhost:3000
 ```
