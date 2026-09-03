@@ -1,25 +1,95 @@
-import { AlertTriangle, CheckCircle2, Plug, Terminal, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, HeartPulse, Plug, Power, ScrollText, Terminal, XCircle } from "lucide-react";
+import { ServerPowerPanel } from "@/components/admin/ServerPowerPanel";
+import { WatchdogPanel } from "@/components/admin/WatchdogPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { craftyConfig, craftyConfigured } from "@/lib/crafty";
 import { formatDate, timeAgo } from "@/lib/format";
 import { recentCommands } from "@/lib/server-commands";
+import { getAutoRestart, getServerLiveState, recentServerEvents } from "@/lib/server-power";
+import { isServerEventType, serverEventLabels, serverEventTones } from "@/lib/server-power-types";
+import { getWatchdogStatus } from "@/lib/server-watchdog";
 import { getStatsSourceError, loadAllPlayerStats } from "@/lib/stats-source";
 
 export default async function AdminServerPage() {
-  const players = craftyConfigured ? await loadAllPlayerStats() : null;
+  const [liveState, autoRestart, events, players, commands] = await Promise.all([
+    getServerLiveState(),
+    getAutoRestart(),
+    recentServerEvents(25),
+    craftyConfigured ? loadAllPlayerStats() : Promise.resolve(null),
+    recentCommands(25),
+  ]);
   const statsError = getStatsSourceError();
-  const commands = await recentCommands(25);
+  const watchdog = { ...getWatchdogStatus(), autoRestart };
 
   return (
     <div className="space-y-10">
       <section>
         <SectionHeading
+          eyebrow="Steuerung"
+          icon={Power}
+          title="Server starten und stoppen"
+          description="Läuft über Crafty – derselbe Weg wie der Knopf im Crafty-Panel, nur ohne sich dort einzuloggen."
+          className="mb-5"
+        />
+        <ServerPowerPanel initial={liveState} />
+      </section>
+
+      <section>
+        <SectionHeading
+          eyebrow="Absturzsicherung"
+          icon={HeartPulse}
+          title="Watchdog"
+          description="Behält den Server im Blick und unterscheidet einen Absturz von einem geplanten Stopp."
+          className="mb-5"
+        />
+        <WatchdogPanel initial={watchdog} />
+      </section>
+
+      <section>
+        <SectionHeading
+          eyebrow="Verlauf"
+          icon={ScrollText}
+          title="Server-Ereignisse"
+          description="Jeder Start, Stopp und jede Entscheidung des Watchdogs – mit der Begründung aus dem Log."
+          className="mb-5"
+        />
+        <Panel className="overflow-hidden">
+          {events.length === 0 ? (
+            <p className="p-10 text-center text-sm text-cream/60">
+              Noch nichts passiert. Sobald der Server über diese Seite gestartet oder gestoppt wird – oder der Watchdog
+              etwas bemerkt – steht es hier.
+            </p>
+          ) : (
+            <ul className="divide-y divide-white/5">
+              {events.map((event) => {
+                const type = isServerEventType(event.type) ? event.type : null;
+                return (
+                  <li key={event.id} className="flex flex-wrap items-start gap-3 p-4">
+                    <Badge tone={type ? serverEventTones[type] : "neutral"}>
+                      {type ? serverEventLabels[type] : event.type}
+                    </Badge>
+                    <div className="min-w-0 flex-1">
+                      {event.detail && <p className="text-sm break-words text-cream/85">{event.detail}</p>}
+                      <p className="mt-1 text-xs text-cream/50">
+                        {event.actorName ?? "Watchdog"} · {timeAgo(event.createdAt)} · {formatDate(event.createdAt)}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Panel>
+      </section>
+
+      <section>
+        <SectionHeading
           eyebrow="Anbindung"
           icon={Plug}
           title="Crafty-Verbindung"
-          description="Statistiken werden über den Dateizugriff gelesen, Whitelist-Befehle über die Server-Konsole geschickt."
+          description="Statistiken werden über den Dateizugriff gelesen, Befehle und Steuerung über die Crafty-API geschickt."
           className="mb-5"
         />
 

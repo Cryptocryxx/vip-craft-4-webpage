@@ -185,6 +185,123 @@ export async function craftySendCommand(command: string): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Server-Steuerung
+// ---------------------------------------------------------------------------
+
+/**
+ * Aktionen, die Crafty auf `POST /servers/{id}/action/{name}` versteht.
+ *
+ * ▸ Achtung: Crafty prüft den Namen NICHT. Unbekannte Werte landen als ganz
+ *   normaler Konsolenbefehl im Server (und quittieren trotzdem mit HTTP 200),
+ *   deshalb ist die Liste hier fest verdrahtet.
+ * ▸ Alle vier brauchen die COMMANDS-Berechtigung – dieselbe wie `/stdin`.
+ */
+export type CraftyPowerAction = "start_server" | "stop_server" | "restart_server" | "kill_server";
+
+export async function craftyServerAction(action: CraftyPowerAction): Promise<void> {
+  await craftyRequest<unknown>("POST", `/servers/${craftyConfig.serverId}/action/${action}`);
+}
+
+/** Aufbereiteter Live-Zustand des Servers aus `GET /servers/{id}/stats`. */
+export type CraftyLiveStats = {
+  running: boolean;
+  /** Craftys eigene Absturzerkennung – nur gesetzt, wenn sie am Server aktiviert ist. */
+  crashed: boolean;
+  /** Der Server fährt gerade hoch bzw. ist in einem Wartungsvorgang. */
+  waitingStart: boolean;
+  updating: boolean;
+  importing: boolean;
+  /** Startzeitpunkt als roher Crafty-String ("2026-09-03 17:41:01") oder null. */
+  startedAt: string | null;
+  cpu: number;
+  memBytes: number;
+  memPercent: number;
+  onlinePlayers: number;
+  maxPlayers: number;
+  players: string[];
+  version: string | null;
+  worldSize: string | null;
+  /** Wann Crafty diese Momentaufnahme gezogen hat. */
+  sampledAt: string | null;
+};
+
+function num(value: unknown): number {
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function str(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 && value !== "False" ? value : null;
+}
+
+/**
+ * Crafty gibt die Spielerliste als Python-Repräsentation zurück:
+ * `"['Gamsa', 'CryptoCryxx']"`. Kein JSON – also von Hand zerlegen.
+ */
+function parsePlayerList(value: unknown): string[] {
+  if (Array.isArray(value)) return value.map(String);
+  if (typeof value !== "string") return [];
+
+  const inner = value.trim().replace(/^\[/, "").replace(/\]$/, "");
+  if (!inner.trim()) return [];
+
+  return inner
+    .split(",")
+    .map((entry) => entry.trim().replace(/^['"]|['"]$/g, ""))
+    .filter(Boolean);
+}
+
+export async function craftyLiveStats(): Promise<CraftyLiveStats> {
+  const data = (await craftyRequest<Record<string, unknown>>("GET", `/servers/${craftyConfig.serverId}/stats`)) ?? {};
+
+  return {
+    running: data.running === true,
+    crashed: data.crashed === true,
+    waitingStart: data.waiting_start === true,
+    updating: data.updating === true,
+    importing: data.importing === true,
+    startedAt: str(data.started),
+    cpu: num(data.cpu),
+    memBytes: num(data.mem),
+    memPercent: num(data.mem_percent),
+    onlinePlayers: num(data.online),
+    maxPlayers: num(data.max),
+    players: parsePlayerList(data.players),
+    version: str(data.version),
+    worldSize: str(data.world_size),
+    sampledAt: str(data.created),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Konsolen-Log
+// ---------------------------------------------------------------------------
+
+/** Crafty maskiert Log-Zeilen fürs Web – für die Auswertung wieder zurückdrehen. */
+function unescapeHtml(line: string): string {
+  return line
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+/**
+ * Liest das Server-Log.
+ *
+ * `fromFile: false` liefert Craftys Konsolenpuffer (nur die letzten ~70 Zeilen,
+ * und nur solange der Prozess lebt). `fromFile: true` liest `logs/latest.log`
+ * von der Platte – deutlich größer, dafür auch nach einem Absturz noch da.
+ */
+export async function craftyLogLines(fromFile = false): Promise<string[]> {
+  const data = await craftyRequest<unknown>("GET", `/servers/${craftyConfig.serverId}/logs?file=${fromFile}`);
+  if (!Array.isArray(data)) return [];
+  return data.filter((line): line is string => typeof line === "string").map(unescapeHtml);
+}
+
+// ---------------------------------------------------------------------------
 // Diagnose
 // ---------------------------------------------------------------------------
 

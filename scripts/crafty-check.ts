@@ -148,7 +148,42 @@ async function main() {
     fail(`usercache.json: ${error instanceof Error ? error.message : String(error)}`);
   }
 
-  // 4. Konsolenbefehl (COMMANDS-Berechtigung) – nur auf ausdrücklichen Wunsch
+  // 4. Server-Zustand (für die Steuerung im Kontrollraum)
+  console.log("");
+  try {
+    const { res, json } = await call("GET", `/servers/${serverId}/stats`);
+    if (!res.ok) {
+      fail(`Server-Zustand lesen → HTTP ${res.status}.`);
+    } else {
+      const data = (json?.data ?? {}) as Record<string, unknown>;
+      ok(`Server-Zustand lesbar: ${data.running === true ? "läuft" : "aus"} (${data.online ?? 0}/${data.max ?? 0} Spieler).`);
+      info("Start/Stopp/Neustart im Kontrollraum laufen über dieselbe Berechtigung wie Konsolenbefehle (COMMANDS).");
+    }
+  } catch (error) {
+    fail(`Server-Zustand: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  // 5. Server-Log (LOGS-Berechtigung) – Grundlage der Absturzerkennung
+  console.log("");
+  try {
+    const { res, json } = await call("GET", `/servers/${serverId}/logs?file=true`);
+    if (!res.ok) {
+      fail(`Server-Log lesen → HTTP ${res.status}. Fehlt der Rolle die LOGS-Berechtigung?`);
+      info("Ohne Log kann der Watchdog einen Absturz nicht von einem geplanten Stopp unterscheiden");
+      info("und startet dann vorsichtshalber gar nicht neu.");
+    } else {
+      const lines = Array.isArray(json?.data) ? (json.data as string[]) : [];
+      if (lines.length === 0) {
+        fail("Das Log kam leer zurück – die Absturzerkennung hätte damit nichts zu bewerten.");
+      } else {
+        ok(`Server-Log lesbar: ${lines.length} Zeilen. Die Absturzerkennung kann arbeiten.`);
+      }
+    }
+  } catch (error) {
+    fail(`Server-Log: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  // 6. Konsolenbefehl (COMMANDS-Berechtigung) – nur auf ausdrücklichen Wunsch
   console.log("");
   if (!withCommand) {
     info("Konsolenbefehl nicht getestet. Mit `npm run crafty:check -- --command` wird `whitelist list` geschickt.");

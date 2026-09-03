@@ -173,6 +173,25 @@ model CommandLog {
 }
 
 // ---------------------------------------------------------------------------
+// Protokoll der Server-Steuerung: Start/Stopp aus dem Kontrollraum und alles,
+// was der Watchdog beobachtet oder selbst ausgelöst hat (siehe server-watchdog.ts)
+// ---------------------------------------------------------------------------
+
+model ServerEvent {
+  id      String  @id @default(cuid())
+  /// Siehe SERVER_EVENT_TYPES in server-power-types.ts
+  type    String
+  detail  String?
+  success Boolean @default(true)
+  /// Discord-Name des Admins; leer = vom Watchdog ausgelöst
+  actorName String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
 // Server-Einstellungen (im Admin-Panel bearbeitbar, überschreiben die .env-Defaults)
 // ---------------------------------------------------------------------------
 

@@ -20,7 +20,7 @@ const items: Array<{ href: AdminRoute; label: string; icon: LucideIcon }> = [
   { href: "/admin/shops", label: "Shops", icon: Store },
   { href: "/admin/users", label: "Spieler", icon: Users },
   { href: "/admin/suggestions", label: "Vorschläge", icon: MessageSquare },
-  { href: "/admin/server", label: "Server-Anbindung", icon: Plug },
+  { href: "/admin/server", label: "Server-Steuerung", icon: Plug },
   { href: "/admin/settings", label: "Einstellungen", icon: Settings },
 ];
 
