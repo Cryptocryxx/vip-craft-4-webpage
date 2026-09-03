@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
+import { CookieBanner } from "@/components/legal/CookieBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { siteConfig } from "@/lib/config";
@@ -34,9 +36,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="de" className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        <AnnouncementBanner />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <CookieBanner />
       </body>
     </html>
   );

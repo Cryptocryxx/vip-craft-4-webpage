@@ -1,7 +1,7 @@
 import { Clock, GraduationCap, MapPin, PartyPopper, Skull, TrainFront, Trophy, User, Users, type LucideIcon } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
-import { eventTypeLabels, type EventType, type ServerEvent } from "@/lib/mock/events";
+import { eventTypeLabels, type EventType, type CommunityEvent } from "@/lib/event-types";
 import { formatTime, relativeDays } from "@/lib/format";
 
 const typeIcon: Record<EventType, LucideIcon> = {
@@ -26,7 +26,7 @@ const dayFormatter = new Intl.DateTimeFormat("de-DE", { day: "2-digit", timeZone
 const monthFormatter = new Intl.DateTimeFormat("de-DE", { month: "short", timeZone: "Europe/Berlin" });
 const weekdayFormatter = new Intl.DateTimeFormat("de-DE", { weekday: "long", timeZone: "Europe/Berlin" });
 
-export function EventGrid({ events, now }: { events: ServerEvent[]; now: Date }) {
+export function EventGrid({ events, now }: { events: CommunityEvent[]; now: Date }) {
   if (events.length === 0) {
     return (
       <Panel className="p-10 text-center text-cream/60">

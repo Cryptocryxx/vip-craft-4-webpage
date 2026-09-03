@@ -1,5 +1,5 @@
 import { gzipSync } from "node:zlib";
-import { getSchematicById } from "@/lib/mock/schematics";
+import { getSchematicById } from "@/lib/schematic-types";
 
 /**
  * GET /api/schematics/[id]/download

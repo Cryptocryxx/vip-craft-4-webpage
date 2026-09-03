@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatNumber, formatShortDate } from "@/lib/format";
-import type { Schematic } from "@/lib/mock/schematics";
+import type { Schematic } from "@/lib/schematic-types";
 
 export function SchematicCard({ schematic, onTagClick }: { schematic: Schematic; onTagClick?: (tag: string) => void }) {
   const volume = schematic.size.x * schematic.size.y * schematic.size.z;

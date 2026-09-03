@@ -1,45 +1,58 @@
 import type { Metadata } from "next";
-import { Compass, Layers, Map as MapIcon, TrainTrack } from "lucide-react";
+import { headers } from "next/headers";
+import { Compass, Layers, Map as MapIcon, Store } from "lucide-react";
 import { MapFrame } from "@/components/map/MapFrame";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
-import { siteConfig } from "@/lib/config";
+import { checkIframeEmbeddable } from "@/lib/embed-check";
+import { getSiteSettings } from "@/lib/settings";
+
+/** Origin dieser Seite, wie ihn ein iframe-Embed-Ziel sehen würde (für den frame-ancestors-Abgleich). */
+async function getOwnOrigin(): Promise<string> {
+  const list = await headers();
+  const host = list.get("x-forwarded-host") ?? list.get("host") ?? "localhost:3000";
+  const proto = list.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
+}
 
 export const metadata: Metadata = {
   title: "Live-Map",
-  description: "Die Live-Karte von VIP Craft 4 – Basen, Bahnstrecken und Spieler in Echtzeit.",
+  description: "Die Live-Karte von VIP Craft 4 – Basen, Shops und Spieler in Echtzeit.",
 };
 
 const tips = [
   {
     icon: Layers,
     title: "Ebenen & Dimensionen",
-    text: "Oben rechts zwischen Overworld, Nether und End wechseln. Marker-Ebenen (Bahnhöfe, Shops) lassen sich einzeln ausblenden.",
+    text: "Über das Menü oben links zwischen Overworld, Nether und End wechseln. Unter „Markers“ lassen sich einzelne Marker-Ebenen ausblenden.",
   },
   {
     icon: Compass,
     title: "Spieler finden",
-    text: "In der Spielerliste auf einen Namen klicken, um die Karte auf die Person zu zentrieren. Spieler im Sneak-Modus sind unsichtbar.",
+    text: "Wer gerade online ist, taucht als Marker direkt auf der Karte auf.",
   },
   {
-    icon: TrainTrack,
-    title: "Bahnstrecken",
-    text: "Das Zugnetz wird als eigene Marker-Ebene gerendert. Bahnhöfe zeigen beim Anklicken den nächsten Halt des Nordexpress.",
+    icon: Store,
+    title: "Shops suchen",
+    text: "Die Koordinaten aller eingetragenen Läden stehen im Shop-Bereich – auf der Karte eingeben und hinfliegen.",
   },
 ];
 
-export default function MapPage() {
+export default async function MapPage() {
+  const [settings, ownOrigin] = await Promise.all([getSiteSettings(), getOwnOrigin()]);
+  const availability = await checkIframeEmbeddable(settings.mapUrl, ownOrigin);
+
   return (
     <>
       <PageHeader
-        eyebrow="Squaremap"
+        eyebrow="BlueMap"
         icon={MapIcon}
         title="Live-Karte"
-        description="Basen, Bahnstrecken und wer gerade wo unterwegs ist – direkt aus der Welt gerendert und alle paar Minuten aktualisiert."
+        description="Basen, Landeplätze und wer gerade wo unterwegs ist – direkt aus der Welt gerendert und alle paar Minuten aktualisiert."
       />
       <Container className="py-8">
-        <MapFrame src={siteConfig.mapUrl} />
+        <MapFrame src={settings.mapUrl} availability={availability} />
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {tips.map((tip) => {

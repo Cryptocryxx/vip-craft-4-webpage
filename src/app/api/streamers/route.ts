@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { getStreamers } from "@/lib/mock/streamers";
+import { getStreamers } from "@/lib/streamers";
 
-/** GET /api/streamers – Streamer des Servers inkl. Live-Status (Mock, später Twitch Helix API). */
+/** GET /api/streamers – verknüpfte Twitch-Kanäle inkl. Live-Status aus der Twitch-API. */
 export async function GET() {
+  const { streamers, liveStatusAvailable } = await getStreamers();
+
   return NextResponse.json({
-    source: "mock",
+    source: liveStatusAvailable ? "twitch" : "database",
+    liveStatusAvailable,
     updatedAt: new Date().toISOString(),
-    streamers: getStreamers(),
+    streamers,
   });
 }

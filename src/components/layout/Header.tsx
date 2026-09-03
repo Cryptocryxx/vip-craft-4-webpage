@@ -1,12 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
+import { auth } from "@/auth";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { ServerStatusWidget } from "@/components/layout/ServerStatusWidget";
 import { UserMenu } from "@/components/layout/UserMenu";
 
-export function Header() {
+export async function Header() {
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
+
   return (
     <header className="sticky top-0 z-40 border-b border-brass-500/25 bg-wood-950/85 backdrop-blur-md">
       <div className="brass-line absolute inset-x-0 top-0 opacity-70" />
@@ -30,10 +33,8 @@ export function Header() {
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <ServerStatusWidget />
-          <Suspense fallback={<div className="h-9 w-20 animate-pulse rounded-lg bg-white/5" />}>
-            <UserMenu />
-          </Suspense>
-          <MobileNav />
+          <UserMenu session={session} />
+          <MobileNav isAdmin={isAdmin} loggedIn={Boolean(session?.user)} />
         </div>
       </div>
     </header>

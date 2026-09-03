@@ -1,20 +1,21 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, DraftingCompass, Radio } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, CalendarDays, Radio, Store, Tv } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatDate, formatTime, relativeDays } from "@/lib/format";
-import { eventTypeLabels, getUpcomingEvents } from "@/lib/mock/events";
-import { getSchematics } from "@/lib/mock/schematics";
-import { getStreamers } from "@/lib/mock/streamers";
+import { eventTypeLabels, getUpcomingEvents } from "@/lib/event-types";
+import { listShops } from "@/lib/shops";
+import { getLiveStreamers } from "@/lib/streamers";
 
-/** Drei kleine Teaser: nächstes Event, neueste Schematic, Live-Streams. */
-export function Teasers() {
+/** Drei kleine Teaser: nächstes Event, Spieler-Shops, Live-Streams. */
+export async function Teasers() {
   const now = new Date();
   const nextEvent = getUpcomingEvents(now)[0];
-  const newestSchematic = getSchematics()[0];
-  const liveStreamers = getStreamers().filter((s) => s.live);
+  const [shops, liveStreamers] = await Promise.all([listShops(), getLiveStreamers()]);
+  const openShops = shops.filter((shop) => shop.open);
 
   return (
     <section className="relative -mt-8 pb-4">
@@ -44,22 +45,26 @@ export function Teasers() {
             </Panel>
           </Link>
 
-          <Link href="/schematics" className="group block">
+          <Link href="/shops" className="group block">
             <Panel className="h-full p-5 transition-colors group-hover:border-brass-400/60">
               <p className="eyebrow">
-                <DraftingCompass className="size-3.5" /> Neueste Schematic
+                <Store className="size-3.5" /> Spieler-Shops
               </p>
-              {newestSchematic && (
-                <>
-                  <p className="mt-3 font-display text-lg leading-snug font-bold text-cream">{newestSchematic.title}</p>
-                  <p className="mt-2 flex items-center gap-2 text-sm text-cream/60">
-                    <PlayerHead name={newestSchematic.author} size={18} />
-                    {newestSchematic.author} · {newestSchematic.size.x}×{newestSchematic.size.y}×{newestSchematic.size.z}
-                  </p>
-                </>
+              <p className="mt-3 font-display text-lg leading-snug font-bold text-cream">
+                {openShops.length > 0
+                  ? `${openShops.length} ${openShops.length === 1 ? "Laden hat" : "Läden haben"} geöffnet`
+                  : "Noch kein Laden eingetragen"}
+              </p>
+              {shops[0] ? (
+                <p className="mt-2 flex items-center gap-2 text-sm text-cream/60">
+                  <PlayerHead name={shops[0].owner.minecraftName ?? shops[0].owner.name ?? "?"} size={18} />
+                  Zuletzt: {shops[0].name}
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-cream/60">Trag deinen im Dashboard ein.</p>
               )}
               <span className="mt-4 inline-flex items-center gap-1 text-xs text-brass-200">
-                Zur Galerie <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
+                Alle Shops <ArrowRight className="size-3 transition-transform group-hover:translate-x-0.5" />
               </span>
             </Panel>
           </Link>
@@ -77,9 +82,27 @@ export function Teasers() {
               {liveStreamers.length > 0 && (
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex -space-x-1.5">
-                    {liveStreamers.slice(0, 4).map((s) => (
-                      <PlayerHead key={s.channel} name={s.minecraftName} size={22} className="ring-2 ring-wood-900" />
-                    ))}
+                    {liveStreamers.slice(0, 4).map((s) =>
+                      s.avatarUrl ? (
+                        <Image
+                          key={s.channel}
+                          src={s.avatarUrl}
+                          alt=""
+                          width={22}
+                          height={22}
+                          className="rounded-full ring-2 ring-wood-900"
+                        />
+                      ) : s.minecraftName ? (
+                        <PlayerHead key={s.channel} name={s.minecraftName} size={22} className="ring-2 ring-wood-900" />
+                      ) : (
+                        <span
+                          key={s.channel}
+                          className="flex size-[22px] items-center justify-center rounded-full bg-brass-500/25 text-brass-200 ring-2 ring-wood-900"
+                        >
+                          <Tv className="size-3" />
+                        </span>
+                      ),
+                    )}
                   </div>
                   <span className="text-sm text-cream/60">{liveStreamers.map((s) => s.displayName).join(", ")}</span>
                 </div>

@@ -6,12 +6,12 @@ export const siteConfig = {
   name: "VIP Craft 4",
   tagline: "Der Create-Server der Uni-Community",
   serverIp: process.env.NEXT_PUBLIC_SERVER_IP ?? "play.vipcraft.de",
-  mapUrl: process.env.NEXT_PUBLIC_MAP_URL ?? "https://demo.squaremap.app/",
+  mapUrl: process.env.NEXT_PUBLIC_MAP_URL ?? "https://vip4.wehrmann.ing/",
   discordInvite: process.env.NEXT_PUBLIC_DISCORD_INVITE ?? "https://discord.gg/vipcraft",
-  minecraftVersion: "1.20.1",
+  minecraftVersion: "1.21.1",
   createVersion: "Create 6",
-  modpackName: "VIP Craft 4 Pack",
-  modpackUrl: "https://example.com/vipcraft4-modpack", // Platzhalter
-  maxPlayers: 60,
+  modpackName: "VIP Craft 4",
+  modpackUrl: "https://www.curseforge.com/minecraft/modpacks/vip-craft-4", // Platzhalter
+  maxPlayers: 30,
   season: "Season 4",
 } as const;

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { SchematicCard } from "@/components/schematics/SchematicCard";
 import { Panel } from "@/components/ui/Panel";
-import type { Schematic } from "@/lib/mock/schematics";
+import type { Schematic } from "@/lib/schematic-types";
 import { cn } from "@/lib/utils";
 
 type SortKey = "new" | "downloads" | "likes";
@@ -98,7 +98,9 @@ export function SchematicGallery({ schematics, tags }: { schematics: Schematic[]
 
       {filtered.length === 0 ? (
         <Panel className="p-12 text-center text-cream/60">
-          Keine Schematic passt zu deiner Suche. Vielleicht baust du sie einfach selbst?
+          {schematics.length === 0
+            ? "Noch keine Blaupause hochgeladen. Der Upload wird gerade gebaut – bis dahin tauscht ihr sie am besten im Discord."
+            : "Keine Schematic passt zu deiner Suche. Vielleicht baust du sie einfach selbst?"}
         </Panel>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

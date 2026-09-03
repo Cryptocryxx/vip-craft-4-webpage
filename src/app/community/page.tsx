@@ -7,18 +7,19 @@ import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { siteConfig } from "@/lib/config";
-import { getUpcomingEvents } from "@/lib/mock/events";
-import { milestones } from "@/lib/mock/timeline";
+import { getUpcomingEvents } from "@/lib/event-types";
+import { milestones } from "@/lib/timeline-types";
+import { getSiteSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Community & Events",
   description: "Event-Kalender und Server-Timeline von VIP Craft 4.",
 };
 
-export default function CommunityPage() {
+export default async function CommunityPage() {
   const now = new Date();
   const events = getUpcomingEvents(now);
+  const settings = await getSiteSettings();
 
   return (
     <>
@@ -46,7 +47,7 @@ export default function CommunityPage() {
             title="Kommende Ingame-Events"
             description="Alle Zeiten in deutscher Zeit (Europe/Berlin). Für Erinnerungen abonniere die Events im Discord."
             action={
-              <Button href={siteConfig.discordInvite} variant="outline" size="sm" target="_blank" rel="noopener noreferrer">
+              <Button href={settings.discordInvite} variant="outline" size="sm" target="_blank" rel="noopener noreferrer">
                 <DiscordIcon className="size-4" /> Event vorschlagen
               </Button>
             }

@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
-import { LayoutDashboard } from "lucide-react";
+import Link from "next/link";
+import { Cog, LayoutDashboard } from "lucide-react";
 import { auth, authConfigured } from "@/auth";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
 import { ProfileCard } from "@/components/dashboard/ProfileCard";
+import { ShopManagerCard } from "@/components/dashboard/ShopManagerCard";
 import { SignInPanel } from "@/components/dashboard/SignInPanel";
 import { SuggestionBoard } from "@/components/dashboard/SuggestionBoard";
 import { WhitelistStatus } from "@/components/dashboard/WhitelistStatus";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { siteConfig } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
+import { getSiteSettings } from "@/lib/settings";
+import { listShopsForUser } from "@/lib/shops";
 import { listSuggestions } from "@/lib/suggestions";
+import { getApplicationForUser } from "@/lib/whitelist";
 
 export const metadata: Metadata = {
   title: "Dashboard",
-  description: "Dein Profil, Whitelist-Status, Statistiken und das Vorschlags-Board.",
+  description: "Dein Profil, Whitelist-Antrag, Statistiken und das Vorschlags-Board.",
 };
 
 /** Auth.js-Fehlercodes → verständliche Meldungen */
@@ -42,7 +46,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
           eyebrow="Profil & Dashboard"
           icon={LayoutDashboard}
           title="Dashboard"
-          description="Whitelist-Status, persönliche Statistiken und das Vorschlags-Board – nach dem Login mit Discord."
+          description="Whitelist beantragen, persönliche Statistiken und das Vorschlags-Board – nach dem Login mit Discord."
         />
         <Container className="py-12">
           <SignInPanel configured={authConfigured} error={errorMessage} />
@@ -51,7 +55,12 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     );
   }
 
-  const suggestions = await listSuggestions(user.id);
+  const [application, settings, suggestions, shops] = await Promise.all([
+    getApplicationForUser(user.id),
+    getSiteSettings(),
+    listSuggestions(user.id),
+    listShopsForUser(user.id),
+  ]);
 
   return (
     <>
@@ -59,21 +68,36 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         eyebrow="Profil & Dashboard"
         icon={LayoutDashboard}
         title={`Moin, ${user.name ?? "Spieler"}!`}
-        description="Dein Bereich auf VIP Craft 4: Gamertag verknüpfen, Whitelist prüfen, Stats ansehen und mitbestimmen, wohin der Server fährt."
-      />
+        description="Dein Bereich auf VIP Craft 4: Whitelist beantragen, Stats ansehen und mitbestimmen, wohin der Server fährt."
+      >
+        {user.role === "ADMIN" && (
+          <Link href="/admin" className="btn btn-outline btn-sm">
+            <Cog className="size-4" /> Zum Kontrollraum
+          </Link>
+        )}
+      </PageHeader>
 
       <Container className="space-y-8 py-10">
         <div className="grid gap-6 lg:grid-cols-3">
-          <ProfileCard user={user} />
-          <WhitelistStatus
-            whitelisted={user.whitelisted}
-            minecraftName={user.minecraftName}
-            serverIp={siteConfig.serverIp}
-            discordInvite={siteConfig.discordInvite}
+          <ProfileCard
+            user={user}
+            allowLinking={Boolean(user.minecraftName) || application?.status !== "PENDING"}
           />
-          <div className="lg:col-span-3 xl:col-span-1">
-            <PersonalStats />
+          <div className="lg:col-span-2">
+            <WhitelistStatus
+              whitelisted={user.whitelisted}
+              minecraftName={user.minecraftName}
+              serverIp={settings.serverIp}
+              application={application}
+              whitelistOpen={settings.whitelistOpen}
+            />
           </div>
+        </div>
+
+        <PersonalStats />
+
+        <div id="shops" className="scroll-mt-24">
+          <ShopManagerCard shops={shops} />
         </div>
 
         <SuggestionBoard suggestions={suggestions} currentUserId={user.id} />

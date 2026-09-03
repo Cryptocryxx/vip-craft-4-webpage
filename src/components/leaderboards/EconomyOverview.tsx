@@ -1,41 +1,40 @@
-import { Coins, MapPin, Minus, Store, TrendingDown, TrendingUp, ArrowLeftRight } from "lucide-react";
+import { Coins, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
+import { COINS, formatCogs, formatCogsLong, formatSpurs, SPURS_PER_COG } from "@/lib/currency";
+import type { EconomyOverview as EconomyOverviewData } from "@/lib/economy-types";
 import { formatNumber } from "@/lib/format";
-import type { EconomyOverview as EconomyOverviewData } from "@/lib/mock/economy";
-import { cn } from "@/lib/utils";
 
-function Trend({ value }: { value: number }) {
-  if (value === 0) {
+type Props = {
+  data: EconomyOverviewData;
+  source: "live" | "unavailable";
+};
+
+export function EconomyOverview({ data, source }: Props) {
+  const { summary, richest } = data;
+
+  if (source !== "live" || richest.length === 0) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs text-cream/40">
-        <Minus className="size-3" /> ±0
-      </span>
+      <Panel className="p-10 text-center">
+        <Coins className="mx-auto size-10 text-brass-500/40" />
+        <p className="mt-3 font-display text-lg font-bold text-cream">Noch keine Kontodaten</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">
+          Sobald auf dem Server die ersten Numismatics-Konten Guthaben haben, stehen hier der Umlauf und die reichsten
+          Spieler.
+        </p>
+      </Panel>
     );
   }
-  const up = value > 0;
-  return (
-    <span className={cn("inline-flex items-center gap-1 text-xs", up ? "text-emerald-300" : "text-rose-300")}>
-      {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-      {up ? "+" : ""}
-      {formatNumber(value)}
-    </span>
-  );
-}
-
-export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
-  const { summary, richest, shops, currency } = data;
 
   const tiles = [
-    { label: "Im Umlauf", value: `${formatNumber(summary.totalCirculation)} ${currency.plural}`, icon: Coins },
-    { label: "Transaktionen (24 h)", value: formatNumber(summary.transactions24h), icon: ArrowLeftRight },
-    { label: "Aktive Shops", value: String(summary.activeShops), icon: Store },
+    { label: "Im Umlauf", value: formatCogsLong(summary.totalCirculationSpurs), icon: Coins },
+    { label: "Konten", value: formatNumber(summary.accountCount), icon: Wallet },
   ];
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         {tiles.map((tile) => {
           const Icon = tile.icon;
           return (
@@ -52,84 +51,41 @@ export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
         })}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
-        {/* Reichste Spieler */}
-        <Panel className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-white/5 bg-black/20 px-5 py-3">
-            <h3 className="font-display text-sm font-bold tracking-wide text-brass-200 uppercase">Reichste Spieler</h3>
-            <Badge tone="brass">{currency.plural}</Badge>
-          </div>
-          <ol>
-            {richest.map((entry) => (
-              <li key={entry.player} className="flex items-center gap-3 border-t border-white/5 px-5 py-3 first:border-t-0">
-                <span className="w-5 font-display text-sm font-bold text-cream/50">{entry.rank}</span>
-                <PlayerHead name={entry.player} size={28} />
-                <span className="flex-1 truncate font-semibold text-cream">{entry.player}</span>
-                <span className="text-right">
-                  <span className="block font-mono text-sm text-cream">{formatNumber(entry.balance)}</span>
-                  <Trend value={entry.change24h} />
-                </span>
-              </li>
-            ))}
-          </ol>
-          <div className="border-t border-white/5 bg-black/15 px-5 py-3 text-xs text-cream/50">
+      <Panel className="overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/5 bg-black/20 px-5 py-3">
+          <h3 className="font-display text-sm font-bold tracking-wide text-brass-200 uppercase">Reichste Spieler</h3>
+          <Badge tone="brass">Cog</Badge>
+        </div>
+        <ol>
+          {richest.map((entry) => (
+            <li key={entry.player} className="flex items-center gap-3 border-t border-white/5 px-5 py-3 first:border-t-0">
+              <span className="w-5 font-display text-sm font-bold text-cream/50">{entry.rank}</span>
+              <PlayerHead name={entry.player} size={28} />
+              <span className="flex-1 truncate font-semibold text-cream">{entry.player}</span>
+              <span className="font-mono text-sm text-cream" title={formatSpurs(entry.balanceSpurs)}>
+                {formatCogs(entry.balanceSpurs)}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <div className="border-t border-white/5 bg-black/15 px-5 py-3 text-xs leading-relaxed text-cream/50">
+          <p>
+            Gerechnet wird in <span className="text-cream/80">Cog</span> – ein Cog sind {SPURS_PER_COG} Spurs.
+          </p>
+          <p className="mt-1">
             Münzen:{" "}
-            {currency.coins.map((coin, index) => (
+            {COINS.map((coin, index) => (
               <span key={coin.name}>
                 {index > 0 && " · "}
-                <span className="text-cream/70">{coin.name}</span> = {formatNumber(coin.value)}
+                <span className="text-cream/70">{coin.name}</span> = {formatNumber(coin.spurs)}
               </span>
             ))}
-          </div>
-        </Panel>
-
-        {/* Shops */}
-        <Panel className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-white/5 bg-black/20 px-5 py-3">
-            <h3 className="font-display text-sm font-bold tracking-wide text-brass-200 uppercase">Aktive Shops</h3>
-            <span className="text-xs text-cream/50">{shops.length} eingetragen</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="table-mech w-full">
-              <thead>
-                <tr>
-                  <th>Shop</th>
-                  <th>Angebot</th>
-                  <th>Ort</th>
-                  <th className="text-right">7 Tage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shops.map((shop) => (
-                  <tr key={shop.id}>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn("size-2 shrink-0 rounded-full", shop.open ? "bg-emerald-400" : "bg-rose-400")}
-                          title={shop.open ? "Geöffnet" : "Geschlossen"}
-                        />
-                        <div>
-                          <p className="font-semibold text-cream">{shop.name}</p>
-                          <p className="text-xs text-cream/50">von {shop.owner}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="max-w-56 text-cream/75">{shop.sells.join(", ")}</td>
-                    <td className="whitespace-nowrap text-cream/75">
-                      <span className="inline-flex items-center gap-1 font-mono text-xs">
-                        <MapPin className="size-3 text-brass-300" />
-                        {shop.location.x} / {shop.location.z}
-                        {shop.location.dimension === "nether" && <Badge tone="copper">Nether</Badge>}
-                      </span>
-                    </td>
-                    <td className="text-right font-mono text-cream/90">{formatNumber(shop.sales7d)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </Panel>
-      </div>
+          </p>
+        </div>
+        <p className="border-t border-white/5 bg-black/15 px-5 py-2 text-[10px] tracking-wider text-cream/35 uppercase">
+          Quelle: Bankkonten des Servers
+        </p>
+      </Panel>
     </div>
   );
 }

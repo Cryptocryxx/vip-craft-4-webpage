@@ -1,6 +1,7 @@
-import { CalendarDays, Cog, DraftingCompass, Map as MapIcon, ShieldCheck, TrainFront, type LucideIcon } from "lucide-react";
+import { Cog, HardHat, Map as MapIcon, Plane, ShieldCheck, Store, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
+import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -11,48 +12,55 @@ type Feature = {
   description: string;
   href?: string;
   accent: "brass" | "diamond";
+  /** Gibt es noch nicht – wird gerade gebaut. */
+  planned?: boolean;
 };
 
 const features: Feature[] = [
   {
     icon: Cog,
     title: "Create 6 im Zentrum",
-    description: "Mechanische Fabriken, Sequenced Assembly, Zahnräder überall – das Modpack ist rund um Create gebaut und läuft stabil.",
+    description:
+      "Mechanische Fabriken, Sequenced Assembly, Zahnräder überall – das Modpack ist rund um Create gebaut und läuft stabil.",
     accent: "brass",
   },
   {
-    icon: TrainFront,
-    title: "Gemeinsames Zugnetz",
-    description: "Ein serverweites Streckennetz mit Bahnhöfen an jeder Basis. Fahrplan im Discord, Signale inklusive.",
+    icon: Plane,
+    title: "Create: Aeronautics",
+    description:
+      "Das Highlight des Packs: Flugzeuge, Luftschiffe und Heißluftballons, die du Block für Block selbst baust. Propellerlager treiben an, Aeronautics-Chassis halten den Rumpf zusammen, Boiler-Engines liefern die Kraft. Geflogen wird mit echter Physik – die Sable-Engine rechnet Gewicht und Auftrieb mit, und ein zu schwerer Rumpf hebt schlicht nicht ab.",
     accent: "diamond",
+  },
+  {
+    icon: Store,
+    title: "Spieler-Shops",
+    description:
+      "Handel mit Create: Numismatics, gerechnet in Cog. Deinen Laden trägst du selbst ein – er ist sofort für alle sichtbar, ohne Freigabe.",
+    href: "/shops",
+    accent: "brass",
   },
   {
     icon: MapIcon,
     title: "Live-Karte",
-    description: "Squaremap zeigt Basen, Bahnstrecken und Spieler in Echtzeit – direkt im Browser.",
+    description: "BlueMap zeigt die ganze Welt und wer gerade wo unterwegs ist – direkt im Browser.",
     href: "/map",
     accent: "diamond",
   },
   {
     icon: ShieldCheck,
-    title: "Whitelist & Uni-Community",
-    description: "Nur Leute aus der Uni-Community, keine Griefer. Login mit Discord, Whitelist-Status im Dashboard.",
+    title: "Whitelist direkt hier beantragen",
+    description:
+      "Mit Discord einloggen, Gamertag eintragen, fertig – der Antrag entsteht automatisch und das Team schaltet dich frei.",
     href: "/dashboard",
     accent: "brass",
   },
   {
-    icon: CalendarDays,
-    title: "Events & Lore",
-    description: "Zugrennen, Build-Contests, Boss-Fights – und eine Timeline, die festhält, welche Basis wann explodiert ist.",
-    href: "/community",
-    accent: "brass",
-  },
-  {
-    icon: DraftingCompass,
-    title: "Schematic-Galerie",
-    description: "Teile deine Maschinen als .nbt-Blaupause – andere laden sie mit der Schematicannon nach.",
-    href: "/schematics",
+    icon: HardHat,
+    title: "Gemeinsames Zugnetz",
+    description:
+      "Ein serverweites Streckennetz mit Bahnhöfen an jeder Basis – geplant und gerade im Bau. Wer mitverlegen will, meldet sich im Discord.",
     accent: "diamond",
+    planned: true,
   },
 ];
 
@@ -81,8 +89,12 @@ export function FeatureGrid() {
                   >
                     <Icon className="size-5" />
                   </span>
-                  {feature.href && (
-                    <ArrowUpRight className="size-4 text-cream/30 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brass-200" />
+                  {feature.planned ? (
+                    <Badge tone="neutral">Im Bau</Badge>
+                  ) : (
+                    feature.href && (
+                      <ArrowUpRight className="size-4 text-cream/30 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brass-200" />
+                    )
                   )}
                 </div>
                 <h3 className="mt-4 text-lg font-bold text-cream">{feature.title}</h3>

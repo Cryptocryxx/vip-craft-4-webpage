@@ -1,7 +1,8 @@
 import { Bomb, Cog, Flag, Flame, TrainFront, Users, type LucideIcon } from "lucide-react";
+import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatDate } from "@/lib/format";
-import type { Milestone, MilestoneKind } from "@/lib/mock/timeline";
+import type { Milestone, MilestoneKind } from "@/lib/timeline-types";
 import { cn } from "@/lib/utils";
 
 const kindIcon: Record<MilestoneKind, LucideIcon> = {
@@ -25,6 +26,15 @@ const kindStyle: Record<MilestoneKind, string> = {
 /** Vertikaler Zeitstrahl – "Die Lore" des Servers. */
 export function Timeline({ milestones }: { milestones: Milestone[] }) {
   const sorted = [...milestones].sort((a, b) => b.date.localeCompare(a.date));
+
+  if (sorted.length === 0) {
+    return (
+      <Panel className="p-10 text-center text-cream/60">
+        Die Chronik ist noch leer. Sobald jemand etwas gebaut hat, das in die Geschichtsbücher gehört – oder etwas
+        spektakulär in die Luft geflogen ist – steht es hier.
+      </Panel>
+    );
+  }
 
   return (
     <ol className="relative space-y-8 pl-14 before:absolute before:top-2 before:bottom-2 before:left-[22px] before:w-px before:bg-linear-to-b before:from-diamond-400 before:via-brass-500/60 before:to-transparent">

@@ -2,10 +2,17 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { createSuggestion, listSuggestions, validateSuggestionInput } from "@/lib/suggestions";
 
-/** GET /api/suggestions – alle Vorschläge (eigene Votes werden markiert, falls eingeloggt). */
+/**
+ * GET /api/suggestions – alle Vorschläge inkl. der eigenen Votes.
+ * Nur für eingeloggte Nutzer, damit Beiträge und Namen nicht öffentlich abrufbar sind.
+ */
 export async function GET() {
   const session = await auth();
-  const items = await listSuggestions(session?.user?.id);
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
+  }
+
+  const items = await listSuggestions(session.user.id);
   return NextResponse.json({ items });
 }
 

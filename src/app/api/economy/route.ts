@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
-import { getEconomyOverview } from "@/lib/mock/economy";
+import { getEconomyData } from "@/lib/economy-source";
 
-/** GET /api/economy – reichste Spieler & aktive Shops (Mock, später Plan-Plugin). */
+/**
+ * GET /api/economy – reichste Spieler & Umlauf aus den Create-Numismatics-Bankkonten.
+ * Beträge sind in Spurs; ein Cog entspricht 64 Spurs (siehe lib/currency.ts).
+ * Ohne Crafty-Konfiguration oder ohne kubejs/data/numismatics.json kommt eine leere
+ * Übersicht mit `source: "unavailable"` zurück.
+ */
 export async function GET() {
+  const { overview, source } = await getEconomyData();
+
   return NextResponse.json({
-    source: "mock",
+    source,
     updatedAt: new Date().toISOString(),
-    ...getEconomyOverview(),
+    ...overview,
   });
 }

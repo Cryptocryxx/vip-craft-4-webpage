@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Minecraft-seitige KubeJS-Skripte: eigenes Rhino/Java-Environment, kein Next.js/Browser-Code.
+    "minecraft/**",
   ]),
 ]);
 

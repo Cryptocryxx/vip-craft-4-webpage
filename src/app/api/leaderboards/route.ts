@@ -1,17 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getLeaderboards } from "@/lib/mock/leaderboards";
+import { getLeaderboardData } from "@/lib/leaderboard-source";
 
 /**
  * GET /api/leaderboards?kind=fame|shame
- * Mock-API – wird später mit dem Plan-Plugin verknüpft.
+ * Speist sich aus den Vanilla-Statistikdateien des Servers (über Crafty).
+ * Ohne Crafty-Konfiguration werden Beispieldaten geliefert (`source: "mock"`).
  */
 export async function GET(request: NextRequest) {
   const kindParam = request.nextUrl.searchParams.get("kind");
   const kind = kindParam === "fame" || kindParam === "shame" ? kindParam : undefined;
 
+  const { boards, source } = await getLeaderboardData(kind);
+
   return NextResponse.json({
-    source: "mock",
+    source,
     updatedAt: new Date().toISOString(),
-    boards: getLeaderboards(kind),
+    boards,
   });
 }

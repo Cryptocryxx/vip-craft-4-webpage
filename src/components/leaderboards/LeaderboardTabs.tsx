@@ -12,10 +12,11 @@ import {
   Pickaxe,
   Skull,
   TrainFront,
+  Trophy,
   type LucideIcon,
 } from "lucide-react";
 import { PlayerHead } from "@/components/ui/PlayerHead";
-import type { Leaderboard, LeaderboardIcon } from "@/lib/mock/leaderboards";
+import type { Leaderboard, LeaderboardIcon } from "@/lib/leaderboard-types";
 import { cn } from "@/lib/utils";
 
 const icons: Record<LeaderboardIcon, LucideIcon> = {
@@ -40,7 +41,17 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
   const [activeId, setActiveId] = useState(boards[0]?.id);
   const active = boards.find((b) => b.id === activeId) ?? boards[0];
 
-  if (!active) return null;
+  if (!active) {
+    return (
+      <div className="panel p-10 text-center">
+        <Trophy className="mx-auto size-10 text-brass-500/40" />
+        <p className="mt-3 font-display text-lg font-bold text-cream">Noch keine Zahlen</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">
+          Die Rangliste baut sich aus den Statistikdateien des Servers. Sobald dort Werte stehen, taucht sie hier auf.
+        </p>
+      </div>
+    );
+  }
 
   const ActiveIcon = icons[active.icon];
   const accent = tone === "fame" ? "brass" : "rose";
@@ -133,7 +144,9 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
               <dd className="text-cream">{active.entries.length} Spieler</dd>
             </div>
           </dl>
-          <p className="mt-5 text-[10px] tracking-wider text-cream/35 uppercase">Quelle: Mock-API · später Plan-Plugin</p>
+          <p className="mt-5 text-[10px] tracking-wider text-cream/35 uppercase">
+            Quelle: Statistikdateien des Servers
+          </p>
         </aside>
       </div>
     </div>
