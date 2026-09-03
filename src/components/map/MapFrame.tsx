@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ExternalLink, RefreshCw } from "lucide-react";
+import { ConsentGate } from "@/components/ui/ConsentGate";
 import { Gear } from "@/components/ui/Gear";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +14,13 @@ export function MapFrame({ src }: { src: string }) {
   function reload() {
     setLoaded(false);
     setReloadKey((k) => k + 1);
+  }
+
+  let host = src;
+  try {
+    host = new URL(src).host;
+  } catch {
+    // ungültige URL: dann eben die Rohangabe anzeigen
   }
 
   return (
@@ -32,22 +40,34 @@ export function MapFrame({ src }: { src: string }) {
       </div>
 
       <div className="relative h-[72vh] min-h-[440px] overflow-hidden rounded-lg border border-diamond-400/20 bg-diamond-950">
-        {!loaded && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-diamond-200">
-            <Gear className="size-14 text-diamond-400/70 animate-gear-spin [animation-duration:6s]" teeth={10} />
-            <p className="font-display text-sm tracking-wide">Karte wird geladen…</p>
-          </div>
-        )}
-        <iframe
-          key={reloadKey}
-          src={src}
-          title="VIP Craft 4 – Live-Karte (Squaremap)"
-          className={cn("size-full transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0")}
-          loading="lazy"
-          allowFullScreen
-          referrerPolicy="no-referrer"
-          onLoad={() => setLoaded(true)}
-        />
+        <ConsentGate
+          category="map"
+          provider={host}
+          description="Die Weltkarte wird als eingebettete Seite von diesem Anbieter geladen. Dabei wird deine IP-Adresse dorthin übertragen. Deine Entscheidung merken wir uns lokal in deinem Browser."
+          buttonLabel="Karte laden"
+          privacyUrl="/datenschutz"
+          privacyLabel="Mehr dazu in unserer Datenschutzerklärung"
+          className="size-full"
+        >
+          <>
+            {!loaded && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-diamond-200">
+                <Gear className="size-14 text-diamond-400/70 animate-gear-spin [animation-duration:6s]" teeth={10} />
+                <p className="font-display text-sm tracking-wide">Karte wird geladen…</p>
+              </div>
+            )}
+            <iframe
+              key={reloadKey}
+              src={src}
+              title="VIP Craft 4 – Live-Karte (Squaremap)"
+              className={cn("size-full transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0")}
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer"
+              onLoad={() => setLoaded(true)}
+            />
+          </>
+        </ConsentGate>
       </div>
     </div>
   );

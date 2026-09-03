@@ -4,7 +4,7 @@ import { Gear } from "@/components/ui/Gear";
 import { Panel } from "@/components/ui/Panel";
 
 const perks = [
-  { icon: ShieldCheck, text: "Whitelist-Status auf einen Blick" },
+  { icon: ShieldCheck, text: "Whitelist-Antrag wird beim Login angelegt" },
   { icon: Sparkles, text: "Deine persönlichen Ingame-Stats" },
   { icon: Vote, text: "Mods vorschlagen, Bugs melden, abstimmen" },
 ];
@@ -20,6 +20,7 @@ export function SignInPanel({ configured, error }: { configured: boolean; error?
         <h2 className="mt-3 text-3xl font-bold text-cream sm:text-4xl">Melde dich mit Discord an</h2>
         <p className="mx-auto mt-3 max-w-md text-cream/70">
           Wir nutzen deinen Discord-Account, weil du dort sowieso schon in der Community bist. Kein extra Passwort, keine E-Mail.
+          Dein Whitelist-Antrag wird beim ersten Login automatisch angelegt.
         </p>
 
         {error && (

@@ -6,8 +6,8 @@ import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
-import { siteConfig } from "@/lib/config";
 import { getAllTags, getSchematics } from "@/lib/mock/schematics";
+import { getSiteSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Schematics",
@@ -20,9 +20,10 @@ const howTo = [
   { icon: Wand2, title: "Ingame platzieren", text: "Leere Schematic & Quill nehmen, Datei auswählen, mit der Schematicannon oder per Hand bauen." },
 ];
 
-export default function SchematicsPage() {
+export default async function SchematicsPage() {
   const schematics = getSchematics();
   const tags = getAllTags();
+  const settings = await getSiteSettings();
 
   return (
     <>
@@ -32,7 +33,7 @@ export default function SchematicsPage() {
         title="Schematics"
         description="Blaupausen für Create-Maschinen aus der Community. Herunterladen, in den Schematics-Ordner legen und mit der Schematicannon nachbauen."
       >
-        <Button href={siteConfig.discordInvite} variant="diamond" size="sm" target="_blank" rel="noopener noreferrer">
+        <Button href={settings.discordInvite} variant="diamond" size="sm" target="_blank" rel="noopener noreferrer">
           <DiscordIcon className="size-4" /> Eigene Schematic einreichen
         </Button>
       </PageHeader>

@@ -6,18 +6,20 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { getEconomyOverview } from "@/lib/mock/economy";
-import { getLeaderboards } from "@/lib/mock/leaderboards";
+import { getEconomyData } from "@/lib/economy-source";
+import { getLeaderboardData } from "@/lib/leaderboard-source";
 
 export const metadata: Metadata = {
   title: "Leaderboards & Economy",
   description: "Hall of Fame, Hall of Shame und die Wirtschaft von VIP Craft 4.",
 };
 
-export default function LeaderboardsPage() {
-  const fame = getLeaderboards("fame");
-  const shame = getLeaderboards("shame");
-  const economy = getEconomyOverview();
+export default async function LeaderboardsPage() {
+  const [fame, shame, economy] = await Promise.all([
+    getLeaderboardData("fame"),
+    getLeaderboardData("shame"),
+    getEconomyData(),
+  ]);
 
   return (
     <>
@@ -46,9 +48,13 @@ export default function LeaderboardsPage() {
             eyebrow="Hall of Fame"
             icon={Trophy}
             title="Die Fleißigen"
-            description="Spielzeit, Rohstoffe, Bauwerke und Zug-Kilometer – die Top 10 jeder Kategorie."
+            description={
+              fame.source === "live"
+                ? "Live aus den Statistikdateien des Servers – die Top 10 jeder Kategorie."
+                : "Beispieldaten, solange der Server noch nicht angebunden ist."
+            }
           />
-          <LeaderboardTabs boards={fame} tone="fame" />
+          <LeaderboardTabs boards={fame.boards} tone="fame" source={fame.source} />
         </section>
 
         <section id="hall-of-shame" className="scroll-mt-24">
@@ -56,9 +62,13 @@ export default function LeaderboardsPage() {
             eyebrow="Hall of Shame"
             icon={Skull}
             title="Die Unvorsichtigen"
-            description="Wer zählt, verliert. Lava, Creeper und die eigene Maschine sind die häufigsten Todesursachen der Season."
+            description={
+              shame.source === "live"
+                ? "Wer zählt, verliert. Tode, Creeper und eingesteckter Schaden – direkt vom Server."
+                : "Beispieldaten, solange der Server noch nicht angebunden ist."
+            }
           />
-          <LeaderboardTabs boards={shame} tone="shame" />
+          <LeaderboardTabs boards={shame.boards} tone="shame" source={shame.source} />
         </section>
 
         <section id="economy" className="scroll-mt-24">
@@ -66,9 +76,15 @@ export default function LeaderboardsPage() {
             eyebrow="Wirtschaft"
             icon={Coins}
             title="Spurs, Shops & Sparfüchse"
-            description="Währung ist der Spur aus Create: Numismatics. Hier siehst du, wer am meisten gehortet hat und wo gerade gehandelt wird."
+            description={
+              economy.source === "live" && economy.shopsSource === "live"
+                ? "Währung ist der Spur aus Create: Numismatics. Reichste Spieler live von den Bankkonten des Servers, Shops von Spielern eingetragen."
+                : economy.source === "live"
+                  ? "Währung ist der Spur aus Create: Numismatics. Reichste Spieler live von den Bankkonten des Servers, Shops sind noch Beispieldaten."
+                  : "Währung ist der Spur aus Create: Numismatics. Hier siehst du, wer am meisten gehortet hat und wo gerade gehandelt wird."
+            }
           />
-          <EconomyOverview data={economy} />
+          <EconomyOverview data={economy.overview} source={economy.source} shopsSource={economy.shopsSource} />
         </section>
       </Container>
     </>

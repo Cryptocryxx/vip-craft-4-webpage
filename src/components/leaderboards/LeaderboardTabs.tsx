@@ -36,7 +36,15 @@ const rankStyle: Record<number, string> = {
   3: "text-copper-400",
 };
 
-export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone: "fame" | "shame" }) {
+export function LeaderboardTabs({
+  boards,
+  tone,
+  source = "mock",
+}: {
+  boards: Leaderboard[];
+  tone: "fame" | "shame";
+  source?: "live" | "mock";
+}) {
   const [activeId, setActiveId] = useState(boards[0]?.id);
   const active = boards.find((b) => b.id === activeId) ?? boards[0];
 
@@ -133,7 +141,9 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
               <dd className="text-cream">{active.entries.length} Spieler</dd>
             </div>
           </dl>
-          <p className="mt-5 text-[10px] tracking-wider text-cream/35 uppercase">Quelle: Mock-API · später Plan-Plugin</p>
+          <p className="mt-5 text-[10px] tracking-wider text-cream/35 uppercase">
+            Quelle: {source === "live" ? "Statistikdateien des Servers" : "Beispieldaten"}
+          </p>
         </aside>
       </div>
     </div>

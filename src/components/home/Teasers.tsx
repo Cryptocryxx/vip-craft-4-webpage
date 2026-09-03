@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, DraftingCompass, Radio } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, CalendarDays, DraftingCompass, Radio, Tv } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
 import { Panel } from "@/components/ui/Panel";
@@ -7,14 +8,14 @@ import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatDate, formatTime, relativeDays } from "@/lib/format";
 import { eventTypeLabels, getUpcomingEvents } from "@/lib/mock/events";
 import { getSchematics } from "@/lib/mock/schematics";
-import { getStreamers } from "@/lib/mock/streamers";
+import { getLiveStreamers } from "@/lib/streamers";
 
 /** Drei kleine Teaser: nächstes Event, neueste Schematic, Live-Streams. */
-export function Teasers() {
+export async function Teasers() {
   const now = new Date();
   const nextEvent = getUpcomingEvents(now)[0];
   const newestSchematic = getSchematics()[0];
-  const liveStreamers = getStreamers().filter((s) => s.live);
+  const liveStreamers = await getLiveStreamers();
 
   return (
     <section className="relative -mt-8 pb-4">
@@ -77,9 +78,27 @@ export function Teasers() {
               {liveStreamers.length > 0 && (
                 <div className="mt-2 flex items-center gap-2">
                   <div className="flex -space-x-1.5">
-                    {liveStreamers.slice(0, 4).map((s) => (
-                      <PlayerHead key={s.channel} name={s.minecraftName} size={22} className="ring-2 ring-wood-900" />
-                    ))}
+                    {liveStreamers.slice(0, 4).map((s) =>
+                      s.avatarUrl ? (
+                        <Image
+                          key={s.channel}
+                          src={s.avatarUrl}
+                          alt=""
+                          width={22}
+                          height={22}
+                          className="rounded-full ring-2 ring-wood-900"
+                        />
+                      ) : s.minecraftName ? (
+                        <PlayerHead key={s.channel} name={s.minecraftName} size={22} className="ring-2 ring-wood-900" />
+                      ) : (
+                        <span
+                          key={s.channel}
+                          className="flex size-[22px] items-center justify-center rounded-full bg-brass-500/25 text-brass-200 ring-2 ring-wood-900"
+                        >
+                          <Tv className="size-3" />
+                        </span>
+                      ),
+                    )}
                   </div>
                   <span className="text-sm text-cream/60">{liveStreamers.map((s) => s.displayName).join(", ")}</span>
                 </div>

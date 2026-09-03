@@ -1,6 +1,7 @@
 /**
  * Mock-Daten für die Wirtschaftsübersicht (Create: Numismatics als Währung).
- * TODO: Später an das Plan-Plugin bzw. die Numismatics-Bank-API anbinden.
+ * Fallback, solange Crafty nicht konfiguriert ist oder kubejs/data/numismatics.json fehlt –
+ * siehe @/lib/economy-source für die echten Daten.
  */
 
 export const currency = {
@@ -21,56 +22,54 @@ export type RichPlayer = {
   rank: number;
   player: string;
   balance: number;
-  change24h: number;
 };
 
 export type Shop = {
   id: string;
   name: string;
   owner: string;
-  location: { x: number; z: number; dimension: "overworld" | "nether" };
+  location: { x: number; z: number; dimension: "overworld" | "nether" | "end" };
   sells: string[];
   open: boolean;
-  sales7d: number;
 };
 
 export type EconomyOverview = {
   currency: typeof currency;
-  summary: { totalCirculation: number; transactions24h: number; activeShops: number };
+  summary: { totalCirculation: number; accountCount: number; activeShops: number };
   richest: RichPlayer[];
   shops: Shop[];
 };
 
-const richestRaw: Array<[player: string, balance: number, change24h: number]> = [
-  ["Jonas_MC", 184320, 4210],
-  ["Lorenz", 156900, -1280],
-  ["Mia_builds", 132455, 2890],
-  ["TechnoTim", 98770, 610],
-  ["Kaya", 87210, 3350],
-  ["RedstoneRolf", 64005, -420],
-  ["Felix_F", 51880, 1120],
-  ["Nadja", 44310, 0],
+const richestRaw: Array<[player: string, balance: number]> = [
+  ["Jonas_MC", 184320],
+  ["Lorenz", 156900],
+  ["Mia_builds", 132455],
+  ["TechnoTim", 98770],
+  ["Kaya", 87210],
+  ["RedstoneRolf", 64005],
+  ["Felix_F", 51880],
+  ["Nadja", 44310],
 ];
 
 const shops: Shop[] = [
-  { id: "bahnhofskiosk", name: "Bahnhofskiosk", owner: "Jonas_MC", location: { x: 128, z: -64, dimension: "overworld" }, sells: ["Zug-Tickets", "Kohle", "Kekse"], open: true, sales7d: 212 },
-  { id: "messing-und-mehr", name: "Messing & Mehr", owner: "TechnoTim", location: { x: -210, z: 340, dimension: "overworld" }, sells: ["Messingbarren", "Zahnräder", "Präzisionsmechanismen"], open: true, sales7d: 148 },
-  { id: "mias-baumarkt", name: "Mias Baumarkt", owner: "Mia_builds", location: { x: 45, z: 12, dimension: "overworld" }, sells: ["Kupferblöcke", "Fensterrahmen", "Schienen"], open: true, sales7d: 301 },
-  { id: "nether-express", name: "Nether-Express", owner: "Kaya", location: { x: 16, z: -8, dimension: "nether" }, sells: ["Blaze-Kuchen", "Quarz", "Netherite-Schrott"], open: false, sales7d: 37 },
-  { id: "rolfs-erzhandel", name: "Rolfs Erzhandel", owner: "RedstoneRolf", location: { x: -88, z: -410, dimension: "overworld" }, sells: ["Eisenerz", "Zinkerz", "Andesit"], open: true, sales7d: 96 },
-  { id: "elytra-werkstatt", name: "Elytra-Werkstatt", owner: "Lena", location: { x: 512, z: 220, dimension: "overworld" }, sells: ["Elytra-Reparatur", "Raketen", "Phantomhaut"], open: true, sales7d: 59 },
+  { id: "bahnhofskiosk", name: "Bahnhofskiosk", owner: "Jonas_MC", location: { x: 128, z: -64, dimension: "overworld" }, sells: ["Zug-Tickets", "Kohle", "Kekse"], open: true },
+  { id: "messing-und-mehr", name: "Messing & Mehr", owner: "TechnoTim", location: { x: -210, z: 340, dimension: "overworld" }, sells: ["Messingbarren", "Zahnräder", "Präzisionsmechanismen"], open: true },
+  { id: "mias-baumarkt", name: "Mias Baumarkt", owner: "Mia_builds", location: { x: 45, z: 12, dimension: "overworld" }, sells: ["Kupferblöcke", "Fensterrahmen", "Schienen"], open: true },
+  { id: "nether-express", name: "Nether-Express", owner: "Kaya", location: { x: 16, z: -8, dimension: "nether" }, sells: ["Blaze-Kuchen", "Quarz", "Netherite-Schrott"], open: false },
+  { id: "rolfs-erzhandel", name: "Rolfs Erzhandel", owner: "RedstoneRolf", location: { x: -88, z: -410, dimension: "overworld" }, sells: ["Eisenerz", "Zinkerz", "Andesit"], open: true },
+  { id: "elytra-werkstatt", name: "Elytra-Werkstatt", owner: "Lena", location: { x: 512, z: 220, dimension: "overworld" }, sells: ["Elytra-Reparatur", "Raketen", "Phantomhaut"], open: true },
 ];
 
 export function getEconomyOverview(): EconomyOverview {
   const richest = richestRaw
     .sort((a, b) => b[1] - a[1])
-    .map(([player, balance, change24h], index) => ({ rank: index + 1, player, balance, change24h }));
+    .map(([player, balance], index) => ({ rank: index + 1, player, balance }));
 
   return {
     currency,
     summary: {
       totalCirculation: 1284320,
-      transactions24h: 412,
+      accountCount: richest.length,
       activeShops: shops.filter((s) => s.open).length,
     },
     richest,

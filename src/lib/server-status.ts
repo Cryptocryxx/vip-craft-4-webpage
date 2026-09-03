@@ -1,6 +1,6 @@
 /**
  * Live-Server-Status über die öffentliche API von mcsrvstat.us (Platzhalter).
- * Später kann hier z.B. direkt der Server-Ping oder das Plan-Plugin angebunden werden.
+ * Später kann hier auch ein direkter Server-Ping erfolgen.
  */
 export type ServerStatus = {
   address: string;

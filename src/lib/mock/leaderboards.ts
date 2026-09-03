@@ -1,6 +1,7 @@
 /**
  * Mock-Daten für Hall of Fame / Hall of Shame.
- * TODO: Später durch Abfragen an das "Plan"-Plugin (Query API) ersetzen.
+ * TODO: Später aus den Vanilla-Statistikdateien (world/stats/<uuid>.json) aufbauen.
+ * Hinweis: Plan (Player Analytics) unterstützt NeoForge nicht.
  */
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
 

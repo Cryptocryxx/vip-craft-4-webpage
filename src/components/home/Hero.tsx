@@ -8,7 +8,7 @@ import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { Gear } from "@/components/ui/Gear";
 import { siteConfig } from "@/lib/config";
 
-export function Hero() {
+export function Hero({ serverIp, discordInvite }: { serverIp: string; discordInvite: string }) {
   return (
     <section className="relative overflow-hidden border-b border-brass-500/20">
       {/* Zahnrad-Kulisse */}
@@ -39,8 +39,8 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <JoinServerButton ip={siteConfig.serverIp} />
-            <Button href={siteConfig.discordInvite} variant="outline" size="lg" target="_blank" rel="noopener noreferrer">
+            <JoinServerButton ip={serverIp} />
+            <Button href={discordInvite} variant="outline" size="lg" target="_blank" rel="noopener noreferrer">
               <DiscordIcon className="size-5" />
               Discord beitreten
             </Button>
@@ -57,7 +57,7 @@ export function Hero() {
             </div>
             <div>
               <dt className="eyebrow text-[10px]">Zugang</dt>
-              <dd className="mt-1 font-semibold text-cream">Whitelist via Discord</dd>
+              <dd className="mt-1 font-semibold text-cream">Whitelist per Login</dd>
             </div>
           </dl>
         </div>

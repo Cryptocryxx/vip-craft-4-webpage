@@ -1,4 +1,4 @@
-import { Coins, MapPin, Minus, Store, TrendingDown, TrendingUp, ArrowLeftRight } from "lucide-react";
+import { Coins, MapPin, Store, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
@@ -6,30 +6,18 @@ import { formatNumber } from "@/lib/format";
 import type { EconomyOverview as EconomyOverviewData } from "@/lib/mock/economy";
 import { cn } from "@/lib/utils";
 
-function Trend({ value }: { value: number }) {
-  if (value === 0) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs text-cream/40">
-        <Minus className="size-3" /> ±0
-      </span>
-    );
-  }
-  const up = value > 0;
-  return (
-    <span className={cn("inline-flex items-center gap-1 text-xs", up ? "text-emerald-300" : "text-rose-300")}>
-      {up ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
-      {up ? "+" : ""}
-      {formatNumber(value)}
-    </span>
-  );
-}
+type Props = {
+  data: EconomyOverviewData;
+  source?: "live" | "mock";
+  shopsSource?: "live" | "mock";
+};
 
-export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
+export function EconomyOverview({ data, source = "mock", shopsSource = "mock" }: Props) {
   const { summary, richest, shops, currency } = data;
 
   const tiles = [
     { label: "Im Umlauf", value: `${formatNumber(summary.totalCirculation)} ${currency.plural}`, icon: Coins },
-    { label: "Transaktionen (24 h)", value: formatNumber(summary.transactions24h), icon: ArrowLeftRight },
+    { label: "Konten", value: formatNumber(summary.accountCount), icon: Wallet },
     { label: "Aktive Shops", value: String(summary.activeShops), icon: Store },
   ];
 
@@ -65,10 +53,7 @@ export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
                 <span className="w-5 font-display text-sm font-bold text-cream/50">{entry.rank}</span>
                 <PlayerHead name={entry.player} size={28} />
                 <span className="flex-1 truncate font-semibold text-cream">{entry.player}</span>
-                <span className="text-right">
-                  <span className="block font-mono text-sm text-cream">{formatNumber(entry.balance)}</span>
-                  <Trend value={entry.change24h} />
-                </span>
+                <span className="font-mono text-sm text-cream">{formatNumber(entry.balance)}</span>
               </li>
             ))}
           </ol>
@@ -81,6 +66,9 @@ export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
               </span>
             ))}
           </div>
+          <p className="border-t border-white/5 bg-black/15 px-5 py-2 text-[10px] tracking-wider text-cream/35 uppercase">
+            Quelle: {source === "live" ? "Bankkonten des Servers" : "Beispieldaten"}
+          </p>
         </Panel>
 
         {/* Shops */}
@@ -96,7 +84,6 @@ export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
                   <th>Shop</th>
                   <th>Angebot</th>
                   <th>Ort</th>
-                  <th className="text-right">7 Tage</th>
                 </tr>
               </thead>
               <tbody>
@@ -120,14 +107,17 @@ export function EconomyOverview({ data }: { data: EconomyOverviewData }) {
                         <MapPin className="size-3 text-brass-300" />
                         {shop.location.x} / {shop.location.z}
                         {shop.location.dimension === "nether" && <Badge tone="copper">Nether</Badge>}
+                        {shop.location.dimension === "end" && <Badge tone="diamond">End</Badge>}
                       </span>
                     </td>
-                    <td className="text-right font-mono text-cream/90">{formatNumber(shop.sales7d)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p className="border-t border-white/5 bg-black/15 px-5 py-2 text-[10px] tracking-wider text-cream/35 uppercase">
+            Quelle: {shopsSource === "live" ? "Von Spielern eingetragen" : "Beispieldaten"}
+          </p>
         </Panel>
       </div>
     </div>

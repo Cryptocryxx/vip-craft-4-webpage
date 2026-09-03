@@ -4,7 +4,7 @@ import { MapFrame } from "@/components/map/MapFrame";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
-import { siteConfig } from "@/lib/config";
+import { getSiteSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Live-Map",
@@ -29,7 +29,9 @@ const tips = [
   },
 ];
 
-export default function MapPage() {
+export default async function MapPage() {
+  const settings = await getSiteSettings();
+
   return (
     <>
       <PageHeader
@@ -39,7 +41,7 @@ export default function MapPage() {
         description="Basen, Bahnstrecken und wer gerade wo unterwegs ist – direkt aus der Welt gerendert und alle paar Minuten aktualisiert."
       />
       <Container className="py-8">
-        <MapFrame src={siteConfig.mapUrl} />
+        <MapFrame src={settings.mapUrl} />
 
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {tips.map((tip) => {

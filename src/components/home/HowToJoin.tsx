@@ -1,4 +1,4 @@
-import { Download, Rocket, Route } from "lucide-react";
+import { Download, Rocket, Route, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
@@ -7,25 +7,26 @@ import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { siteConfig } from "@/lib/config";
 
-const steps = [
-  {
-    title: "Discord beitreten & Whitelist beantragen",
-    description: "Schreib kurz, wer du bist und wie dein Minecraft-Name lautet. Wir schalten dich in der Regel am selben Tag frei.",
-    icon: DiscordIcon,
-  },
-  {
-    title: "Modpack installieren",
-    description: `Lade das „${siteConfig.modpackName}“ für Prism Launcher oder CurseForge herunter. Mindestens 6 GB RAM empfohlen.`,
-    icon: Download,
-  },
-  {
-    title: "Verbinden & loslegen",
-    description: `Server-IP ${siteConfig.serverIp} eintragen, Startkit am Spawn abholen und mit dem Nordexpress zur ersten Baustelle fahren.`,
-    icon: Rocket,
-  },
-];
+export function HowToJoin({ serverIp, discordInvite }: { serverIp: string; discordInvite: string }) {
+  const steps = [
+    {
+      title: "Mit Discord anmelden",
+      description:
+        "Ein Klick auf „Login“ – dabei wird automatisch dein Whitelist-Antrag angelegt. Gamertag eintragen, fertig.",
+      icon: ShieldCheck,
+    },
+    {
+      title: "Modpack installieren",
+      description: `Lade das „${siteConfig.modpackName}“ für Prism Launcher oder CurseForge herunter. Mindestens 6 GB RAM empfohlen.`,
+      icon: Download,
+    },
+    {
+      title: "Verbinden & loslegen",
+      description: `Sobald das Team dich freischaltet: Server-IP ${serverIp} eintragen, Startkit am Spawn abholen und losbauen.`,
+      icon: Rocket,
+    },
+  ];
 
-export function HowToJoin() {
   return (
     <section className="relative py-20">
       <Container>
@@ -58,8 +59,11 @@ export function HowToJoin() {
             })}
           </ol>
           <div className="mt-10 flex flex-wrap gap-3">
-            <Button href={siteConfig.discordInvite} variant="diamond" target="_blank" rel="noopener noreferrer">
-              <DiscordIcon className="size-4" /> Whitelist beantragen
+            <Button href="/dashboard" variant="diamond">
+              <ShieldCheck className="size-4" /> Whitelist beantragen
+            </Button>
+            <Button href={discordInvite} variant="outline" target="_blank" rel="noopener noreferrer">
+              <DiscordIcon className="size-4" /> Discord
             </Button>
             <Button href={siteConfig.modpackUrl} variant="outline" target="_blank" rel="noopener noreferrer">
               <Download className="size-4" /> Modpack

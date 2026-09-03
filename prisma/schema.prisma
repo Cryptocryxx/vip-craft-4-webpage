@@ -22,16 +22,20 @@ model User {
 
   // VIP Craft spezifisch
   minecraftName String?  @unique
+  twitchName    String?  @unique
   whitelisted   Boolean  @default(false)
   role          String   @default("PLAYER") // PLAYER | ADMIN
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  accounts    Account[]
-  sessions    Session[]
-  suggestions Suggestion[]
-  votes       Vote[]
+  accounts            Account[]
+  sessions            Session[]
+  suggestions         Suggestion[]
+  votes               Vote[]
+  applications        WhitelistApplication[] @relation("Applicant")
+  reviewedApplications WhitelistApplication[] @relation("Reviewer")
+  shops               Shop[]
 }
 
 model Account {
@@ -74,6 +78,29 @@ model VerificationToken {
 }
 
 // ---------------------------------------------------------------------------
+// Whitelist-Anträge – werden beim ersten Login automatisch angelegt
+// ---------------------------------------------------------------------------
+
+model WhitelistApplication {
+  id            String    @id @default(cuid())
+  userId        String
+  user          User      @relation("Applicant", fields: [userId], references: [id], onDelete: Cascade)
+  minecraftName String?
+  message       String?
+  status        String    @default("PENDING") // PENDING | APPROVED | REJECTED
+  reviewNote    String?
+  reviewedAt    DateTime?
+  reviewerId    String?
+  reviewer      User?     @relation("Reviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
 // Vorschlags-Board (Mod-Vorschläge, Bugs, Features) mit Upvotes
 // ---------------------------------------------------------------------------
 
@@ -100,4 +127,57 @@ model Vote {
   suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
 
   @@id([userId, suggestionId])
+}
+
+// ---------------------------------------------------------------------------
+// Shops – Spieler tragen ihren Laden selbst ein und er ist sofort öffentlich
+// sichtbar (Numismatics kennt keine globale Shop-Registry, siehe economy-source.ts).
+// Keine Freigabe nötig; Admins können Einträge jederzeit entfernen (Moderation).
+// ---------------------------------------------------------------------------
+
+model Shop {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  sells       String // Komma-getrennte Liste, siehe shop-types.ts
+  locationX   Int
+  locationZ   Int
+  dimension   String   @default("overworld") // overworld | nether | end
+  open        Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([ownerId])
+}
+
+// ---------------------------------------------------------------------------
+// Protokoll aller Konsolenbefehle, die die Website an den Server geschickt hat
+// ---------------------------------------------------------------------------
+
+model CommandLog {
+  id        String   @id @default(cuid())
+  command   String
+  reason    String // z. B. "Whitelist angenommen"
+  success   Boolean
+  error     String?
+  /** Discord-Name des auslösenden Admins (nicht als Relation, damit das Protokoll Löschungen überlebt). */
+  actorName String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Server-Einstellungen (im Admin-Panel bearbeitbar, überschreiben die .env-Defaults)
+// ---------------------------------------------------------------------------
+
+model Setting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }

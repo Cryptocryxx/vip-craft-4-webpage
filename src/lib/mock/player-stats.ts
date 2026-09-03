@@ -1,7 +1,7 @@
 /**
  * Mock-API für persönliche Ingame-Statistiken.
  * Werte werden deterministisch aus dem Spielernamen abgeleitet, damit sie zwischen Aufrufen stabil bleiben.
- * TODO: Später durch das Plan-Plugin (Player-Endpoint) ersetzen.
+ * TODO: Später aus der Vanilla-Statistikdatei des Spielers (world/stats/<uuid>.json) lesen.
  */
 import { hashString, mulberry32 } from "@/lib/utils";
 

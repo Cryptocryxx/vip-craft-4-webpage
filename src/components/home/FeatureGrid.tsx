@@ -35,8 +35,9 @@ const features: Feature[] = [
   },
   {
     icon: ShieldCheck,
-    title: "Whitelist & Uni-Community",
-    description: "Nur Leute aus der Uni-Community, keine Griefer. Login mit Discord, Whitelist-Status im Dashboard.",
+    title: "Whitelist direkt hier beantragen",
+    description:
+      "Mit Discord einloggen, Gamertag eintragen, fertig – der Antrag entsteht automatisch und das Team schaltet dich frei.",
     href: "/dashboard",
     accent: "brass",
   },
