@@ -283,12 +283,74 @@ pm2 status
 Nach jedem `git pull` gehoert `npm ci && npm run build && pm2 restart vipcraft`
 zusammen -- ein Restart allein serviert weiter den alten Build.
 
-### Reverse Proxy (Caddy)
+### Reverse Proxy (nginx)
 
-```
-vip4.example.de {
-    reverse_proxy localhost:3000
+Wichtig sind `Host` und `X-Forwarded-Proto`: Auth.js baut daraus die
+OAuth-Callback-URL, die Map-Seite ihren eigenen Origin fuer den
+`frame-ancestors`-Abgleich.
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-Host  $host;
+
+    proxy_buffering off;
 }
+```
+
+### Deploy-Webhook
+
+`deploy/webhook.mjs` nimmt GitHub-Push-Events entgegen und zieht das Projekt
+nach: `git merge --ff-only`, `npm ci`, `npm run db:push`, `npm run build`,
+`pm2 restart vipcraft`. Schlaegt ein Schritt fehl, bricht der Lauf ab und die
+bisherige Fassung laeuft unveraendert weiter.
+
+Der Dienst laeuft bewusst getrennt von der Website: nach einem kaputten Build
+waere die Seite unten -- und mit ihr das Werkzeug, mit dem man das repariert.
+Er hat keine Abhaengigkeiten und ueberlebt dadurch das `npm ci`, das er selbst
+ausloest.
+
+Einrichtung:
+
+```bash
+openssl rand -hex 32        # als DEPLOY_WEBHOOK_SECRET in die .env
+pm2 start ecosystem.config.cjs && pm2 save
+```
+
+nginx-Block dazu (im selben `server`-Block wie die Website):
+
+```nginx
+location = /_deploy {
+    proxy_pass http://127.0.0.1:9000/;
+    proxy_set_header Host       $host;
+    proxy_set_header X-Real-IP  $remote_addr;
+}
+```
+
+In GitHub unter *Settings → Webhooks → Add webhook*:
+
+| Feld | Wert |
+| --- | --- |
+| Payload URL | `https://<domain>/_deploy` |
+| Content type | `application/json` |
+| Secret | derselbe Wert wie `DEPLOY_WEBHOOK_SECRET` |
+| Events | nur `push` |
+
+Jede Anfrage ohne gueltige HMAC-Signatur (`X-Hub-Signature-256`) wird
+abgewiesen, verglichen wird zeitkonstant. Der Dienst lauscht nur auf
+127.0.0.1, von aussen erreichbar ist er allein ueber nginx.
+
+Aendert ein Deploy den Webhook selbst, laeuft weiter die alte Fassung, bis man
+ihn einmal von Hand neu startet: `pm2 restart deploy-webhook`.
+
+```bash
+pm2 logs deploy-webhook     # zeigt jeden Lauf mit allen Schritten
 ```
 
 ## Projektstruktur
