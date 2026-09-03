@@ -23,7 +23,7 @@ export async function Footer() {
       <Container className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.svg" alt="" width={32} height={32} unoptimized />
+            <Image src="/logo.png" alt="" width={32} height={32} />
             <span className="font-display text-lg font-bold">
               <span className="text-brass">VIP Craft</span> <span className="text-diamond">4</span>
             </span>

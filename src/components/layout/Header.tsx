@@ -16,12 +16,11 @@ export async function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="VIP Craft 4 – Startseite">
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             alt=""
             width={36}
             height={36}
             priority
-            unoptimized
             className="drop-shadow-[0_0_10px_rgba(217,168,63,0.35)]"
           />
           <span className="font-display text-lg font-bold tracking-wide">

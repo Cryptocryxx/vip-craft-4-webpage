@@ -65,12 +65,11 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string; discordInv
         <div className="relative mx-auto w-full max-w-md lg:max-w-none">
           <div className="absolute inset-8 -z-10 rounded-full bg-diamond-400/10 blur-3xl" />
           <Image
-            src="/logo.svg"
+            src="/logo.png"
             alt="VIP Craft 4 Logo"
-            width={520}
-            height={520}
+            width={1024}
+            height={1024}
             priority
-            unoptimized
             className="mx-auto w-full max-w-[400px] drop-shadow-[0_24px_50px_rgba(0,0,0,0.65)] lg:max-w-[470px]"
           />
         </div>
