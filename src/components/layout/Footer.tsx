@@ -26,7 +26,7 @@ export async function Footer() {
           <div className="flex items-center gap-2.5">
             <Image src="/logo.png" alt="" width={32} height={32} />
             <span className="font-display text-lg font-bold">
-              <span className="text-brass">VIP Craft</span> <span className="text-diamond">4</span>
+              <span className="text-diamond">VIP Craft</span> <span className="text-brass">4</span>
             </span>
           </div>
           <p className="mt-3 max-w-xs text-sm text-cream/60">{siteConfig.tagline}. Gebaut mit Zahnrädern, Messing und viel zu wenig Schlaf.</p>

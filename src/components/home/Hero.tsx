@@ -31,7 +31,7 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string | null; dis
           </div>
 
           <h1 className="mt-5 text-5xl leading-[0.95] font-bold sm:text-6xl lg:text-7xl">
-            <span className="text-brass">VIP Craft</span> <span className="text-diamond">4</span>
+            <span className="text-diamond">VIP Craft</span> <span className="text-brass">4</span>
           </h1>
 
           <p className="mt-5 max-w-xl text-lg text-cream/75 sm:text-xl">
