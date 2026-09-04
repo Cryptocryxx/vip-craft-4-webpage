@@ -16,6 +16,6 @@ export const siteConfig = {
   minRamGb: 6,
   modpackName: "VIP Craft 4",
   modpackUrl: "https://www.curseforge.com/minecraft/modpacks/vip-craft-4",
-  maxPlayers: 30,
+  maxPlayers: 67,
   season: "Season 4",
 } as const;

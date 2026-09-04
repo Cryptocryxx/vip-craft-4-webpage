@@ -1,4 +1,5 @@
 import { Clock, ShieldAlert, ShieldCheck, ShieldQuestion, type LucideIcon } from "lucide-react";
+import { DiscordLinkStep } from "@/components/dashboard/DiscordLinkStep";
 import { DiscordStep } from "@/components/dashboard/DiscordStep";
 import { WhitelistApplicationForm } from "@/components/dashboard/WhitelistApplicationForm";
 import { WhitelistSteps, type Schritt } from "@/components/dashboard/WhitelistSteps";
@@ -122,6 +123,21 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
   const gamertagDa = Boolean(application?.minecraftName ?? minecraftName);
 
   /**
+   * Kür: Minecraft-Account mit Discord verknüpfen.
+   *
+   * `erledigt` steht fest auf false – ob jemand verknüpft ist, weiß nur der
+   * MC-Linker-Bot, die Website hat darauf keinen Zugriff. Als optionaler Schritt
+   * blockiert er nichts und behauptet auch nicht, den Stand zu kennen.
+   */
+  const verknuepfungsSchritt: Schritt = {
+    titel: "Minecraft-Account mit Discord verknüpfen",
+    text: "Für die Freischaltung nicht nötig – schaltet aber Zusatzfunktionen rund um den Chat zwischen Spiel und Discord frei.",
+    erledigt: false,
+    optional: true,
+    aktion: <DiscordLinkStep invite={discordInvite} />,
+  };
+
+  /**
    * Was bis zur Freischaltung noch fehlt. Der Discord-Beitritt steht bewusst
    * als eigener Punkt drin – vorher ging er im Fliesstext unter, obwohl der
    * Antrag ohne ihn unvollstaendig ist.
@@ -152,6 +168,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       text: "Sobald alles darüber steht, schaut sich das Team deinen Antrag an – meist noch am selben Tag.",
       erledigt: whitelisted,
     },
+    verknuepfungsSchritt,
   ];
 
   return (
@@ -187,17 +204,20 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
 
       <div className="relative mt-5 space-y-4 text-sm text-cream/75">
         {whitelisted ? (
-          <p>
-            Du kannst dich jederzeit verbinden: <span className="font-mono text-cream">{serverIp}</span>
-            {minecraftName ? (
-              <>
-                {" "}
-                mit dem Account <span className="font-mono text-cream">{minecraftName}</span>.
-              </>
-            ) : (
-              "."
-            )}
-          </p>
+          <>
+            <p>
+              Du kannst dich jederzeit verbinden: <span className="font-mono text-cream">{serverIp}</span>
+              {minecraftName ? (
+                <>
+                  {" "}
+                  mit dem Account <span className="font-mono text-cream">{minecraftName}</span>.
+                </>
+              ) : (
+                "."
+              )}
+            </p>
+            <WhitelistSteps schritte={[verknuepfungsSchritt]} />
+          </>
         ) : application?.status === "PENDING" ? (
           <>
             <WhitelistSteps schritte={schritte} />
