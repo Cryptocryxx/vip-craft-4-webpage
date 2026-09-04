@@ -10,7 +10,7 @@ import { SuggestionBoard } from "@/components/dashboard/SuggestionBoard";
 import { WhitelistStatus } from "@/components/dashboard/WhitelistStatus";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { discordCheckEnabled } from "@/lib/discord";
+import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
 import { prisma } from "@/lib/prisma";
 import { getSiteSettings } from "@/lib/settings";
 import { listShopsForUser } from "@/lib/shops";
@@ -56,11 +56,15 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     );
   }
 
-  const [application, settings, suggestions, shops] = await Promise.all([
+  // Discord-Mitgliedschaft nebenbei nachziehen: Wer nach dem Login beitritt,
+  // sieht den Schritt beim naechsten Aufruf des Dashboards von selbst abgehakt,
+  // ohne auf „Erneut pruefen" zu druecken.
+  const [application, settings, suggestions, shops, discord] = await Promise.all([
     getApplicationForUser(user.id),
     getSiteSettings(),
     listSuggestions(user.id),
     listShopsForUser(user.id),
+    ensureMembershipFresh(user),
   ]);
 
   return (
@@ -91,9 +95,10 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               serverIp={settings.serverIp}
               application={application}
               whitelistOpen={settings.whitelistOpen}
-              discordJoined={user.discordJoined}
+              discordJoined={discord.joined}
               discordInvite={settings.discordInvite}
               discordCheckable={discordCheckEnabled}
+              discordNeuAnmelden={discord.neuAnmelden}
             />
           </div>
         </div>

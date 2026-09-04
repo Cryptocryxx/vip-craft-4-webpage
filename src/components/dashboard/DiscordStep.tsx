@@ -25,11 +25,14 @@ export function DiscordStep({
   invite,
   kompakt = false,
   pruefbar = true,
+  neuAnmelden = false,
 }: {
   joined: boolean;
   invite: string;
   kompakt?: boolean;
   pruefbar?: boolean;
+  /** Der gespeicherte Discord-Token kennt die nötige Erlaubnis noch nicht. */
+  neuAnmelden?: boolean;
 }) {
   const [feedback, setFeedback] = useState<ApplicationFormState>({});
   const [pending, startTransition] = useTransition();
@@ -52,6 +55,13 @@ export function DiscordStep({
           </button>
         )}
       </div>
+
+      {neuAnmelden && (
+        <p className="mt-3 text-sm text-cream/65">
+          Wir können das gerade nicht selbst nachsehen: Deine Anmeldung stammt von vor dieser Funktion. Melde dich
+          einmal ab und wieder mit Discord an – danach haken wir den Schritt von allein ab.
+        </p>
+      )}
 
       {feedback.error && <p className="mt-3 text-sm text-rose-200">{feedback.error}</p>}
       {feedback.success && (

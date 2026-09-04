@@ -4,7 +4,7 @@
  */
 export const siteConfig = {
   name: "VIP Craft 4",
-  tagline: "Der Create-Server der Uni-Community",
+  tagline: "Der Create-Server mit Fabriken, Zügen und Flugmaschinen",
   serverIp: process.env.NEXT_PUBLIC_SERVER_IP ?? "play.vipcraft.de",
   mapUrl: process.env.NEXT_PUBLIC_MAP_URL ?? "https://vip4.wehrmann.ing/",
   discordInvite: process.env.NEXT_PUBLIC_DISCORD_INVITE ?? "https://discord.gg/tyd7KyMXDz",

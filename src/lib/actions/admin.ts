@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
+import { pruefeGamertag } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
 import { saveSiteSettings } from "@/lib/settings";
 import type { SiteSettings } from "@/lib/settings-types";
@@ -115,7 +116,7 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
   }
 
   const userId = text(formData, "userId");
-  const minecraftName = text(formData, "minecraftName");
+  let minecraftName = text(formData, "minecraftName");
   const twitchName = text(formData, "twitchName").toLowerCase();
   const role = text(formData, "role");
   const whitelisted = formData.get("whitelisted") === "on";
@@ -130,6 +131,14 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
   }
   if (userId === admin.id && role !== "ADMIN") {
     return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
+  }
+
+  // Auch hier gegen Mojang pruefen: Ein Gamertag, den es nicht gibt, geht
+  // spaeter als Whitelist-Befehl an den Server und laeuft dort ins Leere.
+  if (minecraftName) {
+    const geprueft = await pruefeGamertag(minecraftName);
+    if (!geprueft.ok) return { error: geprueft.error };
+    minecraftName = geprueft.name;
   }
 
   const before = await prisma.user.findUnique({

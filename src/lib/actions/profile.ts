@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { pruefeGamertag } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
 
 export type ProfileFormState = { error?: string; success?: string };
@@ -21,10 +22,16 @@ export async function linkMinecraftNameAction(
   const session = await auth();
   if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
 
-  const name = String(formData.get("minecraftName") ?? "").trim();
-  if (!GAMERTAG_RE.test(name)) {
+  const eingabe = String(formData.get("minecraftName") ?? "").trim();
+  if (!GAMERTAG_RE.test(eingabe)) {
     return { error: "Ein Minecraft-Name hat 3–16 Zeichen (Buchstaben, Zahlen, Unterstrich)." };
   }
+
+  // Gibt es den Namen ueberhaupt? Sonst landet ein Tippfehler in der Whitelist
+  // und der Betreffende kommt nicht auf den Server, ohne dass jemand merkt warum.
+  const geprueft = await pruefeGamertag(eingabe);
+  if (!geprueft.ok) return { error: geprueft.error };
+  const name = geprueft.name;
 
   try {
     await prisma.user.update({ where: { id: session.user.id }, data: { minecraftName: name } });

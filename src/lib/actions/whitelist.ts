@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { refreshMembership } from "@/lib/discord";
+import { pruefeGamertag } from "@/lib/mojang";
 import { getSiteSettings } from "@/lib/settings";
 import { upsertApplication, validateApplicationInput } from "@/lib/whitelist";
 
@@ -16,17 +17,22 @@ export async function recheckDiscordAction(): Promise<ApplicationFormState> {
   const session = await auth();
   if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
 
-  const joined = await refreshMembership(session.user.id);
+  const pruefung = await refreshMembership(session.user.id);
   revalidatePath("/dashboard");
 
-  if (joined === true) return { success: "Passt – du bist im Discord." };
-  if (joined === false) {
-    return { error: "Wir sehen dich noch nicht im Discord. Tritt bei und prüf es dann noch einmal." };
+  switch (pruefung.status) {
+    case "mitglied":
+      return { success: "Passt – du bist im Discord." };
+    case "nicht-mitglied":
+      return { error: "Wir sehen dich noch nicht im Discord. Tritt bei und prüf es dann noch einmal." };
+    case "neu-anmelden":
+      return {
+        error:
+          "Dafür fehlt uns deine Erlaubnis: Melde dich einmal ab und wieder mit Discord an, dann prüfen wir es von selbst.",
+      };
+    default:
+      return { error: "Das ließ sich gerade nicht klären. Bitte versuch es in ein paar Minuten noch einmal." };
   }
-  // null: Discord antwortet nicht oder das gespeicherte Token ist zu alt.
-  return {
-    error: "Das ließ sich gerade nicht klären. Melde dich einmal ab und wieder an, dann prüfen wir es beim Login.",
-  };
 }
 
 function isUniqueViolation(err: unknown): boolean {
@@ -52,8 +58,14 @@ export async function submitApplicationAction(
   });
   if (!parsed.ok) return { error: parsed.error };
 
+  // Erst hier gegen Mojang pruefen: Ein Tippfehler im Namen faellt sonst erst
+  // auf, wenn die Whitelist gesetzt ist und der Beitritt trotzdem scheitert.
+  // pruefeGamertag liefert ausserdem die offizielle Schreibweise zurueck.
+  const geprueft = await pruefeGamertag(parsed.data.minecraftName);
+  if (!geprueft.ok) return { error: geprueft.error };
+
   try {
-    await upsertApplication(session.user.id, parsed.data);
+    await upsertApplication(session.user.id, { ...parsed.data, minecraftName: geprueft.name });
   } catch (err) {
     if (isUniqueViolation(err)) {
       return { error: "Dieser Gamertag ist bereits mit einem anderen Discord-Account verknüpft." };

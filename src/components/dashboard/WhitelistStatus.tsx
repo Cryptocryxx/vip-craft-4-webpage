@@ -24,6 +24,12 @@ type WhitelistStatusProps = {
    * Liste – nur abhaken kann ihn dann niemand automatisch.
    */
   discordCheckable: boolean;
+  /**
+   * Die Mitgliedschaft ließe sich abfragen, aber der gespeicherte Token stammt
+   * aus einer Anmeldung ohne die nötige Erlaubnis. Dann hilft nur ein neuer
+   * Login – und darauf muss der Schritt hinweisen.
+   */
+  discordNeuAnmelden: boolean;
 };
 
 type View = {
@@ -129,6 +135,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
     discordJoined,
     discordInvite,
     discordCheckable,
+    discordNeuAnmelden,
   } = props;
   const view = buildView(props);
   const Icon = view.icon;
@@ -181,7 +188,13 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       erledigt: discordCheckable && discordJoined,
       aktion:
         discordCheckable && discordJoined ? undefined : (
-          <DiscordStep joined={false} invite={discordInvite} kompakt pruefbar={discordCheckable} />
+          <DiscordStep
+            joined={false}
+            invite={discordInvite}
+            kompakt
+            pruefbar={discordCheckable}
+            neuAnmelden={discordNeuAnmelden}
+          />
         ),
     },
     {

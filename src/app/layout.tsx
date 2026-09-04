@@ -28,8 +28,16 @@ export const metadata: Metadata = {
     default: siteConfig.name,
     template: `%s | ${siteConfig.name}`,
   },
-  description: `${siteConfig.name} – ${siteConfig.tagline}. Create-Mod, Zugstrecken, Events und eine Community aus der Uni.`,
-  keywords: ["Minecraft", "Create Mod", "Server", "VIP Craft", "Uni", "Community"],
+  description: `${siteConfig.name} – ${siteConfig.tagline}. Minecraft ${siteConfig.minecraftVersion} mit ${siteConfig.createVersion} und Create Aeronautics, dazu ein gemeinsames Zugnetz, Spieler-Shops und Zugang per Whitelist.`,
+  keywords: [
+    "Minecraft",
+    "Create Mod",
+    "Create Aeronautics",
+    "NeoForge",
+    "Minecraft Server",
+    "Whitelist",
+    "VIP Craft",
+  ],
 };
 
 /**
