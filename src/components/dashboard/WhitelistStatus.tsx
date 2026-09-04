@@ -18,8 +18,12 @@ type WhitelistStatusProps = {
   /** Ist der Account im Discord-Server? (siehe lib/discord.ts) */
   discordJoined: boolean;
   discordInvite: string;
-  /** Ohne DISCORD_GUILD_ID wird nicht geprüft – dann taucht der Schritt gar nicht auf. */
-  discordRequired: boolean;
+  /**
+   * Lässt sich die Mitgliedschaft automatisch abfragen? Ohne DISCORD_GUILD_ID
+   * nicht. Der Beitritt bleibt trotzdem Pflicht und steht weiterhin in der
+   * Liste – nur abhaken kann ihn dann niemand automatisch.
+   */
+  discordCheckable: boolean;
 };
 
 type View = {
@@ -55,8 +59,10 @@ const valueClasses: Record<View["tone"], string> = {
 };
 
 function buildView(props: WhitelistStatusProps): View {
-  const { whitelisted, application, whitelistOpen, discordJoined, discordRequired } = props;
-  const discordFehlt = discordRequired && !discordJoined;
+  const { whitelisted, application, whitelistOpen, discordJoined, discordCheckable } = props;
+  // Nur wenn wir es wirklich wissen, darf der Antrag „unvollstaendig" heissen.
+  // Ohne Pruefmoeglichkeit koennte die Person laengst im Discord sein.
+  const discordFehlt = discordCheckable && !discordJoined;
 
   if (whitelisted) {
     return {
@@ -114,8 +120,16 @@ function buildView(props: WhitelistStatusProps): View {
 
 /** Whitelist-Karte im Dashboard: Status, Antragsdetails und Antragsformular. */
 export function WhitelistStatus(props: WhitelistStatusProps) {
-  const { whitelisted, minecraftName, serverIp, application, whitelistOpen, discordJoined, discordInvite, discordRequired } =
-    props;
+  const {
+    whitelisted,
+    minecraftName,
+    serverIp,
+    application,
+    whitelistOpen,
+    discordJoined,
+    discordInvite,
+    discordCheckable,
+  } = props;
   const view = buildView(props);
   const Icon = view.icon;
 
@@ -141,6 +155,12 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
    * Was bis zur Freischaltung noch fehlt. Der Discord-Beitritt steht bewusst
    * als eigener Punkt drin – vorher ging er im Fliesstext unter, obwohl der
    * Antrag ohne ihn unvollstaendig ist.
+   *
+   * Er steht auch dann in der Liste, wenn die Website die Mitgliedschaft nicht
+   * abfragen kann: Ob wir nachsehen koennen, aendert nichts daran, dass der
+   * Beitritt Pflicht ist. Frueher hing der ganze Punkt an DISCORD_GUILD_ID –
+   * fehlte die Variable auf dem Server, fiel die Anforderung stillschweigend
+   * unter den Tisch.
    */
   const schritte: Schritt[] = [
     {
@@ -153,16 +173,17 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       text: "Ohne Gamertag kann das Team dich nicht freischalten. Trag ihn unten ein.",
       erledigt: gamertagDa,
     },
-    ...(discordRequired
-      ? [
-          {
-            titel: "Unserem Discord beitreten",
-            text: "Pflicht: Ohne Discord ist dein Antrag unvollständig. Dort läuft die Absprache, und dort bekommst du Bescheid.",
-            erledigt: discordJoined,
-            aktion: discordJoined ? undefined : <DiscordStep joined={false} invite={discordInvite} kompakt />,
-          } satisfies Schritt,
-        ]
-      : []),
+    {
+      titel: "Unserem Discord beitreten",
+      text: discordCheckable
+        ? "Pflicht: Ohne Discord ist dein Antrag unvollständig. Dort läuft die Absprache, und dort bekommst du Bescheid."
+        : "Pflicht: Ohne Discord ist dein Antrag unvollständig. Das Team sieht vor der Freigabe nach, ob du drin bist.",
+      erledigt: discordCheckable && discordJoined,
+      aktion:
+        discordCheckable && discordJoined ? undefined : (
+          <DiscordStep joined={false} invite={discordInvite} kompakt pruefbar={discordCheckable} />
+        ),
+    },
     {
       titel: "Freigabe abwarten",
       text: "Sobald alles darüber steht, schaut sich das Team deinen Antrag an – meist noch am selben Tag.",

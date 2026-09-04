@@ -21,24 +21,41 @@ const SPEICHER_SCHLUESSEL = "vipcraft:intro-gesehen";
 const AUSBLENDEN_SEKUNDEN = 1;
 
 /**
- * Die Entscheidung wird genau einmal pro Seitenaufruf aus dem DOM gelesen und
- * dann festgehalten. useSyncExternalStore verlangt einen stabilen Wert – und
- * das Attribut selbst raeumen wir spaeter weg.
+ * Ob das Intro laufen soll, ist ein Zustand ausserhalb von React: Er steht im
+ * DOM, gesetzt vom Skript im <head>. Deshalb ein kleiner eigener Speicher mit
+ * Zuhoerern statt React-State.
+ *
+ * Wichtig ist der Modulzustand: Beim Wechsel auf eine andere Seite und zurueck
+ * haengt Next.js die Komponente neu ein. Laege das "schon gelaufen" nur im
+ * State der Komponente, waere es dann wieder weg – und das Intro liefe erneut.
+ * Genau das war der Fehler.
  */
-let entscheidung: boolean | null = null;
+let sollLaufen: boolean | null = null;
+const zuhoerer = new Set<() => void>();
 
-function abonnieren() {
-  // Nach dem ersten Bildaufbau aendert sich daran nichts mehr.
-  return () => {};
+function abonnieren(melden: () => void) {
+  zuhoerer.add(melden);
+  return () => {
+    zuhoerer.delete(melden);
+  };
 }
 
 function imBrowser() {
-  entscheidung ??= document.documentElement.dataset.intro === "pending";
-  return entscheidung;
+  sollLaufen ??= document.documentElement.dataset.intro === "pending";
+  return sollLaufen;
 }
 
 function aufDemServer() {
   return false;
+}
+
+/** Beendet das Intro fuer diesen Seitenaufruf – endgueltig, auch ueber Remounts hinweg. */
+function beendeIntro() {
+  if (sollLaufen === false) return;
+  sollLaufen = false;
+  merken();
+  delete document.documentElement.dataset.intro;
+  for (const melden of zuhoerer) melden();
 }
 
 /**
@@ -55,8 +72,7 @@ function merken() {
 }
 
 export function IntroVideo({ src }: { src: string }) {
-  const sollLaufen = useSyncExternalStore(abonnieren, imBrowser, aufDemServer);
-  const [beendet, setBeendet] = useState(false);
+  const aktiv = useSyncExternalStore(abonnieren, imBrowser, aufDemServer);
   const [blendetAus, setBlendetAus] = useState(false);
   const [stumm, setStumm] = useState(true);
 
@@ -64,13 +80,8 @@ export function IntroVideo({ src }: { src: string }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const ausblendenLaeuft = useRef(false);
 
-  const aktiv = sollLaufen && !beendet;
-
-  const beenden = useCallback(() => {
-    merken();
-    delete document.documentElement.dataset.intro;
-    setBeendet(true);
-  }, []);
+  // Modulfunktion, also von sich aus stabil – kein useCallback noetig.
+  const beenden = beendeIntro;
 
   /**
    * Ausblenden ueber die Web Animations API statt ueber eine CSS-Transition.
@@ -102,7 +113,7 @@ export function IntroVideo({ src }: { src: string }) {
     // In einem Hintergrund-Tab laufen Animationen nicht, dann loest `finished`
     // nicht aus – ohne die Frist bliebe die schwarze Flaeche stehen, bis jemand
     // den Tab wieder nach vorn holt. Beide Wege enden in `beenden`, das durch
-    // setBeendet ohnehin nur einmal wirkt.
+    // die Pruefung in beendeIntro ohnehin nur einmal wirkt.
     blende.finished.then(beenden, beenden);
     window.setTimeout(beenden, AUSBLENDEN_SEKUNDEN * 1000 + 500);
   }, [beenden]);

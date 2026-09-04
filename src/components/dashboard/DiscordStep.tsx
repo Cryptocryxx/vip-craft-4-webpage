@@ -14,8 +14,23 @@ import { recheckDiscordAction, type ApplicationFormState } from "@/lib/actions/w
 /**
  * `kompakt` laesst Ueberschrift und Erklaerung weg – die stehen dann schon im
  * Schritt darueber (siehe WhitelistSteps), sonst steht alles doppelt da.
+ *
+ * `pruefbar=false` heisst: Ohne DISCORD_GUILD_ID kann die Website die
+ * Mitgliedschaft nicht abfragen. Dann faellt „Erneut pruefen" weg – der Knopf
+ * koennte nur melden, dass sich nichts klaeren laesst. Der Einladungslink
+ * bleibt, denn der Beitritt ist trotzdem Pflicht.
  */
-export function DiscordStep({ joined, invite, kompakt = false }: { joined: boolean; invite: string; kompakt?: boolean }) {
+export function DiscordStep({
+  joined,
+  invite,
+  kompakt = false,
+  pruefbar = true,
+}: {
+  joined: boolean;
+  invite: string;
+  kompakt?: boolean;
+  pruefbar?: boolean;
+}) {
   const [feedback, setFeedback] = useState<ApplicationFormState>({});
   const [pending, startTransition] = useTransition();
 
@@ -25,15 +40,17 @@ export function DiscordStep({ joined, invite, kompakt = false }: { joined: boole
         <a href={invite} target="_blank" rel="noopener noreferrer" className="btn btn-brass btn-sm">
           <DiscordIcon className="size-4" /> Discord beitreten
         </a>
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => startTransition(async () => setFeedback(await recheckDiscordAction()))}
-          className="btn btn-ghost btn-sm disabled:opacity-50"
-        >
-          {pending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-          Erneut prüfen
-        </button>
+        {pruefbar && (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => startTransition(async () => setFeedback(await recheckDiscordAction()))}
+            className="btn btn-ghost btn-sm disabled:opacity-50"
+          >
+            {pending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+            Erneut prüfen
+          </button>
+        )}
       </div>
 
       {feedback.error && <p className="mt-3 text-sm text-rose-200">{feedback.error}</p>}

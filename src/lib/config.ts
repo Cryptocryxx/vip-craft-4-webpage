@@ -7,7 +7,7 @@ export const siteConfig = {
   tagline: "Der Create-Server der Uni-Community",
   serverIp: process.env.NEXT_PUBLIC_SERVER_IP ?? "play.vipcraft.de",
   mapUrl: process.env.NEXT_PUBLIC_MAP_URL ?? "https://vip4.wehrmann.ing/",
-  discordInvite: process.env.NEXT_PUBLIC_DISCORD_INVITE ?? "https://discord.gg/vipcraft",
+  discordInvite: process.env.NEXT_PUBLIC_DISCORD_INVITE ?? "https://discord.gg/tyd7KyMXDz",
   minecraftVersion: "1.21.1",
   createVersion: "Create 6",
   /** Mod-Loader des Servers – abgeglichen mit dem, was Crafty als Startdatei meldet. */

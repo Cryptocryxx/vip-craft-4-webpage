@@ -44,8 +44,8 @@ export function WhitelistSteps({ schritte }: { schritte: Schritt[] }) {
                   : schritt.optional
                     ? "border-diamond-400/50 bg-diamond-500/15 text-diamond-200"
                     : istNaechster
-                    ? "border-brass-300 bg-brass-500/25 text-brass-100"
-                        : "border-white/15 bg-white/5 text-cream/40",
+                      ? "border-brass-300 bg-brass-500/25 text-brass-100"
+                      : "border-white/15 bg-white/5 text-cream/40",
               )}
             >
               {schritt.erledigt ? (

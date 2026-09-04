@@ -93,7 +93,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               whitelistOpen={settings.whitelistOpen}
               discordJoined={user.discordJoined}
               discordInvite={settings.discordInvite}
-              discordRequired={discordCheckEnabled}
+              discordCheckable={discordCheckEnabled}
             />
           </div>
         </div>

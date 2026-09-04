@@ -10,6 +10,20 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
   const [state, formAction, pending] = useActionState(linkMinecraftNameAction, initialState);
   const [editing, setEditing] = useState(currentName === null);
 
+  /**
+   * Nach erfolgreichem Speichern zurueck in die kompakte Ansicht, wo die
+   * Erfolgsmeldung steht. Ohne das blieb das Formular offen und der Erfolg
+   * wurde nirgends angezeigt – es sah aus, als waere nichts passiert.
+   *
+   * Verglichen wird die Objekt-Identitaet: useActionState liefert bei jedem
+   * Durchlauf ein neues Objekt, auch wenn der Text derselbe ist.
+   */
+  const [vorherigerZustand, setVorherigerZustand] = useState(state);
+  if (state !== vorherigerZustand) {
+    setVorherigerZustand(state);
+    if (state.success && editing) setEditing(false);
+  }
+
   if (currentName && !editing) {
     return (
       <div className="flex flex-wrap items-center gap-2">
@@ -60,6 +74,11 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
         )}
       </div>
       {state.error && <p className="text-xs text-rose-300">{state.error}</p>}
+      {state.success && (
+        <p className="inline-flex items-center gap-1 text-xs text-emerald-300">
+          <Check className="size-3.5" /> {state.success}
+        </p>
+      )}
       <p className="text-xs text-cream/45">
         Der Gamertag wird für Whitelist und Statistiken genutzt. Groß-/Kleinschreibung wie im Spiel.
       </p>
