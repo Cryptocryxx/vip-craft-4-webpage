@@ -19,9 +19,14 @@ export type ServerPlayerStats = {
   damageTaken: number;
 };
 
+/**
+ * `stats` ist auch bei `linked: true` null – naemlich dann, wenn der Server noch
+ * keine Statistikdatei fuer den Gamertag hat (frisch verknuepft, noch nie online).
+ * Erfundene Beispielwerte gibt es dafuer bewusst nicht mehr.
+ */
 type StatsResponse =
   | { linked: false; stats: null }
-  | { linked: true; source: string; stats: ServerPlayerStats }
+  | { linked: true; source: string; stats: ServerPlayerStats | null }
   | { error: string };
 
 type Tile = { icon: LucideIcon; label: string; value: string; hint?: string };
@@ -94,6 +99,11 @@ export function PersonalStats() {
           <div className="rounded-lg border border-dashed border-brass-500/40 bg-black/20 p-6 text-center text-sm text-cream/65">
             Verknüpfe zuerst deinen Minecraft-Gamertag im Profil, dann erscheinen hier deine Ingame-Statistiken.
           </div>
+        ) : data.stats === null ? (
+          <div className="rounded-lg border border-dashed border-brass-500/40 bg-black/20 p-6 text-center text-sm text-cream/65">
+            Für dich liegen auf dem Server noch keine Statistiken. Sobald du das erste Mal online warst, stehen sie
+            hier – geschrieben werden sie, wenn du dich ausloggst oder der Server speichert.
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -112,9 +122,8 @@ export function PersonalStats() {
               })}
             </div>
             <p className="mt-4 text-xs text-cream/45">
-              {data.source === "server"
-                ? "Quelle: Statistikdateien des Servers. Sie werden geschrieben, wenn du dich ausloggst oder der Server speichert."
-                : "Quelle: Beispieldaten – der Server ist noch nicht angebunden oder du warst dort noch nie online."}
+              Quelle: Statistikdateien des Servers. Sie werden geschrieben, wenn du dich ausloggst oder der Server
+              speichert.
             </p>
           </>
         )}
