@@ -12,6 +12,52 @@ export const authConfigured = Boolean(process.env.AUTH_DISCORD_ID && process.env
 // generierte Client ist zur Laufzeit strukturell identisch.
 type AdapterClient = Parameters<typeof PrismaAdapter>[0];
 
+/**
+ * Schreibt Token und erteilte Rechte bei jeder Anmeldung in die Datenbank.
+ *
+ * Auth.js legt die Account-Zeile nur beim allerersten Verknüpfen an und rührt
+ * sie danach nicht mehr an. Wer sich also erneut anmeldet – etwa weil die App
+ * inzwischen einen weiteren Scope anfragt – hat zwar ein frisches Token mit
+ * neuen Rechten, in der Datenbank steht aber weiter das alte. Jede spätere
+ * Abfrage (siehe lib/discord.ts) lief damit ins Leere, obwohl die Anmeldung
+ * selbst funktioniert hat. Deshalb hier von Hand nachziehen.
+ */
+async function aktualisiereKonto(account: {
+  provider: string;
+  providerAccountId: string;
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+  scope?: string;
+  token_type?: string;
+}): Promise<void> {
+  if (!account.access_token) return;
+
+  try {
+    await prisma.account.update({
+      where: {
+        provider_providerAccountId: {
+          provider: account.provider,
+          providerAccountId: account.providerAccountId,
+        },
+      },
+      data: {
+        access_token: account.access_token,
+        // Nur überschreiben, wenn Discord etwas mitschickt – sonst stünde da
+        // hinterher nichts mehr, und die Erneuerung wäre unmöglich.
+        ...(account.refresh_token ? { refresh_token: account.refresh_token } : {}),
+        ...(account.expires_at ? { expires_at: account.expires_at } : {}),
+        ...(account.scope ? { scope: account.scope } : {}),
+        ...(account.token_type ? { token_type: account.token_type } : {}),
+      },
+    });
+  } catch (error) {
+    // Beim allerersten Login legt der Adapter die Zeile selbst an – dass sie
+    // hier noch fehlt, ist also kein Fehler.
+    console.error("[auth] Konto konnte nicht aktualisiert werden:", error);
+  }
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma as unknown as AdapterClient),
   // Ohne konfigurierte Discord-App bleibt die Provider-Liste leer, damit die Seite
@@ -49,6 +95,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
      */
     async signIn({ user, account }) {
       if (!user?.id) return;
+
+      if (account?.provider === "discord") await aktualisiereKonto(account);
 
       if (discordCheckEnabled && account?.provider === "discord" && account.access_token) {
         try {

@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { requireAdmin } from "@/lib/admin";
+import { discordCheckEnabled } from "@/lib/discord";
 import { formatDate, timeAgo } from "@/lib/format";
 import { listPlayers, recentAudits } from "@/lib/players";
 import { prisma } from "@/lib/prisma";
@@ -32,6 +33,8 @@ export default async function AdminUsersPage() {
       whitelisted: true,
       role: true,
       createdAt: true,
+      discordJoined: true,
+      discordCheckedAt: true,
       _count: { select: { suggestions: true, applications: true } },
     },
   });
@@ -48,6 +51,8 @@ export default async function AdminUsersPage() {
     createdAt: user.createdAt.toISOString(),
     suggestionCount: user._count.suggestions,
     applicationCount: user._count.applications,
+    discordJoined: user.discordJoined,
+    discordCheckedAt: user.discordCheckedAt?.toISOString() ?? null,
   }));
 
   return (
@@ -63,11 +68,20 @@ export default async function AdminUsersPage() {
         {rows.length === 0 ? (
           <p className="p-10 text-center text-sm text-cream/60">Noch niemand registriert.</p>
         ) : (
-          rows.map((user) => <UserRow key={user.id} user={user} isSelf={user.id === admin.id} />)
+          rows.map((user) => (
+            <UserRow
+              key={user.id}
+              user={user}
+              isSelf={user.id === admin.id}
+              discordCheckable={discordCheckEnabled}
+            />
+          ))
         )}
       </Panel>
-      <p className="mt-3 text-xs text-cream/45">
-        Deine eigene Rolle lässt sich nicht ändern und dein Account nicht löschen, damit der Kontrollraum erreichbar bleibt.
+      <p className="mt-3 text-xs leading-relaxed text-cream/45">
+        Deine eigene Rolle lässt sich nicht ändern und dein Account nicht löschen, damit der Kontrollraum erreichbar
+        bleibt. Der Discord-Stand kommt aus der Mitgliedschaftsabfrage und wird beim Aufruf des Dashboards
+        aktualisiert – &bdquo;ungeprüft&ldquo; heißt, dass es dazu noch keine Antwort gab.
       </p>
 
       <section className="mt-12">

@@ -15,9 +15,6 @@ import { prisma } from "@/lib/prisma";
 
 const API = "https://discord.com/api/v10";
 
-/** Ohne diese Erlaubnis lässt sich die Mitgliedschaft nicht abfragen (siehe auth.ts). */
-const NOETIGER_SCOPE = "guilds.members.read";
-
 export const discordGuildId = process.env.DISCORD_GUILD_ID ?? "";
 
 /** Nur wenn Server-ID und OAuth-App konfiguriert sind, wird überhaupt geprüft. */
@@ -35,9 +32,11 @@ export type MembershipResult = boolean | null;
 
 /**
  * Ergebnis einer Nachprüfung. `neu-anmelden` ist der Sonderfall, der sich sonst
- * als ewiges „unklar" tarnt: Der gespeicherte Token stammt aus einer Anmeldung,
- * bei der es den nötigen Scope noch nicht gab. Da hilft nur ein neuer Login –
- * und das muss man den Leuten auch sagen können.
+ * als ewiges „unklar" tarnt: Der gespeicherte Token deckt die Frage nicht ab –
+ * etwa weil er aus einer Anmeldung stammt, bei der es den nötigen Scope noch
+ * nicht gab. Erneuern hilft dann nicht, denn eine Erneuerung behält die
+ * ursprünglich erteilten Rechte. Nur ein neuer Login hilft, und das muss man
+ * den Leuten auch sagen können.
  */
 export type Mitgliedspruefung =
   | { status: "mitglied" }
@@ -45,10 +44,13 @@ export type Mitgliedspruefung =
   | { status: "neu-anmelden" }
   | { status: "unklar" };
 
-/** Fragt Discord direkt mit einem gültigen Access-Token. */
-export async function checkGuildMembership(accessToken: string): Promise<MembershipResult> {
-  if (!discordCheckEnabled) return null;
-
+/**
+ * Fragt Discord und übersetzt den HTTP-Status.
+ *
+ * 200 = Mitglied, 404 = nicht im Server, 401 = das Token darf die Frage nicht
+ * stellen. Alles andere (429, 5xx) ist eine Störung und keine Aussage.
+ */
+async function frageDiscord(accessToken: string): Promise<Mitgliedspruefung["status"]> {
   let response: Response;
   try {
     response = await fetch(`${API}/users/@me/guilds/${discordGuildId}/member`, {
@@ -58,15 +60,24 @@ export async function checkGuildMembership(accessToken: string): Promise<Members
     });
   } catch (error) {
     console.error("[discord] Mitgliedschaft nicht abfragbar:", error);
-    return null;
+    return "unklar";
   }
 
-  // 200 = Mitglied, 404 = nicht im Server. Alles andere (401, 429, 5xx) ist
-  // eine Stoerung und keine Aussage ueber die Mitgliedschaft.
-  if (response.status === 200) return true;
-  if (response.status === 404) return false;
+  if (response.status === 200) return "mitglied";
+  if (response.status === 404) return "nicht-mitglied";
+  if (response.status === 401) return "neu-anmelden";
 
   console.error(`[discord] Unerwartete Antwort ${response.status} bei der Mitgliedschaftsabfrage.`);
+  return "unklar";
+}
+
+/** Fragt Discord direkt mit einem frischen Access-Token (nur beim Login). */
+export async function checkGuildMembership(accessToken: string): Promise<MembershipResult> {
+  if (!discordCheckEnabled) return null;
+
+  const status = await frageDiscord(accessToken);
+  if (status === "mitglied") return true;
+  if (status === "nicht-mitglied") return false;
   return null;
 }
 
@@ -78,7 +89,6 @@ type DiscordAccount = {
   access_token: string | null;
   refresh_token: string | null;
   expires_at: number | null;
-  scope: string | null;
 };
 
 /** Discord-Tokens laufen nach sieben Tagen ab – dann mit dem Refresh-Token erneuern. */
@@ -122,44 +132,46 @@ async function refreshAccessToken(userId: string, refreshToken: string): Promise
 }
 
 /**
- * Warum ein Token nicht taugt – das macht einen Unterschied für die Meldung im
- * Dashboard.
+ * Fragt die Mitgliedschaft mit dem gespeicherten Token ab.
+ *
+ * Bewusst NICHT anhand der Spalte `scope` entschieden: Auth.js legt die
+ * Account-Zeile nur beim ersten Verknüpfen an, danach steht dort weiter, was
+ * bei der allerersten Anmeldung galt (deshalb schreibt auth.ts sie inzwischen
+ * bei jeder Anmeldung fort). Ein Wert, der nachweislich veralten kann, taugt
+ * nicht als Entscheidungsgrundlage – also fragen wir Discord und lesen die
+ * Antwort: 401 heißt „dieses Token darf das nicht".
+ *
+ * Vor der 401-Diagnose noch ein Erneuerungsversuch, denn ein abgelaufenes
+ * Token sieht genauso aus. Erst wenn auch das frische Token abgelehnt wird,
+ * steht fest: Es fehlt die Erlaubnis, und nur ein neuer Login hilft.
  */
-type Zugang = { ok: true; token: string } | { ok: false; grund: "kein-token" | "scope-fehlt" };
-
-/** Holt ein brauchbares Access-Token aus der Datenbank, erneuert es bei Bedarf. */
-async function usableAccessToken(userId: string): Promise<Zugang> {
+async function pruefeMitToken(userId: string): Promise<Mitgliedspruefung["status"]> {
   let account: DiscordAccount | null;
   try {
     account = await prisma.account.findFirst({
       where: { userId, provider: "discord" },
-      select: { access_token: true, refresh_token: true, expires_at: true, scope: true },
+      select: { access_token: true, refresh_token: true, expires_at: true },
     });
   } catch (error) {
     console.error("[discord] Account nicht lesbar:", error);
-    return { ok: false, grund: "kein-token" };
+    return "unklar";
   }
 
-  if (!account) return { ok: false, grund: "kein-token" };
-
-  /*
-   * Stammt der Token aus einer Anmeldung von vor der Scope-Erweiterung, kennt
-   * er guilds.members.read nicht. Discord antwortet dann mit 401 – und daran
-   * aendert auch eine Token-Erneuerung nichts, denn die behaelt die urspruenglich
-   * erteilten Rechte. Der einzige Weg ist eine neue Anmeldung. Also fragen wir
-   * gar nicht erst und sagen stattdessen Bescheid.
-   */
-  if (!account.scope?.split(/\s+/).includes(NOETIGER_SCOPE)) {
-    return { ok: false, grund: "scope-fehlt" };
-  }
+  if (!account) return "unklar";
 
   const abgelaufen = account.expires_at !== null && account.expires_at * 1000 <= Date.now();
-  if (abgelaufen) {
-    const frisch = account.refresh_token ? await refreshAccessToken(userId, account.refresh_token) : null;
-    return frisch ? { ok: true, token: frisch } : { ok: false, grund: "kein-token" };
+  let token = abgelaufen ? null : account.access_token;
+
+  if (!token) {
+    token = account.refresh_token ? await refreshAccessToken(userId, account.refresh_token) : null;
+    if (!token) return "neu-anmelden";
   }
 
-  return account.access_token ? { ok: true, token: account.access_token } : { ok: false, grund: "kein-token" };
+  const ergebnis = await frageDiscord(token);
+  if (ergebnis !== "neu-anmelden" || !account.refresh_token) return ergebnis;
+
+  const frisch = await refreshAccessToken(userId, account.refresh_token);
+  return frisch ? frageDiscord(frisch) : "neu-anmelden";
 }
 
 // ---------------------------------------------------------------------------
@@ -201,6 +213,9 @@ const NACHFRAGE_ABSTAND_MS = 60_000;
  */
 const letzterVersuch = new Map<string, number>();
 
+/** Was dabei herauskam – damit der Hinweis auch während der Sperrfrist steht. */
+const letzteAntwort = new Map<string, Mitgliedspruefung["status"]>();
+
 /**
  * Hält den Mitgliedsstatus beim Aufruf des Dashboards von selbst aktuell –
  * ohne dass jemand auf „Erneut prüfen" drücken muss.
@@ -217,20 +232,22 @@ export async function ensureMembershipFresh(user: {
 }): Promise<{ joined: boolean; neuAnmelden: boolean }> {
   if (!discordCheckEnabled || user.discordJoined) return { joined: user.discordJoined, neuAnmelden: false };
 
-  // Bewusst vor der Zeitsperre: Das ist nur ein Datenbankzugriff, und ob die
-  // Erlaubnis fehlt, soll bei jedem Aufruf sichtbar sein – nicht nur einmal
-  // pro Minute.
-  const zugang = await usableAccessToken(user.id);
-  if (!zugang.ok) return { joined: false, neuAnmelden: zugang.grund === "scope-fehlt" };
-
   const zuletzt = Math.max(user.discordCheckedAt?.getTime() ?? 0, letzterVersuch.get(user.id) ?? 0);
-  if (Date.now() - zuletzt < NACHFRAGE_ABSTAND_MS) return { joined: user.discordJoined, neuAnmelden: false };
+  if (Date.now() - zuletzt < NACHFRAGE_ABSTAND_MS) {
+    // Innerhalb der Sperrfrist keine neue Anfrage, aber das zuletzt Gesehene
+    // weiterhin melden – sonst verschwände der Hinweis beim Neuladen.
+    return { joined: user.discordJoined, neuAnmelden: letzteAntwort.get(user.id) === "neu-anmelden" };
+  }
 
   letzterVersuch.set(user.id, Date.now());
-  const joined = await checkGuildMembership(zugang.token);
-  if (joined !== null) await speichern(user.id, joined);
+  const status = await pruefeMitToken(user.id);
+  letzteAntwort.set(user.id, status);
 
-  return { joined: joined ?? user.discordJoined, neuAnmelden: false };
+  if (status === "mitglied" || status === "nicht-mitglied") {
+    await speichern(user.id, status === "mitglied");
+  }
+
+  return { joined: status === "mitglied", neuAnmelden: status === "neu-anmelden" };
 }
 
 /**
@@ -240,13 +257,13 @@ export async function ensureMembershipFresh(user: {
 export async function refreshMembership(userId: string): Promise<Mitgliedspruefung> {
   if (!discordCheckEnabled) return { status: "unklar" };
 
-  const zugang = await usableAccessToken(userId);
-  if (!zugang.ok) return { status: zugang.grund === "scope-fehlt" ? "neu-anmelden" : "unklar" };
+  const status = await pruefeMitToken(userId);
+  letzterVersuch.set(userId, Date.now());
+  letzteAntwort.set(userId, status);
 
-  const joined = await checkGuildMembership(zugang.token);
-  if (joined !== null) await speichern(userId, joined);
+  if (status === "mitglied" || status === "nicht-mitglied") {
+    await speichern(userId, status === "mitglied");
+  }
 
-  if (joined === true) return { status: "mitglied" };
-  if (joined === false) return { status: "nicht-mitglied" };
-  return { status: "unklar" };
+  return { status };
 }
