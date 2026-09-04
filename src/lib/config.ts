@@ -15,7 +15,7 @@ export const siteConfig = {
   /** Empfehlung fuer den Client. Weniger laeuft, ruckelt aber beim Nachladen. */
   minRamGb: 6,
   modpackName: "VIP Craft 4",
-  modpackUrl: "https://www.curseforge.com/minecraft/modpacks/vip-craft-4", // Platzhalter
+  modpackUrl: "https://www.curseforge.com/minecraft/modpacks/vip-craft-4",
   maxPlayers: 30,
   season: "Season 4",
 } as const;

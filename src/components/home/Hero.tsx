@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Cog, ShieldCheck } from "lucide-react";
+import { Cog, Download, ShieldCheck } from "lucide-react";
 import { JoinServerButton } from "@/components/home/JoinServerButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -48,6 +48,16 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string | null; dis
                 Whitelist beantragen
               </Button>
             )}
+            <Button
+              href={siteConfig.modpackUrl}
+              variant="diamond"
+              size="lg"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Download className="size-5" />
+              Modpack
+            </Button>
             <Button href={discordInvite} variant="outline" size="lg" target="_blank" rel="noopener noreferrer">
               <DiscordIcon className="size-5" />
               Discord beitreten
