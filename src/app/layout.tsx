@@ -38,12 +38,24 @@ export const metadata: Metadata = {
  * Muss synchron im <head> stehen: Erst danach weiss das CSS, ob es die Seite
  * hinter einer schwarzen Flaeche verstecken soll. Wuerde das erst React
  * erledigen, saehen Wiederkehrer kurz Schwarz und Erstbesucher kurz die Seite.
+ *
+ * Der Merker wird hier gesetzt – im Moment der Entscheidung, nicht erst wenn das
+ * Video laeuft. Sonst gibt es ein Zeitfenster, in dem noch nichts gemerkt wurde:
+ * Das Video ist 20 MB gross, und wer den Tab waehrend des Ladens schliesst,
+ * bekaeme das Intro beim naechsten Aufruf erneut. Umgekehrt gilt: Faellt das
+ * Intro danach aus (Video fehlt, Verbindung bricht ab), wurde es trotzdem als
+ * gesehen vermerkt. Das ist gewollt – hoechstens einmal ist wichtiger als
+ * unbedingt einmal.
+ *
+ * Reihenfolge mit Absicht: erst das Attribut, dann der Merker. Schlaegt der
+ * Speicherzugriff fehl (privates Fenster), laeuft das Intro trotzdem.
  */
 const introSkript = `(function(){try{
   if(location.pathname!=="/")return;
   if(localStorage.getItem("vipcraft:intro-gesehen"))return;
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   document.documentElement.dataset.intro="pending";
+  localStorage.setItem("vipcraft:intro-gesehen","1");
 }catch(e){}})();`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

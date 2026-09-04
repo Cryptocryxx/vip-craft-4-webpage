@@ -10,6 +10,10 @@ export const siteConfig = {
   discordInvite: process.env.NEXT_PUBLIC_DISCORD_INVITE ?? "https://discord.gg/vipcraft",
   minecraftVersion: "1.21.1",
   createVersion: "Create 6",
+  /** Mod-Loader des Servers – abgeglichen mit dem, was Crafty als Startdatei meldet. */
+  loader: "NeoForge 21.1.249",
+  /** Empfehlung fuer den Client. Weniger laeuft, ruckelt aber beim Nachladen. */
+  minRamGb: 6,
   modpackName: "VIP Craft 4",
   modpackUrl: "https://www.curseforge.com/minecraft/modpacks/vip-craft-4", // Platzhalter
   maxPlayers: 30,

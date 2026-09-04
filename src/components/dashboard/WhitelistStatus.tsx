@@ -1,6 +1,7 @@
 import { Clock, ShieldAlert, ShieldCheck, ShieldQuestion, type LucideIcon } from "lucide-react";
 import { DiscordStep } from "@/components/dashboard/DiscordStep";
 import { WhitelistApplicationForm } from "@/components/dashboard/WhitelistApplicationForm";
+import { WhitelistSteps, type Schritt } from "@/components/dashboard/WhitelistSteps";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Gear } from "@/components/ui/Gear";
 import { formatDate } from "@/lib/format";
@@ -118,9 +119,40 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
   const Icon = view.icon;
 
   const showForm = !whitelisted && whitelistOpen && (application === null || application.status !== "APPROVED");
-  const needsGamertag = application?.status === "PENDING" && !application.minecraftName;
-  // Der Discord-Schritt ist nur solange interessant, wie noch nicht freigeschaltet ist.
-  const showDiscordStep = discordRequired && !whitelisted && whitelistOpen && application?.status !== "REJECTED";
+  const gamertagDa = Boolean(application?.minecraftName ?? minecraftName);
+
+  /**
+   * Was bis zur Freischaltung noch fehlt. Der Discord-Beitritt steht bewusst
+   * als eigener Punkt drin – vorher ging er im Fliesstext unter, obwohl der
+   * Antrag ohne ihn unvollstaendig ist.
+   */
+  const schritte: Schritt[] = [
+    {
+      titel: "Mit Discord angemeldet",
+      text: "Erledigt – sonst wärst du nicht hier.",
+      erledigt: true,
+    },
+    {
+      titel: "Minecraft-Gamertag eintragen",
+      text: "Ohne Gamertag kann das Team dich nicht freischalten. Trag ihn unten ein.",
+      erledigt: gamertagDa,
+    },
+    ...(discordRequired
+      ? [
+          {
+            titel: "Unserem Discord beitreten",
+            text: "Pflicht: Ohne Discord ist dein Antrag unvollständig. Dort läuft die Absprache, und dort bekommst du Bescheid.",
+            erledigt: discordJoined,
+            aktion: discordJoined ? undefined : <DiscordStep joined={false} invite={discordInvite} kompakt />,
+          } satisfies Schritt,
+        ]
+      : []),
+    {
+      titel: "Freigabe abwarten",
+      text: "Sobald alles darüber steht, schaut sich das Team deinen Antrag an – meist noch am selben Tag.",
+      erledigt: whitelisted,
+    },
+  ];
 
   return (
     <div className={cn("relative flex h-full flex-col overflow-hidden rounded-xl border p-6", toneClasses[view.tone])}>
@@ -167,14 +199,10 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
             )}
           </p>
         ) : application?.status === "PENDING" ? (
-          <p>
-            {needsGamertag
-              ? "Dein Antrag wurde beim Login angelegt. Trag deinen Gamertag ein, damit das Team ihn prüfen kann."
-              : discordRequired && !discordJoined
-                ? "Dein Gamertag steht. Sobald du im Discord bist, ist der Antrag vollständig und geht ans Team."
-                : "Dein Antrag liegt beim Team. Du bekommst im Discord Bescheid, sobald er bearbeitet wurde."}{" "}
-            <span className="text-cream/50">Eingereicht am {formatDate(application.createdAt)}.</span>
-          </p>
+          <>
+            <WhitelistSteps schritte={schritte} />
+            <p className="text-xs text-cream/45">Antrag angelegt am {formatDate(application.createdAt)}.</p>
+          </>
         ) : application?.status === "REJECTED" ? (
           <>
             <p>Dein Antrag wurde abgelehnt.</p>
@@ -187,12 +215,11 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
             {whitelistOpen && <p>Du kannst unten einen neuen Antrag stellen.</p>}
           </>
         ) : whitelistOpen ? (
-          <p>Stell hier deinen Antrag. Das Team schaltet dich in der Regel am selben Tag frei.</p>
+          <WhitelistSteps schritte={schritte} />
         ) : (
           <p>Die Whitelist ist gerade geschlossen. Sobald wieder Plätze frei sind, kannst du hier einen Antrag stellen.</p>
         )}
 
-        {showDiscordStep && <DiscordStep joined={discordJoined} invite={discordInvite} />}
 
         {showForm && (
           <div className="rounded-lg border border-white/10 bg-black/25 p-4">

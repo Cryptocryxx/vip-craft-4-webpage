@@ -41,6 +41,11 @@ function aufDemServer() {
   return false;
 }
 
+/**
+ * Zweites Netz. Den Merker setzt eigentlich schon das Skript im <head>, sobald
+ * feststeht, dass das Intro laeuft (siehe layout.tsx) – hier wird nur
+ * sichergestellt, dass er auch dann steht, wenn dort etwas schiefging.
+ */
 function merken() {
   try {
     localStorage.setItem(SPEICHER_SCHLUESSEL, "1");
@@ -139,7 +144,6 @@ export function IntroVideo({ src }: { src: string }) {
         muted={stumm}
         playsInline
         preload="auto"
-        onPlaying={merken}
         onTimeUpdate={(event) => {
           const video = event.currentTarget;
           if (!Number.isFinite(video.duration)) return;
