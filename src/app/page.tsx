@@ -16,8 +16,8 @@ export default async function HomePage() {
       <IntroVideo src="/IntroVipCraft4.mp4" />
       <Hero serverIp={darfIpSehen ? settings.serverIp : null} discordInvite={settings.discordInvite} />
       <MenuCards />
-      <ModpackCard />
       <HowToJoin serverIp={darfIpSehen ? settings.serverIp : null} discordInvite={settings.discordInvite} />
+      <ModpackCard />
       <AeronauticsHighlight />
       <FeatureGrid />
     </>
