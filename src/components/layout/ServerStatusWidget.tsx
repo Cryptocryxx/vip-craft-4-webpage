@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Users } from "lucide-react";
-import type { ServerStatus } from "@/lib/server-status";
+import type { ServerStatusResponse } from "@/lib/server-status";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ const POLL_INTERVAL_MS = 60_000;
 
 /** Live-Status-Widget (Header): Online/Offline + Spielerzahl, aktualisiert sich jede Minute. */
 export function ServerStatusWidget({ className }: { className?: string }) {
-  const [status, setStatus] = useState<ServerStatus | null>(null);
+  const [status, setStatus] = useState<ServerStatusResponse | null>(null);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
@@ -20,7 +20,7 @@ export function ServerStatusWidget({ className }: { className?: string }) {
       try {
         const res = await fetch("/api/server-status", { cache: "no-store" });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = (await res.json()) as ServerStatus;
+        const data = (await res.json()) as ServerStatusResponse;
         if (!cancelled) {
           setStatus(data);
           setFailed(false);
@@ -86,7 +86,9 @@ export function ServerStatusWidget({ className }: { className?: string }) {
       >
         <div className="panel p-3 text-xs">
           <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-mono text-cream/80">{status?.address ?? "…"}</span>
+            <span className="truncate font-mono text-cream/80">
+              {status ? (status.address ?? "Adresse nach der Freischaltung") : "…"}
+            </span>
             {status?.version && <Badge tone="diamond">{status.version}</Badge>}
           </div>
           {status && status.motd.length > 0 && <p className="mt-2 text-cream/70">{status.motd.join(" · ")}</p>}

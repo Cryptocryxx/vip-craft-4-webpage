@@ -18,14 +18,11 @@ export async function Header() {
           <Image
             src="/logo.png"
             alt=""
-            width={36}
-            height={36}
+            width={40}
+            height={40}
             priority
             className="drop-shadow-[0_0_10px_rgba(217,168,63,0.35)]"
           />
-          <span className="font-display text-lg font-bold tracking-wide">
-            <span className="text-brass">VIP Craft</span> <span className="text-diamond">4</span>
-          </span>
         </Link>
 
         <NavLinks className="ml-4 hidden lg:flex" />

@@ -5,16 +5,17 @@ import { HowToJoin } from "@/components/home/HowToJoin";
 import { MenuCards } from "@/components/home/MenuCards";
 import { IntroVideo } from "@/components/intro/IntroVideo";
 import { getSiteSettings } from "@/lib/settings";
+import { viewerMaySeeServerIp } from "@/lib/viewer";
 
 export default async function HomePage() {
-  const settings = await getSiteSettings();
+  const [settings, darfIpSehen] = await Promise.all([getSiteSettings(), viewerMaySeeServerIp()]);
 
   return (
     <>
       <IntroVideo src="/IntroVipCraft4.mp4" />
-      <Hero serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
+      <Hero serverIp={darfIpSehen ? settings.serverIp : null} discordInvite={settings.discordInvite} />
       <MenuCards />
-      <HowToJoin serverIp={settings.serverIp} discordInvite={settings.discordInvite} />
+      <HowToJoin serverIp={darfIpSehen ? settings.serverIp : null} discordInvite={settings.discordInvite} />
       <AeronauticsHighlight />
       <FeatureGrid />
     </>

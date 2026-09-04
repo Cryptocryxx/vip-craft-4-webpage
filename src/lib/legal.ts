@@ -46,27 +46,27 @@ export type LegalConfig = {
 
 export const legal: LegalConfig = {
   operator: {
-    name: PLACEHOLDER,
-    organisation: null,
-    street: PLACEHOLDER,
-    zip: PLACEHOLDER,
-    city: PLACEHOLDER,
+    name: "Lorenz Bauscher",
+    organisation: "Dendree",
+    street: "Mosaikstraße 1",
+    zip: "12345",
+    city: "Berlin",
     country: "Deutschland",
-    email: PLACEHOLDER,
-    phone: PLACEHOLDER,
-    responsibleForContent: PLACEHOLDER,
+    email: "l.bauscher@gmx.de",
+    phone: "+49 30 12345678",
+    responsibleForContent: "Lorenz Bauscher",
     register: null,
     vatId: null,
   },
   hosting: {
-    name: PLACEHOLDER,
-    address: PLACEHOLDER,
+    name: "Lorenz Bauscher",
+    address: "Mosaikstraße 1, 12345 Berlin, Deutschland",
   },
   gameServerHosting: {
-    name: PLACEHOLDER,
-    address: PLACEHOLDER,
+    name: "Lorenz Bauscher",
+    address: "Mosaikstraße 1, 12345 Berlin, Deutschland",
   },
-  lastUpdated: "2026-09-03",
+  lastUpdated: "2026-09-04",
 };
 
 /** Alle Felder, die noch den Platzhalter enthalten – für den Warnhinweis. */

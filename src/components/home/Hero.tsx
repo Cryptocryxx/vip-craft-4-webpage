@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Cog } from "lucide-react";
+import { Cog, ShieldCheck } from "lucide-react";
 import { JoinServerButton } from "@/components/home/JoinServerButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -8,7 +8,8 @@ import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { Gear } from "@/components/ui/Gear";
 import { siteConfig } from "@/lib/config";
 
-export function Hero({ serverIp, discordInvite }: { serverIp: string; discordInvite: string }) {
+/** `serverIp` ist null, solange der Besucher nicht freigeschaltet ist. */
+export function Hero({ serverIp, discordInvite }: { serverIp: string | null; discordInvite: string }) {
   return (
     <section className="relative overflow-hidden border-b border-brass-500/20">
       {/* Zahnrad-Kulisse */}
@@ -39,7 +40,14 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string; discordInv
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <JoinServerButton ip={serverIp} />
+            {serverIp ? (
+              <JoinServerButton ip={serverIp} />
+            ) : (
+              <Button href="/dashboard" variant="brass" size="lg">
+                <ShieldCheck className="size-5" />
+                Whitelist beantragen
+              </Button>
+            )}
             <Button href={discordInvite} variant="outline" size="lg" target="_blank" rel="noopener noreferrer">
               <DiscordIcon className="size-5" />
               Discord beitreten

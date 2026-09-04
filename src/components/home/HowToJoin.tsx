@@ -7,7 +7,8 @@ import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { siteConfig } from "@/lib/config";
 
-export function HowToJoin({ serverIp, discordInvite }: { serverIp: string; discordInvite: string }) {
+/** `serverIp` ist null, solange der Besucher nicht freigeschaltet ist. */
+export function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null; discordInvite: string }) {
   const steps = [
     {
       title: "Mit Discord anmelden",
@@ -28,7 +29,9 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string; disco
     },
     {
       title: "Verbinden & loslegen",
-      description: `Sobald das Team dich freischaltet: Server-IP ${serverIp} eintragen, Startkit am Spawn abholen und losbauen.`,
+      description: serverIp
+        ? `Du bist freigeschaltet: Server-IP ${serverIp} eintragen, Startkit am Spawn abholen und losbauen.`
+        : "Sobald das Team dich freischaltet, findest du die Server-Adresse hier und in deinem Dashboard.",
       icon: Rocket,
     },
   ];

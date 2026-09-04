@@ -24,6 +24,12 @@ type McSrvStatResponse = {
   icon?: string;
 };
 
+/**
+ * Wie ServerStatus, aber die Adresse kann fehlen: /api/server-status liefert sie
+ * nur an freigeschaltete Spieler aus (siehe lib/viewer.ts).
+ */
+export type ServerStatusResponse = Omit<ServerStatus, "address"> & { address: string | null };
+
 export async function fetchServerStatus(address: string): Promise<ServerStatus> {
   const checkedAt = new Date().toISOString();
   const offline: ServerStatus = {

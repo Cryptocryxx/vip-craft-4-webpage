@@ -7,6 +7,7 @@ import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { siteConfig } from "@/lib/config";
 import { navItems } from "@/lib/nav";
 import { getSiteSettings } from "@/lib/settings";
+import { viewerMaySeeServerIp } from "@/lib/viewer";
 
 const legalLinks = [
   { href: "/impressum", label: "Impressum" },
@@ -15,7 +16,7 @@ const legalLinks = [
 ] as const;
 
 export async function Footer() {
-  const settings = await getSiteSettings();
+  const [settings, darfIpSehen] = await Promise.all([getSiteSettings(), viewerMaySeeServerIp()]);
   const year = new Date().getFullYear();
 
   return (
@@ -30,7 +31,13 @@ export async function Footer() {
           </div>
           <p className="mt-3 max-w-xs text-sm text-cream/60">{siteConfig.tagline}. Gebaut mit Zahnrädern, Messing und viel zu wenig Schlaf.</p>
           <p className="mt-4 font-mono text-xs text-cream/50">
-            Server-IP: <span className="text-brass-200">{settings.serverIp}</span>
+            {darfIpSehen ? (
+              <>
+                Server-IP: <span className="text-brass-200">{settings.serverIp}</span>
+              </>
+            ) : (
+              "Server-IP gibt es nach der Freischaltung."
+            )}
           </p>
         </div>
 
