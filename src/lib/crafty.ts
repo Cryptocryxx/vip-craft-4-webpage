@@ -242,7 +242,12 @@ function parsePlayerList(value: unknown): string[] {
   if (Array.isArray(value)) return value.map(String);
   if (typeof value !== "string") return [];
 
-  const inner = value.trim().replace(/^\[/, "").replace(/\]$/, "");
+  // Ist niemand online, liefert Crafty nicht "[]", sondern Pythons "False".
+  // Ohne diese Pruefung landet genau dieses Wort als Spielername in der Liste.
+  const roh = value.trim();
+  if (!roh.startsWith("[")) return [];
+
+  const inner = roh.replace(/^\[/, "").replace(/\]$/, "");
   if (!inner.trim()) return [];
 
   return inner

@@ -251,6 +251,29 @@ export default function DatenschutzPage() {
         {legal.gameServerHosting.address}
       </p>
 
+      <h3>Spielerübersicht auf dieser Website</h3>
+      <p>
+        Diese Website zeigt unter „Spieler“ an, wer gerade auf dem Server ist, sowie die Spielstatistiken aller Personen,
+        die den Server bereits besucht haben. Angezeigt werden der Minecraft-Benutzername, ein daraus erzeugtes
+        Profilbild und die vom Server erfassten Spielwerte (etwa Spielzeit, zurückgelegte Strecken, abgebaute Blöcke,
+        Tode und der Kontostand der Ingame-Währung). Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes
+        Interesse liegt darin, den Mitgliedern der Community den Spielstand transparent zu machen.
+      </p>
+
+      <h3>IP-Adressen im Kontrollraum</h3>
+      <p>
+        Administratorinnen und Administratoren können sich im geschützten Kontrollraum die zuletzt bekannte IP-Adresse
+        eines Spielers anzeigen lassen. Die Adresse wird dabei aus dem laufenden Protokoll des Spielservers gelesen; wir
+        speichern sie nicht zusätzlich. Der Zweck ist ausschließlich die Aufklärung von Regelverstößen, insbesondere das
+        Erkennen umgangener Sperren. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.
+      </p>
+      <p>
+        Die Adresse wird <strong>nicht</strong> allgemein angezeigt, sondern erst auf ausdrückliche Anforderung im
+        Einzelfall. <strong>Jeder solche Abruf wird protokolliert</strong>, einschließlich der abrufenden Person, des
+        betroffenen Spielers und des Zeitpunkts. Dieses Protokoll dient der Nachvollziehbarkeit und ist nur im
+        Kontrollraum einsehbar.
+      </p>
+
       <h2>10. Serverstatus-Abfrage</h2>
       <p>
         Die Anzeige, ob der Spielserver erreichbar ist, rufen wir über den Dienst mcsrvstat.us ab. Diese Abfrage erfolgt

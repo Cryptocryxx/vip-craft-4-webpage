@@ -75,6 +75,19 @@ export async function whitelistRemove(minecraftName: string, reason: string, act
   return run(`whitelist remove ${minecraftName}`, reason, actor);
 }
 
+/**
+ * Ein fertig zusammengebauter Spieler-Befehl (kick, ban, pardon).
+ *
+ * Der Spielername wird vom Aufrufer gegen GAMERTAG_RE geprüft; der Grund kommt
+ * von einem Admin und wird hier entschärft: Zeilenumbrüche würden den Befehl
+ * aufspalten, und übermäßig lange Texte schneidet die Konsole ohnehin ab.
+ */
+export async function runPlayerCommand(command: string, reason: string, actor: Actor): Promise<CommandResult> {
+  const sauber = command.replace(/[\r\n]+/g, " ").trim().slice(0, 200);
+  if (!sauber) return { ok: false, error: "Leerer Befehl." };
+  return run(sauber, reason.replace(/[\r\n]+/g, " ").slice(0, 200), actor);
+}
+
 /** Die letzten Protokolleinträge für den Kontrollraum. */
 export async function recentCommands(limit = 20) {
   return prisma.commandLog.findMany({ orderBy: { createdAt: "desc" }, take: limit });

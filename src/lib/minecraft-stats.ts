@@ -35,6 +35,22 @@ export type ParsedStats = {
   deathsByCreeper: number;
   jumps: number;
   damageTaken: number;
+
+  // --- Create und die Add-ons dieses Modpacks ---
+  /** Zurückgelegte Flugstrecke. Bei einem Aeronautics-Server die Kennzahl. */
+  flownKm: number;
+  cogwheelsPlaced: number;
+  largeCogwheelsPlaced: number;
+  /** Verlegte Create-Zugschienen. */
+  trackPlaced: number;
+  /** Benutzte Aeronautics-Bauteile (Propeller, Brenner, Dampfventile …). */
+  aeronauticsParts: number;
+  /** Benutzte Create-Bauteile insgesamt – Wellen, Motoren, Pumpen und so weiter. */
+  createParts: number;
+  /** Interaktionen mit Numismatics: Verkaufsstände, Bankterminals, Einzahler. */
+  shopInteractions: number;
+  /** Kuchen. Ohne tieferen Sinn, aber der meistbenutzte Gegenstand auf dem Server. */
+  cakeUsed: number;
 };
 
 const TICKS_PER_HOUR = 20 * 60 * 60;
@@ -95,6 +111,17 @@ export function parseStats(raw: RawStatsFile): ParsedStats {
     deathsByCreeper: pick(killedBy, "minecraft:creeper"),
     jumps: pick(custom, "minecraft:jump"),
     damageTaken: Math.round(pick(custom, "minecraft:damage_taken") / 10), // Zehntel-Herzen → Herzen
+
+    flownKm: round(pick(custom, "minecraft:fly_one_cm") / CM_PER_KM),
+    cogwheelsPlaced: pick(used, "create:cogwheel"),
+    largeCogwheelsPlaced: pick(used, "create:large_cogwheel"),
+    trackPlaced: pick(used, "create:track"),
+    // Über das Präfix statt über eine feste Liste: Das Pack bringt mehrere
+    // Aeronautics-Erweiterungen mit, und neue Bauteile sollen mitzählen.
+    aeronauticsParts: sum(used, (key) => key.startsWith("aeronautics:") || key.startsWith("cbcaeronautics")),
+    createParts: sum(used, (key) => key.startsWith("create:") || key.startsWith("create_")),
+    shopInteractions: sum(used, (key) => key.startsWith("numismatics:")),
+    cakeUsed: pick(used, "minecraft:cake"),
   };
 }
 

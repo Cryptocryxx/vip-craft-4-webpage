@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, DraftingCompass, Map as MapIcon, Radio, Store, Trophy, type LucideIcon } from "lucide-react";
+import { ArrowRight, CalendarDays, DraftingCompass, Map as MapIcon, Radio, Store, Trophy, Users, type LucideIcon } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Panel } from "@/components/ui/Panel";
 import { getUpcomingEvents } from "@/lib/event-types";
 import { relativeDays } from "@/lib/format";
 import { navItems } from "@/lib/nav";
+import { listPlayers } from "@/lib/players";
 import { listShops } from "@/lib/shops";
 import { getLiveStreamers } from "@/lib/streamers";
 
@@ -21,6 +22,7 @@ type CardMeta = { icon: LucideIcon; text: string; accent: "brass" | "diamond" };
 const meta: Record<string, CardMeta> = {
   "/map": { icon: MapIcon, text: "Die ganze Welt im Browser, mit allen Spielern in Echtzeit.", accent: "diamond" },
   "/shops": { icon: Store, text: "Wer was verkauft und wo der Laden steht.", accent: "brass" },
+  "/spieler": { icon: Users, text: "Wer gerade spielt – und die Zahlen aller anderen.", accent: "diamond" },
   "/community": { icon: CalendarDays, text: "Termine und die Chronik des Servers.", accent: "brass" },
   "/leaderboards": { icon: Trophy, text: "Ranglisten aus der Welt und die Wirtschaft in Cog.", accent: "brass" },
   "/schematics": { icon: DraftingCompass, text: "Blaupausen zum Nachbauen mit der Schematicannon.", accent: "diamond" },
@@ -29,7 +31,8 @@ const meta: Record<string, CardMeta> = {
 
 export async function MenuCards() {
   const now = new Date();
-  const [shops, liveStreamers] = await Promise.all([listShops(), getLiveStreamers()]);
+  const [shops, liveStreamers, spieler] = await Promise.all([listShops(), getLiveStreamers(), listPlayers()]);
+  const online = spieler.filter((p) => p.online).length;
   const nextEvent = getUpcomingEvents(now)[0];
   const openShops = shops.filter((shop) => shop.open).length;
 
@@ -37,6 +40,7 @@ export async function MenuCards() {
   const live: Record<string, string | null> = {
     "/shops": openShops > 0 ? `${openShops} ${openShops === 1 ? "Laden hat" : "Läden haben"} geöffnet` : null,
     "/community": nextEvent ? `${nextEvent.title} – ${relativeDays(nextEvent.start, now)}` : null,
+    "/spieler": online > 0 ? `${online} ${online === 1 ? "Spieler ist" : "Spieler sind"} gerade online` : null,
     "/streams":
       liveStreamers.length > 0
         ? `${liveStreamers.length} ${liveStreamers.length === 1 ? "Kanal ist" : "Kanäle sind"} gerade live`

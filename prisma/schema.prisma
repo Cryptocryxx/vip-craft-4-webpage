@@ -197,6 +197,31 @@ model ServerEvent {
 }
 
 // ---------------------------------------------------------------------------
+// Protokoll der Admin-Eingriffe an einzelnen Spielern.
+//
+// Getrennt vom CommandLog, weil es eine andere Frage beantwortet: nicht "welcher
+// Befehl ging an den Server", sondern "wer hat was mit wem gemacht". Vor allem
+// fuer IP-Abfragen wichtig – personenbezogene Daten sollen nachvollziehbar
+// bleiben (siehe lib/players.ts).
+// ---------------------------------------------------------------------------
+
+model PlayerAudit {
+  id String @id @default(cuid())
+  /// KICK | BAN | UNBAN | IP_VIEW
+  type String
+  /// Minecraft-Name des betroffenen Spielers
+  target String
+  detail String?
+  success Boolean @default(true)
+  actorName String?
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([target])
+}
+
+// ---------------------------------------------------------------------------
 // Server-Einstellungen (im Admin-Panel bearbeitbar, überschreiben die .env-Defaults)
 // ---------------------------------------------------------------------------
 
