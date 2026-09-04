@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/admin";
+import { discordBotCheckEnabled, pruefeAlle } from "@/lib/discord";
 import { pruefeGamertag } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
 import { saveSiteSettings } from "@/lib/settings";
@@ -177,6 +178,32 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
   }
 
   return { success: "Gespeichert." };
+}
+
+/**
+ * Prüft die Discord-Mitgliedschaft aller verknüpften Accounts auf einmal.
+ * Braucht den Bot-Token – über die persönlichen Tokens ginge das nicht, die
+ * lassen sich nur benutzen, während die betreffende Person selbst da ist.
+ */
+export async function checkDiscordMembershipsAction(): Promise<AdminFormState> {
+  try {
+    await requireAdmin();
+  } catch {
+    return { error: "Kein Admin-Zugriff." };
+  }
+
+  if (!discordBotCheckEnabled) {
+    return { error: "Dafür fehlt DISCORD_BOT_TOKEN in der .env – ohne Bot geht nur die Prüfung beim Dashboard-Aufruf." };
+  }
+
+  const bilanz = await pruefeAlle();
+  revalidateAdmin();
+
+  if (bilanz.geprueft === 0) return { success: "Niemand mit verknüpftem Discord-Account gefunden." };
+
+  const teile = [`${bilanz.mitglied} im Discord`, `${bilanz.nichtMitglied} nicht`];
+  if (bilanz.unklar > 0) teile.push(`${bilanz.unklar} unklar`);
+  return { success: `${bilanz.geprueft} geprüft: ${teile.join(", ")}.` };
 }
 
 export async function deleteUserAction(userId: string): Promise<void> {

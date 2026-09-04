@@ -4,12 +4,21 @@ import { prisma } from "@/lib/prisma";
 /**
  * Prüft, ob jemand im Discord-Server ist.
  *
- * Genutzt wird der OAuth-Scope `guilds.members.read`. Der erlaubt genau eine
- * Sache: die Mitgliedschaft des angemeldeten Nutzers in EINEM bestimmten Server
- * abzufragen. Bewusst nicht `guilds` – der wuerde die vollstaendige Liste aller
- * Server liefern, in denen jemand ist. Fuer eine Ja/Nein-Frage ist das zu viel.
+ * Es gibt zwei Wege, und der erste ist der bessere:
  *
- * Ohne DISCORD_GUILD_ID ist die Pruefung abgeschaltet und niemand wird
+ * 1. MIT BOT-TOKEN (DISCORD_BOT_TOKEN). Der Server fragt für eine beliebige
+ *    Discord-ID nach, jederzeit, ohne Zutun der betreffenden Person. Damit
+ *    lässt sich auch die Spielerliste im Kontrollraum füllen. Der Bot muss
+ *    nur Mitglied des Servers sein – keine Rechte, kein privilegiertes Intent,
+ *    denn wir fragen gezielt nach einer ID statt die Mitgliederliste zu holen.
+ *
+ * 2. OHNE BOT-TOKEN, über den OAuth-Scope `guilds.members.read` der jeweiligen
+ *    Person. Der erlaubt genau eine Sache: die eigene Mitgliedschaft in EINEM
+ *    bestimmten Server abzufragen (bewusst nicht `guilds`, das die ganze
+ *    Serverliste preisgäbe). Nachteil: Es geht nur, während die Person selbst
+ *    da ist, und nur wenn ihr gespeichertes Token diesen Scope trägt.
+ *
+ * Ohne DISCORD_GUILD_ID ist die Prüfung ganz abgeschaltet und niemand wird
  * ausgebremst (siehe `discordCheckEnabled`).
  */
 
@@ -17,10 +26,15 @@ const API = "https://discord.com/api/v10";
 
 export const discordGuildId = process.env.DISCORD_GUILD_ID ?? "";
 
+const discordBotToken = process.env.DISCORD_BOT_TOKEN ?? "";
+
 /** Nur wenn Server-ID und OAuth-App konfiguriert sind, wird überhaupt geprüft. */
 export const discordCheckEnabled = Boolean(
   discordGuildId && process.env.AUTH_DISCORD_ID && process.env.AUTH_DISCORD_SECRET,
 );
+
+/** Steht ein Bot-Token bereit, brauchen wir die Tokens der Nutzer nicht mehr. */
+export const discordBotCheckEnabled = Boolean(discordGuildId && discordBotToken);
 
 /**
  * `null` heißt „konnte nicht geklärt werden" – etwa weil Discord nicht
@@ -68,6 +82,49 @@ async function frageDiscord(accessToken: string): Promise<Mitgliedspruefung["sta
   if (response.status === 401) return "neu-anmelden";
 
   console.error(`[discord] Unerwartete Antwort ${response.status} bei der Mitgliedschaftsabfrage.`);
+  return "unklar";
+}
+
+/**
+ * Fragt mit dem Bot-Token nach einer beliebigen Discord-ID.
+ *
+ * Die Fehlercodes muss man auseinanderhalten, sonst entsteht ein gefährlicher
+ * Kurzschluss: Ist der Bot gar nicht auf dem Server (10004), antwortet Discord
+ * ebenfalls mit 404. Würden wir das als „nicht im Discord" lesen, wäre auf
+ * einen Schlag jeder Antrag unvollständig, obwohl niemand ausgetreten ist.
+ * Deshalb gilt nur „Unknown Member" als Aussage; alles andere ist eine Störung.
+ */
+async function frageBot(discordUserId: string): Promise<Mitgliedspruefung["status"]> {
+  let response: Response;
+  try {
+    response = await fetch(`${API}/guilds/${discordGuildId}/members/${discordUserId}`, {
+      headers: { Authorization: `Bot ${discordBotToken}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(10_000),
+    });
+  } catch (error) {
+    console.error("[discord] Bot-Abfrage fehlgeschlagen:", error);
+    return "unklar";
+  }
+
+  if (response.status === 200) return "mitglied";
+
+  let code: number | undefined;
+  try {
+    code = ((await response.json()) as { code?: number }).code;
+  } catch {
+    // Kein JSON – dann bleibt es beim Status.
+  }
+
+  // 10007 = Unknown Member, 10013 = Unknown User. Beides heisst: nicht drin.
+  if (response.status === 404 && (code === 10007 || code === 10013)) return "nicht-mitglied";
+
+  if (code === 10004) {
+    console.error("[discord] Der Bot ist nicht auf dem Server – Mitgliedschaft nicht pruefbar.");
+    return "unklar";
+  }
+
+  console.error(`[discord] Bot-Abfrage: HTTP ${response.status}${code ? ` (Code ${code})` : ""}.`);
   return "unklar";
 }
 
@@ -174,6 +231,36 @@ async function pruefeMitToken(userId: string): Promise<Mitgliedspruefung["status
   return frisch ? frageDiscord(frisch) : "neu-anmelden";
 }
 
+/** Die Discord-ID einer Person – die steht schon in der Account-Zeile. */
+async function discordIdVon(userId: string): Promise<string | null> {
+  try {
+    const konto = await prisma.account.findFirst({
+      where: { userId, provider: "discord" },
+      select: { providerAccountId: true },
+    });
+    return konto?.providerAccountId ?? null;
+  } catch (error) {
+    console.error("[discord] Account nicht lesbar:", error);
+    return null;
+  }
+}
+
+/**
+ * Der eine Weg, über den alle Prüfungen laufen: Bot-Token wenn vorhanden,
+ * sonst das persönliche Token.
+ */
+async function pruefe(userId: string): Promise<Mitgliedspruefung["status"]> {
+  if (discordBotCheckEnabled) {
+    const discordId = await discordIdVon(userId);
+    // Ohne verknüpften Discord-Account gibt es nichts zu fragen. Das ist keine
+    // Aussage über die Mitgliedschaft, sondern schlicht eine Lücke.
+    if (!discordId) return "unklar";
+    return frageBot(discordId);
+  }
+
+  return pruefeMitToken(userId);
+}
+
 // ---------------------------------------------------------------------------
 // Ergebnis speichern
 // ---------------------------------------------------------------------------
@@ -194,9 +281,60 @@ async function speichern(userId: string, joined: boolean): Promise<void> {
  * Ergebnis. Wird im signIn-Event aufgerufen.
  */
 export async function recordMembershipFromLogin(userId: string, accessToken: string): Promise<MembershipResult> {
+  // Mit Bot-Token brauchen wir das frische Nutzer-Token gar nicht – der Bot
+  // kann die Frage ohnehin beantworten, und zwar unabhaengig davon, welche
+  // Rechte die Anmeldung erteilt hat.
+  if (discordBotCheckEnabled) {
+    const status = await pruefe(userId);
+    if (status === "mitglied" || status === "nicht-mitglied") {
+      await speichern(userId, status === "mitglied");
+      return status === "mitglied";
+    }
+    return null;
+  }
+
   const joined = await checkGuildMembership(accessToken);
   if (joined !== null) await speichern(userId, joined);
   return joined;
+}
+
+/**
+ * Prüft alle verknüpften Accounts auf einmal – für den Knopf im Kontrollraum.
+ * Geht nur mit Bot-Token; über persönliche Tokens wäre das nicht möglich.
+ *
+ * Bewusst nacheinander statt parallel: Es sind wenige Dutzend Anfragen, und
+ * Discord quittiert Stoßbetrieb mit 429.
+ */
+export async function pruefeAlle(): Promise<{
+  geprueft: number;
+  mitglied: number;
+  nichtMitglied: number;
+  unklar: number;
+}> {
+  const bilanz = { geprueft: 0, mitglied: 0, nichtMitglied: 0, unklar: 0 };
+  if (!discordBotCheckEnabled) return bilanz;
+
+  const konten = await prisma.account.findMany({
+    where: { provider: "discord" },
+    select: { userId: true, providerAccountId: true },
+  });
+
+  for (const konto of konten) {
+    const status = await frageBot(konto.providerAccountId);
+    bilanz.geprueft += 1;
+    letzterVersuch.set(konto.userId, Date.now());
+    letzteAntwort.set(konto.userId, status);
+
+    if (status === "mitglied" || status === "nicht-mitglied") {
+      await speichern(konto.userId, status === "mitglied");
+      if (status === "mitglied") bilanz.mitglied += 1;
+      else bilanz.nichtMitglied += 1;
+    } else {
+      bilanz.unklar += 1;
+    }
+  }
+
+  return bilanz;
 }
 
 /**
@@ -240,7 +378,7 @@ export async function ensureMembershipFresh(user: {
   }
 
   letzterVersuch.set(user.id, Date.now());
-  const status = await pruefeMitToken(user.id);
+  const status = await pruefe(user.id);
   letzteAntwort.set(user.id, status);
 
   if (status === "mitglied" || status === "nicht-mitglied") {
@@ -257,7 +395,7 @@ export async function ensureMembershipFresh(user: {
 export async function refreshMembership(userId: string): Promise<Mitgliedspruefung> {
   if (!discordCheckEnabled) return { status: "unklar" };
 
-  const status = await pruefeMitToken(userId);
+  const status = await pruefe(userId);
   letzterVersuch.set(userId, Date.now());
   letzteAntwort.set(userId, status);
 

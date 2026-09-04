@@ -1,11 +1,12 @@
 import { Gamepad2, ScrollText, Users } from "lucide-react";
+import { CheckDiscordButton } from "@/components/admin/CheckDiscordButton";
 import { ServerPlayerRow } from "@/components/admin/ServerPlayerRow";
 import { UserRow, type AdminUserRow } from "@/components/admin/UserRow";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { requireAdmin } from "@/lib/admin";
-import { discordCheckEnabled } from "@/lib/discord";
+import { discordBotCheckEnabled, discordCheckEnabled } from "@/lib/discord";
 import { formatDate, timeAgo } from "@/lib/format";
 import { listPlayers, recentAudits } from "@/lib/players";
 import { prisma } from "@/lib/prisma";
@@ -64,6 +65,11 @@ export default async function AdminUsersPage() {
         description="Gamertag, Twitch-Kanal, Rolle und Whitelist direkt bearbeiten. Änderungen wirken sofort auf der ganzen Seite."
         className="mb-5"
       />
+      {discordBotCheckEnabled && (
+        <div className="mb-4">
+          <CheckDiscordButton />
+        </div>
+      )}
       <Panel className="overflow-hidden">
         {rows.length === 0 ? (
           <p className="p-10 text-center text-sm text-cream/60">Noch niemand registriert.</p>
@@ -80,8 +86,9 @@ export default async function AdminUsersPage() {
       </Panel>
       <p className="mt-3 text-xs leading-relaxed text-cream/45">
         Deine eigene Rolle lässt sich nicht ändern und dein Account nicht löschen, damit der Kontrollraum erreichbar
-        bleibt. Der Discord-Stand kommt aus der Mitgliedschaftsabfrage und wird beim Aufruf des Dashboards
-        aktualisiert – &bdquo;ungeprüft&ldquo; heißt, dass es dazu noch keine Antwort gab.
+        bleibt. Der Discord-Stand wird aktualisiert, wenn jemand sein Dashboard öffnet
+        {discordBotCheckEnabled ? " – oder für alle auf einmal über den Knopf oben" : ""}.
+        &bdquo;Ungeprüft&ldquo; heißt, dass es dazu noch keine Antwort gab.
       </p>
 
       <section className="mt-12">
