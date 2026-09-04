@@ -80,7 +80,10 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string | null; dis
           </dl>
         </div>
 
-        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+        {/* Auf dem Handy weggelassen: Das Logo steht schon im Header, und hier
+            wuerde es fast einen ganzen Bildschirm fuellen, bevor irgendetwas
+            Nuetzliches kommt. Ab sm ist genug Platz dafuer. */}
+        <div className="relative mx-auto hidden w-full max-w-md sm:block lg:max-w-none">
           <div className="absolute inset-8 -z-10 rounded-full bg-diamond-400/10 blur-3xl" />
           <Image
             src="/logo.png"
