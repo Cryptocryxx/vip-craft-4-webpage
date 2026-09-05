@@ -269,11 +269,19 @@ model GameLog {
   /// Fortlaufend in der Reihenfolge des Eintreffens – daran haengt der Kontext.
   seq Int @id @default(autoincrement())
 
-  /// Serverlauf und laufende Nummer darin, beides aus dem Skript. Zusammen
-  /// eindeutig: So kann dasselbe Ereignis nicht zweimal in der Tabelle landen,
-  /// egal wie oft abgeholt wird.
-  runId     String
-  sourceSeq Int
+  /// Serverlauf und laufende Nummer darin, beides aus dem KubeJS-Skript.
+  /// Zusammen eindeutig: So kann dasselbe Ereignis nicht zweimal in der
+  /// Tabelle landen, egal wie oft abgeholt wird. Optional, weil Eintraege
+  /// aus Discord (siehe externalId) keins von beidem haben - NULL zaehlt in
+  /// einem Unique-Index nie als Duplikat, auch nicht gegen ein zweites NULL.
+  runId     String?
+  sourceSeq Int?
+
+  /// Discord-Nachrichten-ID (Snowflake, als String - als Zahl verliert
+  /// JavaScript ab 2^53 Praezision). Eindeutig fuer sich allein, denn ein
+  /// Serverlauf ergibt hier keinen Sinn: Der Discord-Kanal existiert
+  /// unabhaengig davon, ob der Minecraft-Server gerade laeuft.
+  externalId String?
 
   /// CHAT | COMMAND | COMMAND_CONSOLE | JOIN | QUIT | DEATH, siehe game-log-types.ts
   kind       String
@@ -292,6 +300,7 @@ model GameLog {
   createdAt DateTime @default(now())
 
   @@unique([runId, sourceSeq])
+  @@unique([externalId])
   @@index([playerName, seq])
   @@index([kind, seq])
   @@index([userId, seq])

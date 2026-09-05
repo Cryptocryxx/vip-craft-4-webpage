@@ -18,6 +18,7 @@ import { gameLogLabel, istGameLogArt, type GameLogEintrag } from "@/lib/game-log
 
 const toene: Record<string, BadgeTone> = {
   CHAT: "diamond",
+  DISCORD_CHAT: "copper",
   COMMAND: "brass",
   COMMAND_CONSOLE: "neutral",
   JOIN: "emerald",
@@ -53,7 +54,7 @@ function Zeile({
       {zeigeName && <span className="font-display text-sm font-semibold text-cream">{eintrag.playerName}</span>}
       <span
         className={
-          eintrag.kind === "CHAT"
+          eintrag.kind === "CHAT" || eintrag.kind === "DISCORD_CHAT"
             ? "min-w-0 flex-1 text-sm break-words text-cream/90"
             : "min-w-0 flex-1 font-mono text-sm break-words text-cream/60"
         }

@@ -26,7 +26,8 @@ const API = "https://discord.com/api/v10";
 
 export const discordGuildId = process.env.DISCORD_GUILD_ID ?? "";
 
-const discordBotToken = process.env.DISCORD_BOT_TOKEN ?? "";
+/** Auch von discord-chat.ts benutzt – derselbe Bot fragt dort den Chatverlauf ab. */
+export const discordBotToken = process.env.DISCORD_BOT_TOKEN ?? "";
 
 /** Nur wenn Server-ID und OAuth-App konfiguriert sind, wird überhaupt geprüft. */
 export const discordCheckEnabled = Boolean(

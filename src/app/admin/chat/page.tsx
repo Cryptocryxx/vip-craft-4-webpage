@@ -8,6 +8,7 @@ import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { requireTeam } from "@/lib/admin";
 import { formatDate, formatNumber, timeAgo } from "@/lib/format";
+import { discordChatConfigured, holeDiscordNachrichten, letzterDiscordErfassungsStand } from "@/lib/discord-chat";
 import { holeEreignisse, ladeVerlauf, letzterErfassungsStand } from "@/lib/game-log";
 import { gameLogFilter, istFilterSchluessel } from "@/lib/game-log-types";
 import { prisma } from "@/lib/prisma";
@@ -26,7 +27,7 @@ export default async function AdminChatPage({ searchParams }: Props) {
 
   // Beim Öffnen frisch nachsehen. Hat eigene Sperre – höchstens alle zehn
   // Sekunden geht daraus wirklich ein Abruf hervor.
-  await holeEreignisse();
+  await Promise.all([holeEreignisse(), holeDiscordNachrichten()]);
 
   const [eintraege, gesamt, einstellungen] = await Promise.all([
     ladeVerlauf({ arten, suche: suche || undefined, take: 60 }),
@@ -34,6 +35,7 @@ export default async function AdminChatPage({ searchParams }: Props) {
     getSiteSettings(),
   ]);
   const stand = letzterErfassungsStand();
+  const discordStand = letzterDiscordErfassungsStand();
 
   return (
     <div>
@@ -65,6 +67,32 @@ export default async function AdminChatPage({ searchParams }: Props) {
         <Panel className="mb-5 border-rose-400/40 bg-rose-500/10 p-4">
           <p className="text-sm text-rose-100">
             Das Skript konnte diese Ereignisse nicht anmelden: {stand.fehler.join(" · ")}
+          </p>
+        </Panel>
+      )}
+
+      {/* Discord-Chat ist optional (DISCORD_CHAT_CHANNEL_ID) – ohne Konfiguration
+          kein Hinweis, denn dann hat sich einfach niemand dafür entschieden. */}
+      {discordStand.konfiguriert && !discordStand.erreichbar && (
+        <Panel className="mb-5 border-amber-400/40 bg-amber-500/10 p-4">
+          <p className="flex items-start gap-2 text-sm text-amber-100">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              <strong className="font-semibold">Discord-Chat kommt nicht an.</strong> {discordStand.meldung}
+            </span>
+          </p>
+        </Panel>
+      )}
+
+      {discordStand.vermutlichOhneInhalt && (
+        <Panel className="mb-5 border-amber-400/40 bg-amber-500/10 p-4">
+          <p className="flex items-start gap-2 text-sm text-amber-100">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+            <span>
+              <strong className="font-semibold">Discord-Nachrichten kommen leer an.</strong> Vermutlich fehlt im
+              Developer Portal unter Bot das Häkchen bei &bdquo;Message Content Intent&ldquo; – ohne das liefert
+              Discord nur, wer geschrieben hat, nicht was.
+            </span>
           </p>
         </Panel>
       )}
@@ -144,10 +172,14 @@ export default async function AdminChatPage({ searchParams }: Props) {
       )}
 
       <p className="mt-6 text-xs leading-relaxed text-cream/45">
-        Aufgezeichnet werden Chat, Befehle von Spielern und aus der Konsole, Beitritt und Verlassen sowie Tode.
-        Befehle aus Befehlsblöcken bleiben draußen. Was hier steht, gehört ins Team – es sind Gespräche von Leuten, die
-        sich dabei nichts gedacht haben.
+        Aufgezeichnet werden Chat, Befehle von Spielern und aus der Konsole, Beitritt und Verlassen sowie Tode
+        {discordChatConfigured ? ", dazu Nachrichten aus dem verknüpften Discord-Kanal" : ""}. Befehle aus
+        Befehlsblöcken bleiben draußen. Was hier steht, gehört ins Team – es sind Gespräche von Leuten, die sich dabei
+        nichts gedacht haben.
         {stand.geprueftAm ? ` Zuletzt nachgesehen: ${formatDate(stand.geprueftAm)}.` : ""}
+        {!discordChatConfigured
+          ? " Discord-Chat ist nicht eingerichtet (DISCORD_CHAT_CHANNEL_ID) – nur der Spielchat wird erfasst."
+          : ""}
       </p>
     </div>
   );

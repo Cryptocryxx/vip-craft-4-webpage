@@ -242,7 +242,7 @@ async function durchgang(): Promise<ErfassungsStand> {
     };
   });
 
-  const geschrieben = await schreibe(zeilen);
+  const geschrieben = await schreibeGameLogZeilen(zeilen);
   for (const [userId, uuid] of nachzutragen) await uuidNachtragen(userId, uuid);
 
   if (luecke > 0) {
@@ -261,9 +261,20 @@ async function durchgang(): Promise<ErfassungsStand> {
   };
 }
 
-type NeueZeile = {
-  runId: string;
-  sourceSeq: number;
+/**
+ * Eine Zeile, wie sie in die Tabelle geschrieben wird.
+ *
+ * `runId`+`sourceSeq` sind das Eindeutigkeitsmerkmal für Ereignisse aus dem
+ * KubeJS-Skript, `externalId` für Discord-Nachrichten (siehe discord-chat.ts)
+ * – jede Quelle nutzt nur ihr eigenes Feld, das andere bleibt `null`. Das ist
+ * kein Kompromiss: In einem Unique-Index zählt `null` in SQLite nie als
+ * Duplikat, auch nicht gegen ein zweites `null`, also stören sich die beiden
+ * Schemata nicht gegenseitig.
+ */
+export type NeueGameLogZeile = {
+  runId?: string | null;
+  sourceSeq?: number | null;
+  externalId?: string | null;
   kind: string;
   playerName: string;
   playerUuid: string | null;
@@ -276,8 +287,12 @@ type NeueZeile = {
  * Schreibt den Schwung. Im Normalfall in einem Rutsch; kommt dabei ein
  * Doppelter vor (zwei Abrufe zur selben Zeit), wird zeilenweise nachgeholt und
  * das Doppelte übersprungen.
+ *
+ * Exportiert, weil discord-chat.ts dieselbe Tabelle mit demselben
+ * Duplikat-Schutz beschreibt – nur mit `externalId` statt `runId`/`sourceSeq`
+ * als Eindeutigkeitsmerkmal.
  */
-async function schreibe(zeilen: NeueZeile[]): Promise<number> {
+export async function schreibeGameLogZeilen(zeilen: NeueGameLogZeile[]): Promise<number> {
   try {
     const ergebnis = await prisma.gameLog.createMany({ data: zeilen });
     return ergebnis.count;
@@ -383,7 +398,9 @@ export type SpielerZahlen = {
 
 export async function spielerZahlen(name: string): Promise<SpielerZahlen> {
   const [nachrichten, befehle, tode, beitritte, erste, letzte] = await Promise.all([
-    prisma.gameLog.count({ where: { playerName: name, kind: "CHAT" } }),
+    // Discord-Nachrichten zaehlen mit - fuer jemanden mit verknuepftem Account
+    // laufen sie ohnehin unter demselben Minecraft-Namen (siehe discord-chat.ts).
+    prisma.gameLog.count({ where: { playerName: name, kind: { in: ["CHAT", "DISCORD_CHAT"] } } }),
     // Konsolenbefehle zaehlen mit: Bei der Konsole selbst ist es alles, was sie
     // je getan hat, und bei einem Spieler kommt diese Art gar nicht vor.
     prisma.gameLog.count({ where: { playerName: name, kind: { in: ["COMMAND", "COMMAND_CONSOLE"] } } }),

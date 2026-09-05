@@ -24,6 +24,7 @@ import { StatTile } from "@/components/admin/StatTile";
 import { requireTeam } from "@/lib/admin";
 import { formatCogsLong } from "@/lib/currency";
 import { formatDate, formatHours, formatNumber, timeAgo } from "@/lib/format";
+import { holeDiscordNachrichten } from "@/lib/discord-chat";
 import { bekannteSpieler, holeEreignisse, ladeVerlauf, spielerZahlen } from "@/lib/game-log";
 import { auditsFuer, findPlayer } from "@/lib/players";
 import { prisma } from "@/lib/prisma";
@@ -59,7 +60,7 @@ export default async function AdminSpielerDetailPage({ params }: Props) {
   const gesucht = decodeURIComponent(roh);
 
   // Frisch nachsehen, bevor die Seite gebaut wird (eigene Sperre, siehe game-log).
-  await holeEreignisse();
+  await Promise.all([holeEreignisse(), holeDiscordNachrichten()]);
 
   // Die Schreibweise aus dem Spiel gewinnt: Danach wird der Verlauf gesucht,
   // und SQLite vergleicht Zeichenketten Zeichen für Zeichen.

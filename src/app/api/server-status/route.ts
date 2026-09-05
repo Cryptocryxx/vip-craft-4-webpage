@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { holeDiscordNachrichten } from "@/lib/discord-chat";
 import { holeEreignisse } from "@/lib/game-log";
 import { fetchServerStatus } from "@/lib/server-status";
 import { getSiteSettings } from "@/lib/settings";
@@ -38,6 +39,9 @@ export async function GET() {
    * hoechstens alle 10 Sekunden ein echter Abruf.
    */
   void holeEreignisse();
+  // Unabhaengig vom Minecraft-Server: Im Discord-Kanal wird auch geschrieben,
+  // waehrend der Server aus ist.
+  void holeDiscordNachrichten();
 
   return NextResponse.json(
     { ...status, address: darfAdresseSehen ? status.address : null },

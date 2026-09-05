@@ -6,6 +6,7 @@ import {
   recordServerEvent,
 } from "@/lib/server-power";
 import type { WatchdogStatus } from "@/lib/server-power-types";
+import { holeDiscordNachrichten } from "@/lib/discord-chat";
 import { bereinigeVerlauf, holeEreignisse } from "@/lib/game-log";
 import { classifyShutdown, describeVerdict } from "@/lib/shutdown-reason";
 import { verarbeiteVormerkungen } from "@/lib/whitelist-queue";
@@ -189,6 +190,10 @@ async function handleShutdown(): Promise<void> {
 export async function runWatchdogTick(): Promise<void> {
   if (state.ticking) return;
   state.ticking = true;
+
+  // Unabhaengig von Crafty und vom Minecraft-Server: Im Discord-Kanal wird
+  // auch geschrieben, waehrend der Server aus ist oder gar nicht angebunden.
+  void holeDiscordNachrichten();
 
   try {
     if (!craftyConfigured) {

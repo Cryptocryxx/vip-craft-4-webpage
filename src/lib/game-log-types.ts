@@ -6,11 +6,12 @@
  * (minecraft/kubejs/server_scripts/insights-log.js), gelesen von lib/game-log.ts.
  */
 
-export const GAME_LOG_ARTEN = ["CHAT", "COMMAND", "COMMAND_CONSOLE", "JOIN", "QUIT", "DEATH"] as const;
+export const GAME_LOG_ARTEN = ["CHAT", "DISCORD_CHAT", "COMMAND", "COMMAND_CONSOLE", "JOIN", "QUIT", "DEATH"] as const;
 export type GameLogArt = (typeof GAME_LOG_ARTEN)[number];
 
 export const gameLogLabel: Record<GameLogArt, string> = {
   CHAT: "Chat",
+  DISCORD_CHAT: "Discord",
   COMMAND: "Befehl",
   COMMAND_CONSOLE: "Konsole",
   JOIN: "Beigetreten",
@@ -25,7 +26,7 @@ export function istGameLogArt(wert: string): wert is GameLogArt {
 /** Filter für die Übersicht: mehrere Arten unter einem Knopf. */
 export const gameLogFilter = {
   alles: { label: "Alles", arten: [...GAME_LOG_ARTEN] },
-  chat: { label: "Nur Chat", arten: ["CHAT"] },
+  chat: { label: "Nur Chat", arten: ["CHAT", "DISCORD_CHAT"] },
   befehle: { label: "Befehle", arten: ["COMMAND", "COMMAND_CONSOLE"] },
   anwesenheit: { label: "Kommen & Gehen", arten: ["JOIN", "QUIT"] },
   tode: { label: "Tode", arten: ["DEATH"] },
