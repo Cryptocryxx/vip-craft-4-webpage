@@ -1,10 +1,14 @@
 import { Settings } from "lucide-react";
+import { AdminOnly } from "@/components/admin/AdminOnly";
 import { SettingsForm } from "@/components/admin/SettingsForm";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { getAdminUser } from "@/lib/admin";
 import { getSiteSettings } from "@/lib/settings";
 
 export default async function AdminSettingsPage() {
+  if (!(await getAdminUser())) return <AdminOnly bereich="Die Einstellungsseite" />;
+
   const settings = await getSiteSettings();
 
   return (

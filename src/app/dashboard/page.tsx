@@ -14,6 +14,7 @@ import { serverStartZeit } from "@/lib/event-types";
 import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
 import { ensureNameChecked } from "@/lib/name-check";
 import { prisma } from "@/lib/prisma";
+import { imTeam } from "@/lib/roles";
 import { getSiteSettings } from "@/lib/settings";
 import { listShopsForUser } from "@/lib/shops";
 import { listSuggestions } from "@/lib/suggestions";
@@ -89,7 +90,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         title={`Moin, ${user.name ?? "Spieler"}!`}
         description="Dein Bereich auf VIP Craft 4: Whitelist beantragen, Stats ansehen und mitbestimmen, wohin der Server fährt."
       >
-        {user.role === "ADMIN" && (
+        {imTeam(user.role) && (
           <Link href="/admin" className="btn btn-outline btn-sm">
             <Cog className="size-4" /> Zum Kontrollraum
           </Link>

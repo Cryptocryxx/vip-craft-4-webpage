@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, requireTeam } from "@/lib/admin";
 import { discordBotCheckEnabled, pruefeAlle } from "@/lib/discord";
 import { pruefeGamertag } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
+import { imTeam, istAdmin, istRolle } from "@/lib/roles";
 import { saveSiteSettings } from "@/lib/settings";
 import type { SiteSettings } from "@/lib/settings-types";
 import { SUGGESTION_STATUSES, type SuggestionStatus } from "@/lib/suggestion-types";
@@ -45,9 +46,9 @@ export async function reviewApplicationAction(
 ): Promise<AdminFormState> {
   let admin;
   try {
-    admin = await requireAdmin();
+    admin = await requireTeam();
   } catch {
-    return { error: "Kein Admin-Zugriff." };
+    return { error: "Dafür fehlen dir die Rechte." };
   }
 
   const id = text(formData, "applicationId");
@@ -117,7 +118,7 @@ export async function reviewApplicationAction(
 }
 
 export async function deleteApplicationAction(applicationId: string): Promise<void> {
-  await requireAdmin();
+  await requireTeam();
   await deleteApplication(applicationId);
   revalidateAdmin();
 }
@@ -129,27 +130,46 @@ export async function deleteApplicationAction(applicationId: string): Promise<vo
 export async function updateUserAction(_prev: AdminFormState, formData: FormData): Promise<AdminFormState> {
   let admin;
   try {
-    admin = await requireAdmin();
+    admin = await requireTeam();
   } catch {
-    return { error: "Kein Admin-Zugriff." };
+    return { error: "Dafür fehlen dir die Rechte." };
   }
 
   const userId = text(formData, "userId");
   let minecraftName = text(formData, "minecraftName");
   const twitchName = text(formData, "twitchName").toLowerCase();
-  const role = text(formData, "role");
   const whitelisted = formData.get("whitelisted") === "on";
 
   if (!userId) return { error: "Benutzer fehlt." };
-  if (role !== "PLAYER" && role !== "ADMIN") return { error: "Ungültige Rolle." };
+
+  const before = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { whitelisted: true, minecraftName: true, role: true },
+  });
+  if (!before) return { error: "Diesen Account gibt es nicht (mehr)." };
+
+  // Das Rollenfeld ist gesperrt, wenn jemand seine eigene Zeile bearbeitet oder
+  // ein Moderator davorsitzt – und gesperrte Felder schickt der Browser gar
+  // nicht erst mit. Dann bleibt die Rolle einfach stehen. (Vorher lief genau
+  // dieser Fall in „Ungültige Rolle" und blockierte das Speichern komplett.)
+  const rolleRoh = text(formData, "role");
+  const role = rolleRoh === "" ? before.role : rolleRoh;
+
+  if (!istRolle(role)) return { error: "Ungültige Rolle." };
   if (minecraftName && !GAMERTAG_RE.test(minecraftName)) {
     return { error: "Ein Minecraft-Name hat 3–16 Zeichen (Buchstaben, Zahlen, Unterstrich)." };
   }
   if (twitchName && !TWITCH_RE.test(twitchName)) {
     return { error: "Ein Twitch-Name hat 4–25 Zeichen (Buchstaben, Zahlen, Unterstrich)." };
   }
-  if (userId === admin.id && role !== "ADMIN") {
-    return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
+
+  // Rollen sind die einzige Stellschraube, mit der man sich selbst mehr Rechte
+  // geben könnte – die bleibt beim Admin, sonst wäre die Trennung wertlos.
+  const rollenwechsel = role !== before.role;
+  if (rollenwechsel && !istAdmin(admin.role)) return { error: "Rollen darf nur ein Admin vergeben." };
+  if (rollenwechsel && userId === admin.id) return { error: "Deine eigene Rolle kannst du nicht ändern." };
+  if (!istAdmin(admin.role) && userId !== admin.id && imTeam(before.role)) {
+    return { error: "Accounts aus dem Team darf nur ein Admin bearbeiten." };
   }
 
   // Auch hier gegen Mojang pruefen: Ein Gamertag, den es nicht gibt, geht
@@ -159,11 +179,6 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
     if (!geprueft.ok) return { error: geprueft.error };
     minecraftName = geprueft.name;
   }
-
-  const before = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { whitelisted: true, minecraftName: true },
-  });
 
   try {
     await prisma.user.update({
@@ -237,9 +252,9 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
  */
 export async function checkDiscordMembershipsAction(): Promise<AdminFormState> {
   try {
-    await requireAdmin();
+    await requireTeam();
   } catch {
-    return { error: "Kein Admin-Zugriff." };
+    return { error: "Dafür fehlen dir die Rechte." };
   }
 
   if (!discordBotCheckEnabled) {
@@ -257,7 +272,7 @@ export async function checkDiscordMembershipsAction(): Promise<AdminFormState> {
 }
 
 /**
- * Nimmt alle außer Admins vorübergehend von der Server-Whitelist.
+ * Nimmt alle außer dem Team vorübergehend von der Server-Whitelist.
  *
  * `whitelisted` bleibt dabei stehen – sonst wüsste hinterher niemand mehr, wer
  * zurückdarf. Nur wer wirklich vom Server entfernt wurde, gilt als ausgesetzt:
@@ -277,13 +292,13 @@ export async function suspendNonAdminsAction(): Promise<AdminFormState> {
     where: {
       whitelisted: true,
       whitelistSuspended: false,
-      role: { not: "ADMIN" },
+      role: { notIn: ["ADMIN", "MODERATOR"] },
       NOT: { minecraftName: null },
     },
     select: { id: true, minecraftName: true },
   });
 
-  if (betroffene.length === 0) return { success: "Niemand zum Aussetzen – außer Admins ist gerade niemand freigeschaltet." };
+  if (betroffene.length === 0) return { success: "Niemand zum Aussetzen – außer dem Team ist gerade niemand freigeschaltet." };
 
   let entfernt = 0;
   const gescheitert: string[] = [];
@@ -311,7 +326,7 @@ export async function suspendNonAdminsAction(): Promise<AdminFormState> {
       error: `Bei ${gescheitert.length} klappte es nicht: ${gescheitert.join(", ")}.`,
     };
   }
-  return { success: `${entfernt} Spieler ausgesetzt. Admins bleiben freigeschaltet.` };
+  return { success: `${entfernt} Spieler ausgesetzt. Das Team bleibt freigeschaltet.` };
 }
 
 /** Hebt die Aussetzung wieder auf. */
@@ -378,7 +393,7 @@ export async function deleteUserAction(userId: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 export async function updateSuggestionStatusAction(formData: FormData): Promise<void> {
-  await requireAdmin();
+  await requireTeam();
 
   const id = text(formData, "suggestionId");
   const status = text(formData, "status");
@@ -389,17 +404,17 @@ export async function updateSuggestionStatusAction(formData: FormData): Promise<
 }
 
 export async function deleteSuggestionAction(suggestionId: string): Promise<void> {
-  await requireAdmin();
+  await requireTeam();
   await prisma.suggestion.delete({ where: { id: suggestionId } });
   revalidateAdmin();
 }
 
 // ---------------------------------------------------------------------------
-// Shops – gehen ohne Freigabe live, Admins können nur noch entfernen.
+// Shops – gehen ohne Freigabe live, das Team kann nur noch entfernen.
 // ---------------------------------------------------------------------------
 
 export async function deleteShopAdminAction(shopId: string): Promise<void> {
-  await requireAdmin();
+  await requireTeam();
   await adminDeleteShop(shopId);
   revalidateAdmin();
 }

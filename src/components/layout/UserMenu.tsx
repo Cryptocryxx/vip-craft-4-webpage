@@ -4,6 +4,7 @@ import { Cog, User } from "lucide-react";
 import type { Session } from "next-auth";
 import { SignInButton } from "@/components/auth/SignInButton";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { imTeam } from "@/lib/roles";
 
 /** Login-Button bzw. Avatar + Logout im Header. */
 export function UserMenu({ session }: { session: Session | null }) {
@@ -15,7 +16,7 @@ export function UserMenu({ session }: { session: Session | null }) {
 
   return (
     <div className="flex items-center gap-1">
-      {role === "ADMIN" && (
+      {imTeam(role) && (
         <Link
           href="/admin"
           title="Kontrollraum"

@@ -13,7 +13,13 @@ import {
 } from "@/lib/actions/players";
 import { formatHours } from "@/lib/format";
 
-type Props = { name: string; online: boolean; playtimeHours: number | null };
+type Props = {
+  name: string;
+  online: boolean;
+  playtimeHours: number | null;
+  /** Die IP bleibt beim Admin – Moderatoren sehen den Knopf gar nicht. */
+  darfIpSehen: boolean;
+};
 
 /**
  * Eine Zeile im Kontrollraum: kicken, bannen, entbannen, IP nachsehen.
@@ -22,7 +28,7 @@ type Props = { name: string; online: boolean; playtimeHours: number | null };
  * und beim Gebannten in der Meldung. Die IP steht bewusst nicht von vornherein
  * da: Sie ist ein personenbezogenes Datum, jeder Abruf wird protokolliert.
  */
-export function ServerPlayerRow({ name, online, playtimeHours }: Props) {
+export function ServerPlayerRow({ name, online, playtimeHours, darfIpSehen }: Props) {
   const [grund, setGrund] = useState("");
   const [modus, setModus] = useState<"kick" | "ban" | null>(null);
   const [rueckmeldung, setRueckmeldung] = useState<PlayerActionState & { ip?: string }>({});
@@ -75,15 +81,17 @@ export function ServerPlayerRow({ name, online, playtimeHours }: Props) {
           >
             <Undo2 className="size-3.5" /> Entbannen
           </button>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => ausfuehren(() => revealPlayerIpAction(name))}
-            title="Wird protokolliert"
-            className="btn btn-ghost btn-sm disabled:opacity-40"
-          >
-            {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Eye className="size-3.5" />} IP
-          </button>
+          {darfIpSehen && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => ausfuehren(() => revealPlayerIpAction(name))}
+              title="Wird protokolliert"
+              className="btn btn-ghost btn-sm disabled:opacity-40"
+            >
+              {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Eye className="size-3.5" />} IP
+            </button>
+          )}
         </div>
       </div>
 

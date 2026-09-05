@@ -5,11 +5,12 @@ import { UserRow, type AdminUserRow } from "@/components/admin/UserRow";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { requireAdmin } from "@/lib/admin";
+import { requireTeam } from "@/lib/admin";
 import { discordBotCheckEnabled, discordCheckEnabled } from "@/lib/discord";
 import { formatDate, timeAgo } from "@/lib/format";
 import { listPlayers, recentAudits } from "@/lib/players";
 import { prisma } from "@/lib/prisma";
+import { istAdmin } from "@/lib/roles";
 
 const auditLabels: Record<string, string> = {
   KICK: "Gekickt",
@@ -19,7 +20,8 @@ const auditLabels: Record<string, string> = {
 };
 
 export default async function AdminUsersPage() {
-  const admin = await requireAdmin();
+  const team = await requireTeam();
+  const darfAlles = istAdmin(team.role);
   const [spieler, audits] = await Promise.all([listPlayers(), recentAudits(25)]);
 
   const users = await prisma.user.findMany({
@@ -78,8 +80,10 @@ export default async function AdminUsersPage() {
             <UserRow
               key={user.id}
               user={user}
-              isSelf={user.id === admin.id}
+              isSelf={user.id === team.id}
               discordCheckable={discordCheckEnabled}
+              darfRollenAendern={darfAlles}
+              darfLoeschen={darfAlles}
             />
           ))
         )}
@@ -112,15 +116,17 @@ export default async function AdminUsersPage() {
                   name={p.name}
                   online={p.online}
                   playtimeHours={p.stats?.playtimeHours ?? null}
+                  darfIpSehen={darfAlles}
                 />
               ))}
             </ul>
           )}
         </Panel>
         <p className="mt-3 text-xs leading-relaxed text-cream/45">
-          Kicken geht nur, solange jemand online ist. Bannen und Entbannen wirken sofort auf dem Server. Jede IP-Abfrage
-          wird unten protokolliert – eine IP-Adresse ist ein personenbezogenes Datum, deshalb steht sie nicht einfach in
-          der Liste.
+          Kicken geht nur, solange jemand online ist. Bannen und Entbannen wirken sofort auf dem Server.{" "}
+          {darfAlles
+            ? "Jede IP-Abfrage wird unten protokolliert – eine IP-Adresse ist ein personenbezogenes Datum, deshalb steht sie nicht einfach in der Liste."
+            : "IP-Abfragen bleiben beim Admin."}
         </p>
       </section>
 

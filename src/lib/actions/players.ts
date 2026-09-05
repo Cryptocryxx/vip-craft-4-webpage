@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
-import { requireAdmin } from "@/lib/admin";
+import { requireAdmin, requireTeam } from "@/lib/admin";
 import { findPlayerIp, protokolliere, saveAndRefresh } from "@/lib/players";
 import { runPlayerCommand } from "@/lib/server-commands";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
@@ -57,6 +57,7 @@ function pruefeName(name: string): string | null {
   return GAMERTAG_RE.test(name) ? null : "Ungültiger Minecraft-Name.";
 }
 
+/** Kicken, Bannen und Entbannen gehören zur Moderation – Admin und Moderator. */
 async function fuehreAus(
   type: "KICK" | "BAN" | "UNBAN",
   name: string,
@@ -65,9 +66,9 @@ async function fuehreAus(
 ): Promise<PlayerActionState> {
   let admin;
   try {
-    admin = await requireAdmin();
+    admin = await requireTeam();
   } catch {
-    return { error: "Kein Admin-Zugriff." };
+    return { error: "Dafür fehlen dir die Rechte." };
   }
 
   const fehler = pruefeName(name);
@@ -107,6 +108,9 @@ export async function unbanPlayerAction(name: string): Promise<PlayerActionState
  * Zeigt die letzte bekannte IP eines Spielers – und schreibt mit, wer sie
  * abgerufen hat. Eine IP ist ein personenbezogenes Datum; ohne Protokoll
  * wäre das nicht nachvollziehbar (siehe Datenschutzerklärung, Ziffer 5a).
+ *
+ * Aus demselben Grund bleibt das beim Admin: Moderatoren können kicken und
+ * bannen, dafür braucht es keine IP.
  */
 export async function revealPlayerIpAction(name: string): Promise<PlayerActionState & { ip?: string }> {
   let admin;

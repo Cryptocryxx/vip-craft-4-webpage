@@ -1,6 +1,7 @@
 import "server-only";
 import { serverStartZeit } from "@/lib/event-types";
 import { prisma } from "@/lib/prisma";
+import { imTeam } from "@/lib/roles";
 import { whitelistAdd } from "@/lib/server-commands";
 
 /**
@@ -22,7 +23,7 @@ import { whitelistAdd } from "@/lib/server-commands";
  * Server-Whitelist geschrieben – auch dann nicht, wenn der Server schon läuft.
  * Anträge werden trotzdem angenommen und gelten; sie stehen nur alle
  * gleichzeitig zum Start bereit, statt dass die Ersten schon vorher allein
- * losziehen. Admins bleiben ausgenommen, sonst käme vor dem Start niemand zum
+ * losziehen. Das Team bleibt ausgenommen, sonst käme vor dem Start niemand zum
  * Vorbereiten auf den Server.
  */
 export function freigabeGesperrt(): boolean {
@@ -30,9 +31,9 @@ export function freigabeGesperrt(): boolean {
   return start !== null && Date.now() < start.getTime();
 }
 
-/** Vor dem Start bekommen nur Admins den Befehl, alle anderen eine Vormerkung. */
+/** Vor dem Start bekommt nur das Team den Befehl, alle anderen eine Vormerkung. */
 export function nurVormerken(rolle: string): boolean {
-  return freigabeGesperrt() && rolle !== "ADMIN";
+  return freigabeGesperrt() && !imTeam(rolle);
 }
 
 /** Die Freigabe steht, der Serverbefehl fehlt noch. */

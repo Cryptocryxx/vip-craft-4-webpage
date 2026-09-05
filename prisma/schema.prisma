@@ -24,7 +24,7 @@ model User {
   minecraftName String?  @unique
   twitchName    String?  @unique
   whitelisted   Boolean  @default(false)
-  role          String   @default("PLAYER") // PLAYER | ADMIN
+  role          String   @default("PLAYER") // PLAYER | MODERATOR | ADMIN, siehe lib/roles.ts
 
   /// Ist der Account im Discord-Server? Geprüft über den OAuth-Scope
   /// guilds.members.read, siehe lib/discord.ts

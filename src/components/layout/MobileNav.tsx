@@ -5,7 +5,14 @@ import Link from "next/link";
 import { Cog, LayoutDashboard, Menu, X } from "lucide-react";
 import { NavLinks } from "@/components/layout/NavLinks";
 
-export function MobileNav({ isAdmin = false, loggedIn = false }: { isAdmin?: boolean; loggedIn?: boolean }) {
+export function MobileNav({
+  teamMitglied = false,
+  loggedIn = false,
+}: {
+  /** Admin oder Moderator – beide kommen in den Kontrollraum. */
+  teamMitglied?: boolean;
+  loggedIn?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
 
@@ -33,7 +40,7 @@ export function MobileNav({ isAdmin = false, loggedIn = false }: { isAdmin?: boo
               <LayoutDashboard className="size-4" />
               {loggedIn ? "Dashboard" : "Login"}
             </Link>
-            {isAdmin && (
+            {teamMitglied && (
               <Link
                 href="/admin"
                 onClick={close}

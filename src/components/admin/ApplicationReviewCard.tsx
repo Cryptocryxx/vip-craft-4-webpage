@@ -9,6 +9,7 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatDate, timeAgo } from "@/lib/format";
+import { imTeam, rolleName } from "@/lib/roles";
 import { applicationStatusLabels, type ApplicationStatus, type WhitelistApplicationDTO } from "@/lib/whitelist-types";
 
 const initialState: AdminFormState = {};
@@ -62,7 +63,7 @@ export function ApplicationReviewCard({
             ) : (
               <Badge tone="rose">Nicht im Discord</Badge>
             ))}
-          {applicant.role === "ADMIN" && <Badge tone="brass">Admin</Badge>}
+          {imTeam(applicant.role) && <Badge tone="brass">{rolleName(applicant.role)}</Badge>}
         </div>
       </div>
 

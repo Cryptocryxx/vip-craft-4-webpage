@@ -5,10 +5,11 @@ import { MobileNav } from "@/components/layout/MobileNav";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { ServerStatusWidget } from "@/components/layout/ServerStatusWidget";
 import { UserMenu } from "@/components/layout/UserMenu";
+import { imTeam } from "@/lib/roles";
 
 export async function Header() {
   const session = await auth();
-  const isAdmin = session?.user?.role === "ADMIN";
+  const teamMitglied = imTeam(session?.user?.role);
 
   return (
     <header className="sticky top-0 z-40 border-b border-brass-500/25 bg-wood-950/85 backdrop-blur-md">
@@ -30,7 +31,7 @@ export async function Header() {
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
           <ServerStatusWidget />
           <UserMenu session={session} />
-          <MobileNav isAdmin={isAdmin} loggedIn={Boolean(session?.user)} />
+          <MobileNav teamMitglied={teamMitglied} loggedIn={Boolean(session?.user)} />
         </div>
       </div>
     </header>

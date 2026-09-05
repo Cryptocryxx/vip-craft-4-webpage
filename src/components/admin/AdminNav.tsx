@@ -14,20 +14,23 @@ type AdminRoute =
   | "/admin/server"
   | "/admin/settings";
 
-const items: Array<{ href: AdminRoute; label: string; icon: LucideIcon }> = [
+const items: Array<{ href: AdminRoute; label: string; icon: LucideIcon; nurAdmin?: boolean }> = [
   { href: "/admin", label: "Übersicht", icon: LayoutDashboard },
   { href: "/admin/whitelist", label: "Whitelist-Anträge", icon: ShieldCheck },
   { href: "/admin/shops", label: "Shops", icon: Store },
   { href: "/admin/users", label: "Spieler", icon: Users },
   { href: "/admin/suggestions", label: "Vorschläge", icon: MessageSquare },
-  { href: "/admin/server", label: "Server-Steuerung", icon: Plug },
-  { href: "/admin/settings", label: "Einstellungen", icon: Settings },
+  { href: "/admin/server", label: "Server-Steuerung", icon: Plug, nurAdmin: true },
+  { href: "/admin/settings", label: "Einstellungen", icon: Settings, nurAdmin: true },
 ];
 
-type Props = { pendingCount: number };
+type Props = { pendingCount: number; istAdmin: boolean };
 
-export function AdminNav({ pendingCount }: Props) {
+export function AdminNav({ pendingCount, istAdmin }: Props) {
   const pathname = usePathname();
+  // Ausblenden ist nur die Höflichkeitsform; die Seiten und Actions dahinter
+  // prüfen die Rolle selbst.
+  const sichtbar = items.filter((item) => istAdmin || !item.nurAdmin);
 
   const badgeFor: Partial<Record<AdminRoute, number>> = {
     "/admin/whitelist": pendingCount,
@@ -35,7 +38,7 @@ export function AdminNav({ pendingCount }: Props) {
 
   return (
     <nav aria-label="Admin-Bereiche" className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
-      {items.map((item) => {
+      {sichtbar.map((item) => {
         const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
         const Icon = item.icon;
         const badge = badgeFor[item.href];

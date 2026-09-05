@@ -5,7 +5,8 @@ import { AccessDenied } from "@/components/admin/AccessDenied";
 import { AdminNav } from "@/components/admin/AdminNav";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { getAdminUser } from "@/lib/admin";
+import { getTeamUser } from "@/lib/admin";
+import { istAdmin, rolleName } from "@/lib/roles";
 import { countPendingApplications } from "@/lib/whitelist";
 
 export const metadata: Metadata = {
@@ -15,9 +16,9 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
-  const admin = await getAdminUser();
+  const team = await getTeamUser();
 
-  if (!admin) {
+  if (!team) {
     const session = await auth();
     return <AccessDenied loggedIn={Boolean(session?.user)} />;
   }
@@ -27,14 +28,18 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   return (
     <>
       <PageHeader
-        eyebrow="Admin"
+        eyebrow={rolleName(team.role)}
         icon={Cog}
         title="Kontrollraum"
-        description="Whitelist-Anträge prüfen, Spieler und Beiträge verwalten, Server-Einstellungen anpassen."
+        description={
+          istAdmin(team.role)
+            ? "Whitelist-Anträge prüfen, Spieler und Beiträge verwalten, Server-Einstellungen anpassen."
+            : "Whitelist-Anträge prüfen, Spieler und Beiträge verwalten. Server-Steuerung und Einstellungen bleiben beim Admin."
+        }
       />
       <Container className="grid gap-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <AdminNav pendingCount={pendingCount} />
+          <AdminNav pendingCount={pendingCount} istAdmin={istAdmin(team.role)} />
         </aside>
         <div className="min-w-0">{children}</div>
       </Container>

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Crown, User } from "lucide-react";
+import { Crown, Shield, User } from "lucide-react";
 import { LinkMinecraftForm } from "@/components/dashboard/LinkMinecraftForm";
 import { LinkTwitchForm } from "@/components/dashboard/LinkTwitchForm";
 import { Badge } from "@/components/ui/Badge";
@@ -7,6 +7,7 @@ import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatDate } from "@/lib/format";
+import { imTeam, istAdmin } from "@/lib/roles";
 
 type ProfileCardProps = {
   user: {
@@ -49,9 +50,13 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
             <DiscordIcon className="size-3.5" /> Discord verknüpft
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
-            {user.role === "ADMIN" ? (
+            {istAdmin(user.role) ? (
               <Badge tone="brass">
                 <Crown className="size-3" /> Admin
+              </Badge>
+            ) : imTeam(user.role) ? (
+              <Badge tone="brass">
+                <Shield className="size-3" /> Moderator
               </Badge>
             ) : (
               <Badge tone="wood">Spieler</Badge>

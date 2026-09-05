@@ -1,10 +1,12 @@
 import { AlertTriangle, CheckCircle2, HeartPulse, Plug, Power, ScrollText, ShieldOff, Terminal, XCircle } from "lucide-react";
+import { AdminOnly } from "@/components/admin/AdminOnly";
 import { ServerPowerPanel } from "@/components/admin/ServerPowerPanel";
 import { WatchdogPanel } from "@/components/admin/WatchdogPanel";
 import { WhitelistSuspendPanel } from "@/components/admin/WhitelistSuspendPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { getAdminUser } from "@/lib/admin";
 import { craftyConfig, craftyConfigured } from "@/lib/crafty";
 import { serverStartZeit } from "@/lib/event-types";
 import { formatDate, timeAgo } from "@/lib/format";
@@ -17,6 +19,10 @@ import { getStatsSourceError, loadAllPlayerStats } from "@/lib/stats-source";
 import { freigabeGesperrt } from "@/lib/whitelist-queue";
 
 export default async function AdminServerPage() {
+  // Zweite Schicht: In der Navigation steht der Punkt fuer Moderatoren gar
+  // nicht, die Adresse laesst sich aber eintippen.
+  if (!(await getAdminUser())) return <AdminOnly bereich="Die Server-Steuerung" />;
+
   const [liveState, autoRestart, events, players, commands, ausgesetzt, vorgemerkt] = await Promise.all([
     getServerLiveState(),
     getAutoRestart(),
