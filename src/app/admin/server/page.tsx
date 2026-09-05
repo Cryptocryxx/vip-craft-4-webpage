@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { craftyConfig, craftyConfigured } from "@/lib/crafty";
+import { serverStartZeit } from "@/lib/event-types";
 import { formatDate, timeAgo } from "@/lib/format";
 import { recentCommands } from "@/lib/server-commands";
 import { getAutoRestart, getServerLiveState, recentServerEvents } from "@/lib/server-power";
@@ -13,16 +14,33 @@ import { isServerEventType, serverEventLabels, serverEventTones } from "@/lib/se
 import { getWatchdogStatus } from "@/lib/server-watchdog";
 import { prisma } from "@/lib/prisma";
 import { getStatsSourceError, loadAllPlayerStats } from "@/lib/stats-source";
+import { freigabeGesperrt } from "@/lib/whitelist-queue";
 
 export default async function AdminServerPage() {
-  const [liveState, autoRestart, events, players, commands, ausgesetzt] = await Promise.all([
+  const [liveState, autoRestart, events, players, commands, ausgesetzt, vorgemerkt] = await Promise.all([
     getServerLiveState(),
     getAutoRestart(),
     recentServerEvents(25),
     craftyConfigured ? loadAllPlayerStats() : Promise.resolve(null),
     recentCommands(25),
     prisma.user.count({ where: { whitelistSuspended: true } }),
+    prisma.user.count({ where: { whitelistPending: true } }),
   ]);
+
+  // Die Frage „liegt der Start noch vor uns?" beantwortet die Bibliothek –
+  // ein Date.now() mitten im Rendern waere unrein (siehe event-types).
+  const start = serverStartZeit();
+  const startText =
+    start && freigabeGesperrt()
+      ? start.toLocaleString("de-DE", {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Berlin",
+        })
+      : null;
   const statsError = getStatsSourceError();
   const watchdog = { ...getWatchdogStatus(), autoRestart };
 
@@ -47,7 +65,7 @@ export default async function AdminServerPage() {
           description="Für Wartung oder wenn kurz Ruhe einkehren soll. Admins bleiben drauf, damit der Weg zurück offen bleibt."
           className="mb-5"
         />
-        <WhitelistSuspendPanel ausgesetzt={ausgesetzt} />
+        <WhitelistSuspendPanel ausgesetzt={ausgesetzt} vorgemerkt={vorgemerkt} startText={startText} />
       </section>
 
       <section>

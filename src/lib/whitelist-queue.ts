@@ -1,4 +1,5 @@
 import "server-only";
+import { serverStartZeit } from "@/lib/event-types";
 import { prisma } from "@/lib/prisma";
 import { whitelistAdd } from "@/lib/server-commands";
 
@@ -13,6 +14,26 @@ import { whitelistAdd } from "@/lib/server-commands";
  * Jetzt wird stattdessen vorgemerkt: Die Freigabe gilt sofort, der Befehl wird
  * nachgeholt, sobald der Server wieder oben ist.
  */
+
+/**
+ * Ist die Freigabe auf dem Server noch gesperrt?
+ *
+ * Bis zum Serverstart wird niemand ausser Admins wirklich auf die
+ * Server-Whitelist geschrieben – auch dann nicht, wenn der Server schon läuft.
+ * Anträge werden trotzdem angenommen und gelten; sie stehen nur alle
+ * gleichzeitig zum Start bereit, statt dass die Ersten schon vorher allein
+ * losziehen. Admins bleiben ausgenommen, sonst käme vor dem Start niemand zum
+ * Vorbereiten auf den Server.
+ */
+export function freigabeGesperrt(): boolean {
+  const start = serverStartZeit();
+  return start !== null && Date.now() < start.getTime();
+}
+
+/** Vor dem Start bekommen nur Admins den Befehl, alle anderen eine Vormerkung. */
+export function nurVormerken(rolle: string): boolean {
+  return freigabeGesperrt() && rolle !== "ADMIN";
+}
 
 /** Die Freigabe steht, der Serverbefehl fehlt noch. */
 export async function merkeVor(userId: string): Promise<void> {
@@ -52,6 +73,8 @@ let laeuft = false;
  * beim nächsten Mal wieder dran.
  */
 export async function verarbeiteVormerkungen(): Promise<{ erledigt: number; offen: number }> {
+  // Vor dem Serverstart bleiben alle vorgemerkt, auch wenn der Server laeuft.
+  if (freigabeGesperrt()) return { erledigt: 0, offen: 0 };
   if (laeuft || Date.now() - letzterLauf < ABSTAND_MS) return { erledigt: 0, offen: 0 };
   laeuft = true;
   letzterLauf = Date.now();

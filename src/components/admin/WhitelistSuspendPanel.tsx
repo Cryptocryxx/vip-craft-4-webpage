@@ -16,7 +16,17 @@ const initialState: AdminFormState = {};
  * es rückgängig zu machen. Beide Richtungen stehen nebeneinander: Ein
  * Aussetzen ohne sichtbaren Weg zurück wäre eine Falle.
  */
-export function WhitelistSuspendPanel({ ausgesetzt }: { ausgesetzt: number }) {
+export function WhitelistSuspendPanel({
+  ausgesetzt,
+  vorgemerkt,
+  startText,
+}: {
+  ausgesetzt: number;
+  /** Freigegeben, aber noch nicht auf dem Server (siehe lib/whitelist-queue). */
+  vorgemerkt: number;
+  /** Wann der Server startet – `null`, wenn der Start schon vorbei ist. */
+  startText: string | null;
+}) {
   const [aussetzen, aussetzenAction, aussetzenLaeuft] = useActionState(suspendNonAdminsAction, initialState);
   const [zurueck, zurueckAction, zurueckLaeuft] = useActionState(restoreSuspendedAction, initialState);
 
@@ -27,6 +37,15 @@ export function WhitelistSuspendPanel({ ausgesetzt }: { ausgesetzt: number }) {
         zweite Knopf sie vollständig zurück. Ist der Server dann gerade aus, werden sie vorgemerkt und kommen dran,
         sobald er wieder läuft.
       </p>
+
+      {vorgemerkt > 0 && (
+        <p className="mt-3 rounded-lg border border-diamond-400/40 bg-diamond-500/10 p-3 text-sm text-diamond-100">
+          {vorgemerkt} {vorgemerkt === 1 ? "Spieler ist vorgemerkt und kommt" : "Spieler sind vorgemerkt und kommen"}{" "}
+          {startText
+            ? `zum Serverstart am ${startText} Uhr gemeinsam auf die Whitelist.`
+            : "auf die Whitelist, sobald der Server läuft."}
+        </p>
+      )}
 
       {ausgesetzt > 0 && (
         <p className="mt-3 rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-sm text-brass-100">

@@ -37,6 +37,10 @@ type WhitelistStatusProps = {
   nameUngueltig: boolean;
   /** Vom Team vorübergehend von der Server-Whitelist genommen. */
   whitelistSuspended: boolean;
+  /** Freigegeben, aber der Serverbefehl steht noch aus (siehe whitelist-queue). */
+  whitelistPending: boolean;
+  /** Wann der Server startet – für die Vormerkungs-Meldung. */
+  serverStart: string | null;
 };
 
 type View = {
@@ -146,6 +150,8 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
     modpackGeladen,
     nameUngueltig,
     whitelistSuspended,
+    whitelistPending,
+    serverStart,
   } = props;
   const view = buildView(props);
   const Icon = view.icon;
@@ -246,7 +252,16 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       <div className="relative mt-5 space-y-4 text-sm text-cream/75">
         {whitelisted ? (
           <>
-            {whitelistSuspended ? (
+            {whitelistPending ? (
+              // Freigegeben, aber noch nicht auf dem Server: entweder wartet
+              // alles auf den Start, oder der Server war beim Freischalten aus.
+              <p className="rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-brass-100">
+                Du bist dabei – dein Platz ist sicher.{" "}
+                {serverStart
+                  ? `Freigeschaltet wird zum Serverstart am ${serverStart} Uhr, dann geht es für alle gleichzeitig los.`
+                  : "Freigeschaltet wirst du, sobald der Server wieder läuft."}
+              </p>
+            ) : whitelistSuspended ? (
               // Sonst steht hier „du kannst dich jederzeit verbinden", waehrend
               // der Server einen abweist – und niemand wuesste, warum.
               <p className="rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-brass-100">

@@ -49,6 +49,16 @@ export function getUpcomingEvents(now: Date = new Date()): CommunityEvent[] {
     .sort((a, b) => a.start.localeCompare(b.start));
 }
 
+/**
+ * Wann der Server startet – oder `null`, wenn kein Start-Termin im Kalender
+ * steht. Gebraucht für die Sperre davor: Bis dahin wird niemand ausser Admins
+ * wirklich auf die Server-Whitelist geschrieben (siehe lib/whitelist-queue).
+ */
+export function serverStartZeit(): Date | null {
+  const start = events.find((event) => event.id === "season4-start");
+  return start ? new Date(start.start) : null;
+}
+
 export type StartCountdown = {
   zielIso: string;
   titel: string;

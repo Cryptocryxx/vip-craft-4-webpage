@@ -10,6 +10,7 @@ import { SuggestionBoard } from "@/components/dashboard/SuggestionBoard";
 import { WhitelistStatus } from "@/components/dashboard/WhitelistStatus";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { serverStartZeit } from "@/lib/event-types";
 import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
 import { ensureNameChecked } from "@/lib/name-check";
 import { prisma } from "@/lib/prisma";
@@ -69,6 +70,17 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     ensureNameChecked(user),
   ]);
 
+  const start = serverStartZeit();
+  const serverStartText =
+    start?.toLocaleString("de-DE", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Europe/Berlin",
+    }) ?? null;
+
   return (
     <>
       <PageHeader
@@ -104,6 +116,8 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               modpackGeladen={user.modpackDownloadedAt !== null}
               nameUngueltig={name.gueltig === false}
               whitelistSuspended={user.whitelistSuspended}
+              whitelistPending={user.whitelistPending}
+              serverStart={serverStartText}
             />
           </div>
         </div>

@@ -11,7 +11,7 @@ import { SUGGESTION_STATUSES, type SuggestionStatus } from "@/lib/suggestion-typ
 import { approveApplication, deleteApplication, rejectApplication } from "@/lib/whitelist";
 import { adminDeleteShop } from "@/lib/shops";
 import { whitelistAdd, whitelistRemove } from "@/lib/server-commands";
-import { merkeVor } from "@/lib/whitelist-queue";
+import { merkeVor, nurVormerken } from "@/lib/whitelist-queue";
 import { invalidateStatsCache } from "@/lib/stats-source";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
 
@@ -61,7 +61,7 @@ export async function reviewApplicationAction(
   // Gamertag vor der Änderung merken – für den Konsolenbefehl.
   const application = await prisma.whitelistApplication.findUnique({
     where: { id },
-    select: { userId: true, minecraftName: true, user: { select: { minecraftName: true } } },
+    select: { userId: true, minecraftName: true, user: { select: { minecraftName: true, role: true } } },
   });
   const gamertag = application?.minecraftName ?? application?.user.minecraftName ?? null;
 
@@ -85,6 +85,15 @@ export async function reviewApplicationAction(
   // Whitelist auf dem Server nachziehen. Ein Fehler hier darf die Entscheidung
   // nicht rückgängig machen – sie steht bereits in der Datenbank.
   if (gamertag) {
+    // Vor dem Serverstart wird nur vorgemerkt: Der Antrag gilt, aber alle
+    // kommen gleichzeitig zum Start auf den Server (siehe whitelist-queue).
+    if (decision === "approve" && application && nurVormerken(application.user.role)) {
+      await merkeVor(application.userId);
+      return {
+        success: `${base} ${gamertag} ist vorgemerkt und wird zum Serverstart freigeschaltet.`,
+      };
+    }
+
     const result =
       decision === "approve"
         ? await whitelistAdd(gamertag, "Whitelist-Antrag angenommen", admin)
@@ -159,7 +168,14 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
   try {
     await prisma.user.update({
       where: { id: userId },
-      data: { minecraftName: minecraftName || null, twitchName: twitchName || null, role, whitelisted },
+      data: {
+        minecraftName: minecraftName || null,
+        twitchName: twitchName || null,
+        role,
+        whitelisted,
+        // Wer die Freigabe verliert, soll nicht als vorgemerkt liegen bleiben.
+        ...(whitelisted ? {} : { whitelistPending: false }),
+      },
     });
   } catch (err) {
     if (isUniqueViolation(err)) return { error: "Dieser Minecraft-Username oder Twitch-Kanal ist bereits vergeben." };
@@ -171,6 +187,14 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
 
   // Whitelist-Schalter umgelegt? Dann auf dem Server nachziehen.
   if (before && before.whitelisted !== whitelisted && minecraftName) {
+    // Vor dem Serverstart nur vormerken – siehe whitelist-queue. Das Entziehen
+    // laeuft weiter sofort: Wer nicht mehr darf, soll auch nicht vorgemerkt
+    // bleiben.
+    if (whitelisted && nurVormerken(role)) {
+      await merkeVor(userId);
+      return { success: `Gespeichert. ${minecraftName} ist vorgemerkt und wird zum Serverstart freigeschaltet.` };
+    }
+
     const result = whitelisted
       ? await whitelistAdd(minecraftName, "Whitelist im Kontrollraum gesetzt", admin)
       : await whitelistRemove(minecraftName, "Whitelist im Kontrollraum entzogen", admin);
@@ -191,6 +215,13 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
 
   // Gamertag geändert, während der Spieler gewhitelisted bleibt: Eintrag umziehen.
   if (before?.whitelisted && whitelisted && minecraftName && before.minecraftName && before.minecraftName !== minecraftName) {
+    // Vor dem Start steht der alte Name noch gar nicht auf dem Server – dann
+    // gibt es nichts umzuziehen, nur die Vormerkung gilt weiter.
+    if (nurVormerken(role)) {
+      await merkeVor(userId);
+      return { success: `Gespeichert. ${minecraftName} bleibt vorgemerkt für den Serverstart.` };
+    }
+
     await whitelistRemove(before.minecraftName, "Minecraft-Username geändert (alter Eintrag)", admin);
     await whitelistAdd(minecraftName, "Minecraft-Username geändert (neuer Eintrag)", admin);
     return { success: `Gespeichert. Whitelist-Eintrag von ${before.minecraftName} auf ${minecraftName} umgestellt.` };
