@@ -86,5 +86,107 @@
     "playersOnline": "{count, plural, one {# player is online right now} other {# players are online right now}}",
     "streamsLive": "{count, plural, one {# channel is live right now} other {# channels are live right now}}",
     "nextEvent": "{title} – {relative}"
+  },
+  "Hero": {
+    "minecraftBadge": "Minecraft {version}",
+    "description": "Whitelist server on Minecraft {mcVersion} with {createVersion}: build factories, bolt together a plane that actually flies, and lay a shared rail network across the whole world with everyone else.",
+    "applyWhitelist": "Apply for whitelist",
+    "joinDiscord": "Join Discord",
+    "modpack": "Modpack"
+  },
+  "HowToJoin": {
+    "eyebrow": "Blueprint: how to get in",
+    "title": "Four steps onto the server",
+    "step1Title": "Sign in with Discord",
+    "step1Description": "One click on “Login” automatically creates your whitelist application. Enter your Minecraft username, done.",
+    "step2Title": "Join the Discord",
+    "step2Description": "The application isn't complete until you're in the Discord. We check this automatically – that's where coordination happens and where you'll hear back.",
+    "step3Title": "Install the modpack",
+    "step3Description": "Download “{modpackName}” for Prism Launcher or CurseForge. At least 6 GB RAM recommended.",
+    "step4Title": "Connect & get building",
+    "step4DescriptionReady": "You're whitelisted: enter server IP {serverIp}, grab your starter kit at spawn, and start building.",
+    "step4DescriptionPending": "Once the team whitelists you, you'll find the server address here and in your dashboard.",
+    "applyWhitelist": "Apply for whitelist",
+    "discord": "Discord",
+    "modpack": "Modpack"
+  },
+  "ModpackCard": {
+    "eyebrow": "What you need to play",
+    "heading": "Modpack <b>{name}</b>",
+    "description": "The vanilla client won't get you onto the server – you need our pack. Install it via Prism Launcher or the CurseForge app, set memory to at least {ramGb} GB, then enter the server address you get after being whitelisted.",
+    "downloadModpack": "Download modpack",
+    "applyWhitelist": "Apply for whitelist",
+    "minecraft": "Minecraft",
+    "loader": "Loader",
+    "mods": "Mods",
+    "modsValue": "120+",
+    "ram": "Memory"
+  },
+  "AeronauticsHighlight": {
+    "eyebrow": "The modpack's centerpiece",
+    "titleLine1": "You build",
+    "titleHighlight": "planes",
+    "titleLine2": " here that actually fly",
+    "paragraph1": "<b>Create: Aeronautics</b> is why this pack is unlike any other Create server. You assemble your aircraft block by block – fuselage, wings, engine, propeller – and then it genuinely takes off. From small biplanes to cargo airships, hot air balloons, and flying bases, it's all in there.",
+    "paragraph2": "There's no animation behind it – it's the physics engine <b>Sable</b>: weight, lift, and collisions are actually calculated. A hull that's too heavy won't leave the ground, and too little lift will drop you out of a turn. Your first build will crash almost every time – and that's exactly the fun of it.",
+    "paragraph3": "Because it all builds on Create, everything connects in the end: your factory on the ground produces the parts, the crane loads the freighter, and it flies the cargo to the next base.",
+    "badgeVersion": "Create: Aeronautics 1.3.2",
+    "badgePhysics": "Sable physics",
+    "badgeDiesel": "Diesel engines",
+    "badgeCannons": "Big Cannons integration",
+    "part1Title": "Propeller bearing",
+    "part1Text": "Takes the rotation from your engine and turns it into thrust. Bigger propeller, more pull – and more power needed.",
+    "part2Title": "Aeronautics chassis",
+    "part2Text": "The frame. Everything attached to it becomes one connected aircraft when it takes off.",
+    "part3Title": "Boiler engine",
+    "part3Text": "Generates the mechanical power on board. If you like it louder, use the diesel engines from the bundled addon.",
+    "part4Title": "Balloons",
+    "part4Text": "Provide lift instead of thrust – the basis for airships and hot air balloons."
+  },
+  "FeatureGrid": {
+    "eyebrow": "What makes the server",
+    "title": "Workshop, not wasteland",
+    "description": "VIP Craft 4 isn't a vanilla server with a few mods – it's a shared factory. Here are the most important features.",
+    "planned": "In progress",
+    "createTitle": "Create 6 at the core",
+    "createDescription": "Mechanical factories, Sequenced Assembly, cogwheels everywhere – the modpack is built around Create and runs stably.",
+    "aeronauticsTitle": "Create: Aeronautics",
+    "aeronauticsDescription": "The pack's highlight: planes, airships, and hot air balloons you build yourself, block by block. Propeller bearings provide thrust, Aeronautics chassis hold the hull together, boiler engines supply the power. Flight uses real physics – the Sable engine calculates weight and lift, and a hull that's too heavy simply won't take off.",
+    "shopsTitle": "Player shops",
+    "shopsDescription": "Trade using Create: Numismatics, counted in Cog. You add your own shop yourself – it's visible to everyone instantly, no approval needed.",
+    "mapTitle": "Live map",
+    "mapDescription": "BlueMap shows the whole world and who's out and about where – right in your browser.",
+    "whitelistTitle": "Apply for the whitelist right here",
+    "whitelistDescription": "Sign in with Discord, enter your Minecraft username, done – the application is created automatically and the team whitelists you.",
+    "railTitle": "Shared rail network",
+    "railDescription": "A server-wide rail network with stations at every base – planned and currently under construction. Want to help lay track? Speak up in the Discord."
+  },
+  "NextStepPopup": {
+    "close": "Close notice",
+    "warningEyebrow": "Something's not right",
+    "hintEyebrow": "Your next step",
+    "toDashboard": "Go to dashboard"
+  },
+  "IntroVideo": {
+    "unmute": "Unmute",
+    "mute": "Mute",
+    "skip": "Skip"
+  },
+  "ServerCountdown": {
+    "goingLive": "It's starting",
+    "serverRunning": "The server is live!",
+    "comeJoinUs": "Grab the modpack and come join us – we'll meet at spawn.",
+    "startingIn": "Server starts in",
+    "day": "day",
+    "days": "days",
+    "hours": "hrs",
+    "minutes": "min",
+    "seconds": "sec",
+    "meetingPoint": "· Meeting point: spawn"
+  },
+  "JoinServerButton": {
+    "join": "Join Server",
+    "copied": "IP copied!",
+    "failed": "Copy failed"
   }
 }

@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Boxes, Cpu, Download, Package, Puzzle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ModpackLink } from "@/components/ui/ModpackLink";
@@ -14,37 +15,38 @@ import { siteConfig } from "@/lib/config";
  * (Minecraft 1.21.1 auf NeoForge, gut 120 Mods).
  */
 
-const eckdaten = [
-  { icon: Boxes, label: "Minecraft", wert: siteConfig.minecraftVersion },
-  { icon: Puzzle, label: "Loader", wert: siteConfig.loader },
-  { icon: Package, label: "Mods", wert: "über 120" },
-  { icon: Cpu, label: "Arbeitsspeicher", wert: `${siteConfig.minRamGb} GB` },
-];
+export async function ModpackCard() {
+  const t = await getTranslations("ModpackCard");
 
-export function ModpackCard() {
+  const eckdaten = [
+    { icon: Boxes, label: t("minecraft"), wert: siteConfig.minecraftVersion },
+    { icon: Puzzle, label: t("loader"), wert: siteConfig.loader },
+    { icon: Package, label: t("mods"), wert: t("modsValue") },
+    { icon: Cpu, label: t("ram"), wert: `${siteConfig.minRamGb} GB` },
+  ];
+
   return (
     <section className="py-12">
       <Container>
         <Panel rivets className="grid gap-8 p-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-center sm:p-10">
           <div>
             <p className="eyebrow">
-              <Download className="size-3.5" /> Das brauchst du zum Mitspielen
+              <Download className="size-3.5" /> {t("eyebrow")}
             </p>
             <h2 className="mt-3 font-display text-3xl leading-tight font-bold text-cream">
-              Modpack <span className="text-brass">{siteConfig.modpackName}</span>
+              {t.rich("heading", {
+                name: siteConfig.modpackName,
+                b: (chunks) => <span className="text-brass">{chunks}</span>,
+              })}
             </h2>
-            <p className="mt-4 leading-relaxed text-cream/70">
-              Mit dem Vanilla-Client kommst du nicht auf den Server – es braucht unser Pack. Installier es im Prism
-              Launcher oder in der CurseForge-App, stell den Arbeitsspeicher auf mindestens {siteConfig.minRamGb} GB und
-              trag danach die Server-Adresse ein, die du nach der Freischaltung bekommst.
-            </p>
+            <p className="mt-4 leading-relaxed text-cream/70">{t("description", { ramGb: siteConfig.minRamGb })}</p>
 
             <div className="mt-6 flex flex-wrap gap-3">
               <ModpackLink variant="brass">
-                <Download className="size-4" /> Modpack herunterladen
+                <Download className="size-4" /> {t("downloadModpack")}
               </ModpackLink>
               <Button href="/dashboard" variant="outline">
-                Whitelist beantragen
+                {t("applyWhitelist")}
               </Button>
             </div>
           </div>

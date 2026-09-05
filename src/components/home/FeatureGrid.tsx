@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Cog, HardHat, Map as MapIcon, Plane, ShieldCheck, Store, type LucideIcon } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpRight } from "lucide-react";
@@ -16,64 +17,34 @@ type Feature = {
   planned?: boolean;
 };
 
-const features: Feature[] = [
-  {
-    icon: Cog,
-    title: "Create 6 im Zentrum",
-    description:
-      "Mechanische Fabriken, Sequenced Assembly, Zahnräder überall – das Modpack ist rund um Create gebaut und läuft stabil.",
-    accent: "brass",
-  },
-  {
-    icon: Plane,
-    title: "Create: Aeronautics",
-    description:
-      "Das Highlight des Packs: Flugzeuge, Luftschiffe und Heißluftballons, die du Block für Block selbst baust. Propellerlager treiben an, Aeronautics-Chassis halten den Rumpf zusammen, Boiler-Engines liefern die Kraft. Geflogen wird mit echter Physik – die Sable-Engine rechnet Gewicht und Auftrieb mit, und ein zu schwerer Rumpf hebt schlicht nicht ab.",
-    accent: "diamond",
-  },
-  {
-    icon: Store,
-    title: "Spieler-Shops",
-    description:
-      "Handel mit Create: Numismatics, gerechnet in Cog. Deinen Laden trägst du selbst ein – er ist sofort für alle sichtbar, ohne Freigabe.",
-    href: "/shops",
-    accent: "brass",
-  },
-  {
-    icon: MapIcon,
-    title: "Live-Karte",
-    description: "BlueMap zeigt die ganze Welt und wer gerade wo unterwegs ist – direkt im Browser.",
-    href: "/map",
-    accent: "diamond",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Whitelist direkt hier beantragen",
-    description:
-      "Mit Discord einloggen, Minecraft-Username eintragen, fertig – der Antrag entsteht automatisch und das Team schaltet dich frei.",
-    href: "/dashboard",
-    accent: "brass",
-  },
-  {
-    icon: HardHat,
-    title: "Gemeinsames Zugnetz",
-    description:
-      "Ein serverweites Streckennetz mit Bahnhöfen an jeder Basis – geplant und gerade im Bau. Wer mitverlegen will, meldet sich im Discord.",
-    accent: "diamond",
-    planned: true,
-  },
-];
+export async function FeatureGrid() {
+  const t = await getTranslations("FeatureGrid");
 
-export function FeatureGrid() {
+  const features: Feature[] = [
+    { icon: Cog, title: t("createTitle"), description: t("createDescription"), accent: "brass" },
+    { icon: Plane, title: t("aeronauticsTitle"), description: t("aeronauticsDescription"), accent: "diamond" },
+    { icon: Store, title: t("shopsTitle"), description: t("shopsDescription"), href: "/shops", accent: "brass" },
+    { icon: MapIcon, title: t("mapTitle"), description: t("mapDescription"), href: "/map", accent: "diamond" },
+    {
+      icon: ShieldCheck,
+      title: t("whitelistTitle"),
+      description: t("whitelistDescription"),
+      href: "/dashboard",
+      accent: "brass",
+    },
+    {
+      icon: HardHat,
+      title: t("railTitle"),
+      description: t("railDescription"),
+      accent: "diamond",
+      planned: true,
+    },
+  ];
+
   return (
     <section className="py-20">
       <Container>
-        <SectionHeading
-          eyebrow="Was den Server ausmacht"
-          icon={Cog}
-          title="Werkstatt statt Wüste"
-          description="VIP Craft 4 ist kein Vanilla-Server mit ein paar Mods, sondern eine gemeinsame Fabrik. Das sind die wichtigsten Features."
-        />
+        <SectionHeading eyebrow={t("eyebrow")} icon={Cog} title={t("title")} description={t("description")} />
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => {
             const Icon = feature.icon;
@@ -90,7 +61,7 @@ export function FeatureGrid() {
                     <Icon className="size-5" />
                   </span>
                   {feature.planned ? (
-                    <Badge tone="neutral">Im Bau</Badge>
+                    <Badge tone="neutral">{t("planned")}</Badge>
                   ) : (
                     feature.href && (
                       <ArrowUpRight className="size-4 text-cream/30 transition-all group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-brass-200" />

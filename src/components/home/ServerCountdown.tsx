@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { CalendarClock, PartyPopper } from "lucide-react";
 
 /**
@@ -52,6 +53,8 @@ export function ServerCountdown({
   /** Zeitstempel vom Server-Rendern, in Millisekunden. */
   serverJetzt: number;
 }) {
+  const t = useTranslations("ServerCountdown");
+  const locale = useLocale();
   const ziel = new Date(zielIso).getTime();
   const [jetzt, setJetzt] = useState(serverJetzt);
 
@@ -68,7 +71,7 @@ export function ServerCountdown({
   const minuten = Math.floor((rest % STUNDE) / MINUTE);
   const sekunden = Math.floor((rest % MINUTE) / SEKUNDE);
 
-  const termin = new Date(zielIso).toLocaleString("de-DE", {
+  const termin = new Date(zielIso).toLocaleString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -81,14 +84,12 @@ export function ServerCountdown({
     return (
       <div className="mt-10 max-w-lg border-t border-brass-500/20 pt-6">
         <p className="eyebrow text-[10px]">
-          <PartyPopper className="size-3.5" /> Es geht los
+          <PartyPopper className="size-3.5" /> {t("goingLive")}
         </p>
         <p className="font-pixel mt-3 text-sm leading-relaxed text-brass-100 sm:text-base" style={pixelSchatten}>
-          Der Server läuft!
+          {t("serverRunning")}
         </p>
-        <p className="mt-2 text-sm text-cream/65">
-          Schnapp dir das Modpack und komm dazu – wir treffen uns am Spawn.
-        </p>
+        <p className="mt-2 text-sm text-cream/65">{t("comeJoinUs")}</p>
       </div>
     );
   }
@@ -96,19 +97,19 @@ export function ServerCountdown({
   return (
     <div className="mt-10 max-w-lg border-t border-brass-500/20 pt-6">
       <p className="eyebrow text-[10px]">
-        <CalendarClock className="size-3.5" /> Server-Start in
+        <CalendarClock className="size-3.5" /> {t("startingIn")}
       </p>
 
       {/* Vier gleich breite Spalten statt fester Breiten: So bleibt die Reihe
           auch auf schmalen Handys in einer Zeile, ohne dass etwas umbricht. */}
       <div className="mt-3 grid max-w-sm grid-cols-4 gap-1.5 sm:max-w-md sm:gap-2.5 lg:max-w-lg">
-        <Feld wert={tage} einheit={tage === 1 ? "Tag" : "Tage"} />
-        <Feld wert={stunden} einheit="Std" />
-        <Feld wert={minuten} einheit="Min" />
-        <Feld wert={sekunden} einheit="Sek" />
+        <Feld wert={tage} einheit={tage === 1 ? t("day") : t("days")} />
+        <Feld wert={stunden} einheit={t("hours")} />
+        <Feld wert={minuten} einheit={t("minutes")} />
+        <Feld wert={sekunden} einheit={t("seconds")} />
       </div>
 
-      <p className="mt-3 text-sm text-cream/65">{termin} Uhr · Treffpunkt am Spawn</p>
+      <p className="mt-3 text-sm text-cream/65">{termin} {t("meetingPoint")}</p>
     </div>
   );
 }

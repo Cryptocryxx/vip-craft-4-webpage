@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Download, Rocket, Route, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ModpackLink } from "@/components/ui/ModpackLink";
@@ -9,30 +10,30 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { siteConfig } from "@/lib/config";
 
 /** `serverIp` ist null, solange der Besucher nicht freigeschaltet ist. */
-export function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null; discordInvite: string }) {
+export async function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null; discordInvite: string }) {
+  const t = await getTranslations("HowToJoin");
+
   const steps = [
     {
-      title: "Mit Discord anmelden",
-      description:
-        "Ein Klick auf „Login“ – dabei wird automatisch dein Whitelist-Antrag angelegt. Minecraft-Username eintragen, fertig.",
+      title: t("step1Title"),
+      description: t("step1Description"),
       icon: ShieldCheck,
     },
     {
-      title: "Discord beitreten",
-      description:
-        "Der Antrag ist erst vollständig, wenn du im Discord bist. Wir prüfen das automatisch – dort läuft die Absprache und dort bekommst du Bescheid.",
+      title: t("step2Title"),
+      description: t("step2Description"),
       icon: Users,
     },
     {
-      title: "Modpack installieren",
-      description: `Lade das „${siteConfig.modpackName}“ für Prism Launcher oder CurseForge herunter. Mindestens 6 GB RAM empfohlen.`,
+      title: t("step3Title"),
+      description: t("step3Description", { modpackName: siteConfig.modpackName }),
       icon: Download,
     },
     {
-      title: "Verbinden & loslegen",
+      title: t("step4Title"),
       description: serverIp
-        ? `Du bist freigeschaltet: Server-IP ${serverIp} eintragen, Startkit am Spawn abholen und losbauen.`
-        : "Sobald das Team dich freischaltet, findest du die Server-Adresse hier und in deinem Dashboard.",
+        ? t("step4DescriptionReady", { serverIp })
+        : t("step4DescriptionPending"),
       icon: Rocket,
     },
   ];
@@ -45,12 +46,7 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null
             teeth={16}
             className="pointer-events-none absolute -right-24 -bottom-24 size-72 text-diamond-300/10 animate-gear-spin-reverse"
           />
-          <SectionHeading
-            eyebrow="Bauplan: So kommst du drauf"
-            icon={Route}
-            title="In vier Schritten auf den Server"
-            className="mb-10"
-          />
+          <SectionHeading eyebrow={t("eyebrow")} icon={Route} title={t("title")} className="mb-10" />
           <ol className="relative grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, index) => {
               const Icon = step.icon;
@@ -70,13 +66,13 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null
           </ol>
           <div className="mt-10 flex flex-wrap gap-3">
             <Button href="/dashboard" variant="diamond">
-              <ShieldCheck className="size-4" /> Whitelist beantragen
+              <ShieldCheck className="size-4" /> {t("applyWhitelist")}
             </Button>
             <Button href={discordInvite} variant="outline" target="_blank" rel="noopener noreferrer">
-              <DiscordIcon className="size-4" /> Discord
+              <DiscordIcon className="size-4" /> {t("discord")}
             </Button>
             <ModpackLink variant="outline">
-              <Download className="size-4" /> Modpack
+              <Download className="size-4" /> {t("modpack")}
             </ModpackLink>
           </div>
         </Panel>

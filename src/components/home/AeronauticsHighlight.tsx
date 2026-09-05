@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 import { Fan, Flame, Frame, Plane, Wind } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";
@@ -11,30 +13,18 @@ import { Panel } from "@/components/ui/Panel";
  * Aeronautics-Erweiterung für Create Big Cannons).
  */
 
-const parts = [
-  {
-    icon: Fan,
-    title: "Propellerlager",
-    text: "Nimmt die Rotation aus deinem Antrieb auf und macht daraus Schub. Größerer Propeller, mehr Zug – und mehr Kraftbedarf.",
-  },
-  {
-    icon: Frame,
-    title: "Aeronautics-Chassis",
-    text: "Der Rahmen. Alles, was daran hängt, wird beim Abheben zu einem zusammenhängenden Flugkörper.",
-  },
-  {
-    icon: Flame,
-    title: "Boiler-Engine",
-    text: "Erzeugt die mechanische Kraft an Bord. Wer es lauter mag, nimmt die Dieselmotoren aus dem mitgelieferten Zusatz.",
-  },
-  {
-    icon: Wind,
-    title: "Ballons",
-    text: "Bringen Auftrieb statt Schub – die Grundlage für Luftschiffe und Heißluftballons.",
-  },
-];
+export async function AeronauticsHighlight() {
+  const t = await getTranslations("AeronauticsHighlight");
 
-export function AeronauticsHighlight() {
+  const parts = [
+    { icon: Fan, title: t("part1Title"), text: t("part1Text") },
+    { icon: Frame, title: t("part2Title"), text: t("part2Text") },
+    { icon: Flame, title: t("part3Title"), text: t("part3Text") },
+    { icon: Wind, title: t("part4Title"), text: t("part4Text") },
+  ];
+
+  const fett = (chunks: ReactNode) => <span className="font-semibold text-cream">{chunks}</span>;
+
   return (
     <section className="relative overflow-hidden border-y border-diamond-400/20 bg-diamond-950/30 py-20">
       <div
@@ -46,36 +36,24 @@ export function AeronauticsHighlight() {
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
           <div>
             <p className="eyebrow">
-              <Plane className="size-3.5" /> Das Herzstück des Modpacks
+              <Plane className="size-3.5" /> {t("eyebrow")}
             </p>
             <h2 className="mt-3 font-display text-3xl leading-tight font-bold text-cream sm:text-4xl">
-              Ihr baut hier <span className="text-diamond">Flugzeuge</span>, die wirklich fliegen
+              {t("titleLine1")} <span className="text-diamond">{t("titleHighlight")}</span>
+              {t("titleLine2")}
             </h2>
 
             <div className="mt-5 space-y-4 text-cream/75">
-              <p className="leading-relaxed">
-                <span className="font-semibold text-cream">Create: Aeronautics</span> ist der Grund, warum dieses Pack
-                anders ist als jeder andere Create-Server. Du setzt dein Fluggerät Block für Block zusammen – Rumpf,
-                Tragflächen, Motor, Propeller – und dann hebt es tatsächlich ab. Vom kleinen Doppeldecker über
-                Frachtluftschiffe und Heißluftballons bis zur fliegenden Basis ist alles drin.
-              </p>
-              <p className="leading-relaxed">
-                Dahinter steckt keine Animation, sondern die Physik-Engine <span className="text-cream">Sable</span>:
-                Gewicht, Auftrieb und Kollisionen werden echt gerechnet. Ein zu schwerer Rumpf kommt nicht vom Boden,
-                zu wenig Auftrieb sackt dir in der Kurve weg. Das erste Modell stürzt praktisch immer ab – und genau das
-                ist der Spaß daran.
-              </p>
-              <p className="leading-relaxed">
-                Weil das Ganze auf Create aufsetzt, hängt am Ende alles zusammen: Deine Fabrik am Boden produziert die
-                Teile, der Kran belädt den Frachter, und der fliegt die Ladung zur nächsten Basis.
-              </p>
+              <p className="leading-relaxed">{t.rich("paragraph1", { b: fett })}</p>
+              <p className="leading-relaxed">{t.rich("paragraph2", { b: fett })}</p>
+              <p className="leading-relaxed">{t("paragraph3")}</p>
             </div>
 
             <div className="mt-6 flex flex-wrap gap-2">
-              <Badge tone="diamond">Create: Aeronautics 1.3.2</Badge>
-              <Badge tone="brass">Sable-Physik</Badge>
-              <Badge tone="brass">Dieselmotoren</Badge>
-              <Badge tone="copper">Big-Cannons-Integration</Badge>
+              <Badge tone="diamond">{t("badgeVersion")}</Badge>
+              <Badge tone="brass">{t("badgePhysics")}</Badge>
+              <Badge tone="brass">{t("badgeDiesel")}</Badge>
+              <Badge tone="copper">{t("badgeCannons")}</Badge>
             </div>
           </div>
 

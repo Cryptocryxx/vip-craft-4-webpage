@@ -86,5 +86,107 @@
     "playersOnline": "{count, plural, one {# Spieler ist gerade online} other {# Spieler sind gerade online}}",
     "streamsLive": "{count, plural, one {# Kanal ist gerade live} other {# Kanäle sind gerade live}}",
     "nextEvent": "{title} – {relative}"
+  },
+  "Hero": {
+    "minecraftBadge": "Minecraft {version}",
+    "description": "Whitelist-Server auf Minecraft {mcVersion} mit {createVersion}: Baue Fabriken, schraub dir ein Flugzeug zusammen, das wirklich fliegt, und leg mit den anderen ein Schienennetz durch die ganze Welt.",
+    "applyWhitelist": "Whitelist beantragen",
+    "joinDiscord": "Discord beitreten",
+    "modpack": "Modpack"
+  },
+  "HowToJoin": {
+    "eyebrow": "Bauplan: So kommst du drauf",
+    "title": "In vier Schritten auf den Server",
+    "step1Title": "Mit Discord anmelden",
+    "step1Description": "Ein Klick auf „Login“ – dabei wird automatisch dein Whitelist-Antrag angelegt. Minecraft-Username eintragen, fertig.",
+    "step2Title": "Discord beitreten",
+    "step2Description": "Der Antrag ist erst vollständig, wenn du im Discord bist. Wir prüfen das automatisch – dort läuft die Absprache und dort bekommst du Bescheid.",
+    "step3Title": "Modpack installieren",
+    "step3Description": "Lade das „{modpackName}“ für Prism Launcher oder CurseForge herunter. Mindestens 6 GB RAM empfohlen.",
+    "step4Title": "Verbinden & loslegen",
+    "step4DescriptionReady": "Du bist freigeschaltet: Server-IP {serverIp} eintragen, Startkit am Spawn abholen und losbauen.",
+    "step4DescriptionPending": "Sobald das Team dich freischaltet, findest du die Server-Adresse hier und in deinem Dashboard.",
+    "applyWhitelist": "Whitelist beantragen",
+    "discord": "Discord",
+    "modpack": "Modpack"
+  },
+  "ModpackCard": {
+    "eyebrow": "Das brauchst du zum Mitspielen",
+    "heading": "Modpack <b>{name}</b>",
+    "description": "Mit dem Vanilla-Client kommst du nicht auf den Server – es braucht unser Pack. Installier es im Prism Launcher oder in der CurseForge-App, stell den Arbeitsspeicher auf mindestens {ramGb} GB und trag danach die Server-Adresse ein, die du nach der Freischaltung bekommst.",
+    "downloadModpack": "Modpack herunterladen",
+    "applyWhitelist": "Whitelist beantragen",
+    "minecraft": "Minecraft",
+    "loader": "Loader",
+    "mods": "Mods",
+    "modsValue": "über 120",
+    "ram": "Arbeitsspeicher"
+  },
+  "AeronauticsHighlight": {
+    "eyebrow": "Das Herzstück des Modpacks",
+    "titleLine1": "Ihr baut hier",
+    "titleHighlight": "Flugzeuge",
+    "titleLine2": ", die wirklich fliegen",
+    "paragraph1": "<b>Create: Aeronautics</b> ist der Grund, warum dieses Pack anders ist als jeder andere Create-Server. Du setzt dein Fluggerät Block für Block zusammen – Rumpf, Tragflächen, Motor, Propeller – und dann hebt es tatsächlich ab. Vom kleinen Doppeldecker über Frachtluftschiffe und Heißluftballons bis zur fliegenden Basis ist alles drin.",
+    "paragraph2": "Dahinter steckt keine Animation, sondern die Physik-Engine <b>Sable</b>: Gewicht, Auftrieb und Kollisionen werden echt gerechnet. Ein zu schwerer Rumpf kommt nicht vom Boden, zu wenig Auftrieb sackt dir in der Kurve weg. Das erste Modell stürzt praktisch immer ab – und genau das ist der Spaß daran.",
+    "paragraph3": "Weil das Ganze auf Create aufsetzt, hängt am Ende alles zusammen: Deine Fabrik am Boden produziert die Teile, der Kran belädt den Frachter, und der fliegt die Ladung zur nächsten Basis.",
+    "badgeVersion": "Create: Aeronautics 1.3.2",
+    "badgePhysics": "Sable-Physik",
+    "badgeDiesel": "Dieselmotoren",
+    "badgeCannons": "Big-Cannons-Integration",
+    "part1Title": "Propellerlager",
+    "part1Text": "Nimmt die Rotation aus deinem Antrieb auf und macht daraus Schub. Größerer Propeller, mehr Zug – und mehr Kraftbedarf.",
+    "part2Title": "Aeronautics-Chassis",
+    "part2Text": "Der Rahmen. Alles, was daran hängt, wird beim Abheben zu einem zusammenhängenden Flugkörper.",
+    "part3Title": "Boiler-Engine",
+    "part3Text": "Erzeugt die mechanische Kraft an Bord. Wer es lauter mag, nimmt die Dieselmotoren aus dem mitgelieferten Zusatz.",
+    "part4Title": "Ballons",
+    "part4Text": "Bringen Auftrieb statt Schub – die Grundlage für Luftschiffe und Heißluftballons."
+  },
+  "FeatureGrid": {
+    "eyebrow": "Was den Server ausmacht",
+    "title": "Werkstatt statt Wüste",
+    "description": "VIP Craft 4 ist kein Vanilla-Server mit ein paar Mods, sondern eine gemeinsame Fabrik. Das sind die wichtigsten Features.",
+    "planned": "Im Bau",
+    "createTitle": "Create 6 im Zentrum",
+    "createDescription": "Mechanische Fabriken, Sequenced Assembly, Zahnräder überall – das Modpack ist rund um Create gebaut und läuft stabil.",
+    "aeronauticsTitle": "Create: Aeronautics",
+    "aeronauticsDescription": "Das Highlight des Packs: Flugzeuge, Luftschiffe und Heißluftballons, die du Block für Block selbst baust. Propellerlager treiben an, Aeronautics-Chassis halten den Rumpf zusammen, Boiler-Engines liefern die Kraft. Geflogen wird mit echter Physik – die Sable-Engine rechnet Gewicht und Auftrieb mit, und ein zu schwerer Rumpf hebt schlicht nicht ab.",
+    "shopsTitle": "Spieler-Shops",
+    "shopsDescription": "Handel mit Create: Numismatics, gerechnet in Cog. Deinen Laden trägst du selbst ein – er ist sofort für alle sichtbar, ohne Freigabe.",
+    "mapTitle": "Live-Karte",
+    "mapDescription": "BlueMap zeigt die ganze Welt und wer gerade wo unterwegs ist – direkt im Browser.",
+    "whitelistTitle": "Whitelist direkt hier beantragen",
+    "whitelistDescription": "Mit Discord einloggen, Minecraft-Username eintragen, fertig – der Antrag entsteht automatisch und das Team schaltet dich frei.",
+    "railTitle": "Gemeinsames Zugnetz",
+    "railDescription": "Ein serverweites Streckennetz mit Bahnhöfen an jeder Basis – geplant und gerade im Bau. Wer mitverlegen will, meldet sich im Discord."
+  },
+  "NextStepPopup": {
+    "close": "Hinweis schließen",
+    "warningEyebrow": "Da stimmt etwas nicht",
+    "hintEyebrow": "Dein nächster Schritt",
+    "toDashboard": "Zum Dashboard"
+  },
+  "IntroVideo": {
+    "unmute": "Ton einschalten",
+    "mute": "Ton ausschalten",
+    "skip": "Überspringen"
+  },
+  "ServerCountdown": {
+    "goingLive": "Es geht los",
+    "serverRunning": "Der Server läuft!",
+    "comeJoinUs": "Schnapp dir das Modpack und komm dazu – wir treffen uns am Spawn.",
+    "startingIn": "Server-Start in",
+    "day": "Tag",
+    "days": "Tage",
+    "hours": "Std",
+    "minutes": "Min",
+    "seconds": "Sek",
+    "meetingPoint": "Uhr · Treffpunkt am Spawn"
+  },
+  "JoinServerButton": {
+    "join": "Join Server",
+    "copied": "IP kopiert!",
+    "failed": "Kopieren fehlgeschlagen"
   }
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ function fallbackCopy(text: string): boolean {
 
 /** "Join Server"-Button: kopiert die Server-IP in die Zwischenablage. */
 export function JoinServerButton({ ip, className }: { ip: string; className?: string }) {
+  const t = useTranslations("JoinServerButton");
   const [state, setState] = useState<"idle" | "copied" | "error">("idle");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -53,7 +55,7 @@ export function JoinServerButton({ ip, className }: { ip: string; className?: st
       className={cn("btn btn-lg", state === "copied" ? "btn-diamond" : "btn-brass", className)}
     >
       {state === "copied" ? <Check className="size-5" /> : <Copy className="size-5" />}
-      <span>{state === "copied" ? "IP kopiert!" : state === "error" ? "Kopieren fehlgeschlagen" : "Join Server"}</span>
+      <span>{state === "copied" ? t("copied") : state === "error" ? t("failed") : t("join")}</span>
       <span className="ml-1 hidden rounded-md bg-black/15 px-2 py-0.5 font-mono text-xs font-normal tracking-normal sm:inline">
         {ip}
       </span>

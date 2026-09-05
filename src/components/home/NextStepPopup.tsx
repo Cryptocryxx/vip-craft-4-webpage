@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { AlertTriangle, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,7 @@ export function NextStepPopup({
 }) {
   const speicherSchluessel = `vipcraft:hinweis-weg:${schluessel}`;
   const warnung = ton === "warnung";
+  const t = useTranslations("NextStepPopup");
 
   const weg = useSyncExternalStore(
     abonnieren,
@@ -90,7 +92,7 @@ export function NextStepPopup({
       <button
         type="button"
         onClick={() => wegklicken(speicherSchluessel)}
-        aria-label="Hinweis schließen"
+        aria-label={t("close")}
         className="absolute top-2 right-2 rounded p-1 text-cream/45 hover:bg-white/10 hover:text-cream"
       >
         <X className="size-4" />
@@ -98,13 +100,13 @@ export function NextStepPopup({
 
       <p className={cn("eyebrow text-[10px]", warnung && "text-rose-200")}>
         {warnung ? <AlertTriangle className="size-3" /> : null}
-        {warnung ? "Da stimmt etwas nicht" : "Dein nächster Schritt"}
+        {warnung ? t("warningEyebrow") : t("hintEyebrow")}
       </p>
       <p className="mt-1 pr-6 font-display font-bold text-cream">{titel}</p>
       <p className="mt-1 text-sm leading-relaxed text-cream/70">{text}</p>
 
       <Link href="/dashboard" className={cn("btn btn-sm mt-3", warnung ? "btn-outline" : "btn-brass")}>
-        Zum Dashboard <ArrowRight className="size-4" />
+        {t("toDashboard")} <ArrowRight className="size-4" />
       </Link>
     </div>
   );

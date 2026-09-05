@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
 import { SkipForward, Volume2, VolumeX } from "lucide-react";
 
 /**
@@ -75,6 +76,8 @@ export function IntroVideo({ src }: { src: string }) {
   const aktiv = useSyncExternalStore(abonnieren, imBrowser, aufDemServer);
   const [blendetAus, setBlendetAus] = useState(false);
   const [stumm, setStumm] = useState(true);
+
+  const t = useTranslations("IntroVideo");
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -174,7 +177,7 @@ export function IntroVideo({ src }: { src: string }) {
             setStumm(neu);
           }}
           className="btn btn-sm border border-white/25 bg-black/50 text-white/90 backdrop-blur hover:bg-black/70"
-          aria-label={stumm ? "Ton einschalten" : "Ton ausschalten"}
+          aria-label={stumm ? t("unmute") : t("mute")}
         >
           {stumm ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
         </button>
@@ -183,7 +186,7 @@ export function IntroVideo({ src }: { src: string }) {
           onClick={beenden}
           className="btn btn-sm border border-white/25 bg-black/50 text-white/90 backdrop-blur hover:bg-black/70"
         >
-          <SkipForward className="size-4" /> Überspringen
+          <SkipForward className="size-4" /> {t("skip")}
         </button>
       </div>
     </div>

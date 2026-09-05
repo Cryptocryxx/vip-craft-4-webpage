@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Cog, Download, ShieldCheck } from "lucide-react";
 import { JoinServerButton } from "@/components/home/JoinServerButton";
 import { Badge } from "@/components/ui/Badge";
@@ -12,7 +13,7 @@ import { siteConfig } from "@/lib/config";
 import type { StartCountdown } from "@/lib/event-types";
 
 /** `serverIp` ist null, solange der Besucher nicht freigeschaltet ist. */
-export function Hero({
+export async function Hero({
   serverIp,
   discordInvite,
   countdown,
@@ -22,6 +23,8 @@ export function Hero({
   /** `null`, sobald der Start lange genug her ist. */
   countdown: StartCountdown | null;
 }) {
+  const t = await getTranslations("Hero");
+
   return (
     <section className="relative overflow-hidden border-b border-brass-500/20">
       {/* Zahnrad-Kulisse */}
@@ -39,7 +42,7 @@ export function Hero({
             <Badge tone="brass">
               <Cog className="size-3" /> {siteConfig.createVersion}
             </Badge>
-            <Badge tone="wood">Minecraft {siteConfig.minecraftVersion}</Badge>
+            <Badge tone="wood">{t("minecraftBadge", { version: siteConfig.minecraftVersion })}</Badge>
           </div>
 
           <h1 className="mt-5 text-5xl leading-[0.95] font-bold sm:text-6xl lg:text-7xl">
@@ -47,9 +50,7 @@ export function Hero({
           </h1>
 
           <p className="mt-5 max-w-xl text-lg text-cream/75 sm:text-xl">
-            Whitelist-Server auf Minecraft {siteConfig.minecraftVersion} mit {siteConfig.createVersion}: Baue Fabriken,
-            schraub dir ein Flugzeug zusammen, das wirklich fliegt, und leg mit den anderen ein Schienennetz durch die
-            ganze Welt.
+            {t("description", { mcVersion: siteConfig.minecraftVersion, createVersion: siteConfig.createVersion })}
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -58,16 +59,16 @@ export function Hero({
             ) : (
               <Button href="/dashboard" variant="brass" size="lg">
                 <ShieldCheck className="size-5" />
-                Whitelist beantragen
+                {t("applyWhitelist")}
               </Button>
             )}
             <ModpackLink variant="diamond" size="lg">
               <Download className="size-5" />
-              Modpack
+              {t("modpack")}
             </ModpackLink>
             <Button href={discordInvite} variant="outline" size="lg" target="_blank" rel="noopener noreferrer">
               <DiscordIcon className="size-5" />
-              Discord beitreten
+              {t("joinDiscord")}
             </Button>
           </div>
 
