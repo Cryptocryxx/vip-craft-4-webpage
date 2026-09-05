@@ -11,6 +11,7 @@ import { SUGGESTION_STATUSES, type SuggestionStatus } from "@/lib/suggestion-typ
 import { approveApplication, deleteApplication, rejectApplication } from "@/lib/whitelist";
 import { adminDeleteShop } from "@/lib/shops";
 import { whitelistAdd, whitelistRemove } from "@/lib/server-commands";
+import { merkeVor } from "@/lib/whitelist-queue";
 import { invalidateStatsCache } from "@/lib/stats-source";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
 
@@ -60,7 +61,7 @@ export async function reviewApplicationAction(
   // Gamertag vor der Änderung merken – für den Konsolenbefehl.
   const application = await prisma.whitelistApplication.findUnique({
     where: { id },
-    select: { minecraftName: true, user: { select: { minecraftName: true } } },
+    select: { userId: true, minecraftName: true, user: { select: { minecraftName: true } } },
   });
   const gamertag = application?.minecraftName ?? application?.user.minecraftName ?? null;
 
@@ -90,6 +91,14 @@ export async function reviewApplicationAction(
         : await whitelistRemove(gamertag, "Whitelist-Antrag abgelehnt", admin);
 
     if (!result.ok) {
+      // Der Server ist aus oder nicht erreichbar. Die Entscheidung steht
+      // trotzdem – der Befehl wird nachgeholt, sobald er wieder laeuft.
+      if (decision === "approve" && application) {
+        await merkeVor(application.userId);
+        return {
+          success: `${base} Der Server war nicht erreichbar – ${gamertag} ist vorgemerkt und wird freigeschaltet, sobald er wieder läuft.`,
+        };
+      }
       return { success: base, error: `Server-Befehl fehlgeschlagen: ${result.error}` };
     }
     return { success: `${base} ${gamertag} wurde auf dem Server ${decision === "approve" ? "freigeschaltet" : "entfernt"}.` };
@@ -166,7 +175,17 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
       ? await whitelistAdd(minecraftName, "Whitelist im Kontrollraum gesetzt", admin)
       : await whitelistRemove(minecraftName, "Whitelist im Kontrollraum entzogen", admin);
 
-    if (!result.ok) return { success: "Gespeichert.", error: `Server-Befehl fehlgeschlagen: ${result.error}` };
+    if (!result.ok) {
+      if (whitelisted) {
+        await merkeVor(userId);
+        return {
+          success: `Gespeichert. Der Server war nicht erreichbar – ${minecraftName} ist vorgemerkt und wird freigeschaltet, sobald er wieder läuft.`,
+        };
+      }
+      return { success: "Gespeichert.", error: `Server-Befehl fehlgeschlagen: ${result.error}` };
+    }
+    // Geklappt - eine eventuelle Vormerkung ist damit erledigt.
+    await prisma.user.update({ where: { id: userId }, data: { whitelistPending: false } });
     return { success: `Gespeichert. ${minecraftName} auf dem Server ${whitelisted ? "freigeschaltet" : "entfernt"}.` };
   }
 
@@ -204,6 +223,115 @@ export async function checkDiscordMembershipsAction(): Promise<AdminFormState> {
   const teile = [`${bilanz.mitglied} im Discord`, `${bilanz.nichtMitglied} nicht`];
   if (bilanz.unklar > 0) teile.push(`${bilanz.unklar} unklar`);
   return { success: `${bilanz.geprueft} geprüft: ${teile.join(", ")}.` };
+}
+
+/**
+ * Nimmt alle außer Admins vorübergehend von der Server-Whitelist.
+ *
+ * `whitelisted` bleibt dabei stehen – sonst wüsste hinterher niemand mehr, wer
+ * zurückdarf. Nur wer wirklich vom Server entfernt wurde, gilt als ausgesetzt:
+ * Wäre der Server gerade nicht erreichbar und wir würden es trotzdem
+ * vermerken, stünden die Leute weiter auf der echten Whitelist und kämen beim
+ * nächsten Start ungehindert herein.
+ */
+export async function suspendNonAdminsAction(): Promise<AdminFormState> {
+  let admin;
+  try {
+    admin = await requireAdmin();
+  } catch {
+    return { error: "Kein Admin-Zugriff." };
+  }
+
+  const betroffene = await prisma.user.findMany({
+    where: {
+      whitelisted: true,
+      whitelistSuspended: false,
+      role: { not: "ADMIN" },
+      NOT: { minecraftName: null },
+    },
+    select: { id: true, minecraftName: true },
+  });
+
+  if (betroffene.length === 0) return { success: "Niemand zum Aussetzen – außer Admins ist gerade niemand freigeschaltet." };
+
+  let entfernt = 0;
+  const gescheitert: string[] = [];
+
+  for (const person of betroffene) {
+    if (!person.minecraftName) continue;
+    const ergebnis = await whitelistRemove(person.minecraftName, "Whitelist vorübergehend ausgesetzt", admin);
+
+    if (!ergebnis.ok) {
+      gescheitert.push(person.minecraftName);
+      continue;
+    }
+    await prisma.user.update({ where: { id: person.id }, data: { whitelistSuspended: true } });
+    entfernt += 1;
+  }
+
+  revalidateAdmin();
+
+  if (entfernt === 0) {
+    return { error: `Kein Eintrag ging durch – läuft der Server? (${gescheitert.length} Versuche)` };
+  }
+  if (gescheitert.length > 0) {
+    return {
+      success: `${entfernt} ausgesetzt.`,
+      error: `Bei ${gescheitert.length} klappte es nicht: ${gescheitert.join(", ")}.`,
+    };
+  }
+  return { success: `${entfernt} Spieler ausgesetzt. Admins bleiben freigeschaltet.` };
+}
+
+/** Hebt die Aussetzung wieder auf. */
+export async function restoreSuspendedAction(): Promise<AdminFormState> {
+  let admin;
+  try {
+    admin = await requireAdmin();
+  } catch {
+    return { error: "Kein Admin-Zugriff." };
+  }
+
+  const ausgesetzte = await prisma.user.findMany({
+    where: { whitelistSuspended: true, NOT: { minecraftName: null } },
+    select: { id: true, minecraftName: true },
+  });
+
+  if (ausgesetzte.length === 0) return { success: "Es ist gerade niemand ausgesetzt." };
+
+  let zurueck = 0;
+  let vorgemerkt = 0;
+
+  for (const person of ausgesetzte) {
+    if (!person.minecraftName) continue;
+    const ergebnis = await whitelistAdd(person.minecraftName, "Aussetzung aufgehoben", admin);
+
+    if (ergebnis.ok) {
+      await prisma.user.update({
+        where: { id: person.id },
+        data: { whitelistSuspended: false, whitelistPending: false },
+      });
+      zurueck += 1;
+      continue;
+    }
+
+    // Server nicht erreichbar: Die Aussetzung ist aufgehoben, der Befehl wird
+    // nachgeholt (siehe lib/whitelist-queue).
+    await prisma.user.update({
+      where: { id: person.id },
+      data: { whitelistSuspended: false, whitelistPending: true },
+    });
+    vorgemerkt += 1;
+  }
+
+  revalidateAdmin();
+
+  if (vorgemerkt > 0) {
+    return {
+      success: `${zurueck} zurück auf der Whitelist, ${vorgemerkt} vorgemerkt – die kommen dran, sobald der Server wieder läuft.`,
+    };
+  }
+  return { success: `${zurueck} Spieler wieder freigeschaltet.` };
 }
 
 export async function deleteUserAction(userId: string): Promise<void> {

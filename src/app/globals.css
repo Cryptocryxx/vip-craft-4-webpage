@@ -7,6 +7,8 @@
   --font-display: var(--font-display), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-mono), ui-monospace, "SFMono-Regular", monospace;
+  /* Pixelschrift fuer den Start-Countdown (siehe layout.tsx). */
+  --font-pixel: var(--font-pixel), ui-monospace, monospace;
 
   /* Holz */
   --color-wood-50: #f7eedd;

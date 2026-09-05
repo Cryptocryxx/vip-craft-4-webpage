@@ -7,6 +7,7 @@ import {
 } from "@/lib/server-power";
 import type { WatchdogStatus } from "@/lib/server-power-types";
 import { classifyShutdown, describeVerdict } from "@/lib/shutdown-reason";
+import { verarbeiteVormerkungen } from "@/lib/whitelist-queue";
 
 /**
  * Beobachtet den Minecraft-Server und startet ihn nach einem Absturz neu.
@@ -217,6 +218,8 @@ export async function runWatchdogTick(): Promise<void> {
       }
       state.awaitingStartUntil = null;
       state.lastRunning = true;
+      // Der Server nimmt wieder Befehle an: vorgemerkte Freigaben nachholen.
+      void verarbeiteVormerkungen();
       note(`Server läuft (${stats.onlinePlayers} von ${stats.maxPlayers} Spielern online).`);
       return;
     }

@@ -2,7 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowRight, X } from "lucide-react";
+import { AlertTriangle, ArrowRight, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * Kleiner Hinweis unten rechts: Was als Nächstes zu tun ist.
@@ -54,8 +55,20 @@ function wegklicken(schluessel: string): void {
   for (const melden of zuhoerer) melden();
 }
 
-export function NextStepPopup({ schluessel, titel, text }: { schluessel: string; titel: string; text: string }) {
+export function NextStepPopup({
+  schluessel,
+  titel,
+  text,
+  ton = "hinweis",
+}: {
+  schluessel: string;
+  titel: string;
+  text: string;
+  /** „warnung" für Dinge, die kaputt sind – etwa ein Name, den es nicht gibt. */
+  ton?: "hinweis" | "warnung";
+}) {
   const speicherSchluessel = `vipcraft:hinweis-weg:${schluessel}`;
+  const warnung = ton === "warnung";
 
   const weg = useSyncExternalStore(
     abonnieren,
@@ -69,7 +82,10 @@ export function NextStepPopup({ schluessel, titel, text }: { schluessel: string;
   return (
     <div
       role="status"
-      className="fixed right-3 bottom-3 z-40 w-[min(22rem,calc(100vw-1.5rem))] rounded-xl border border-brass-400/40 bg-wood-900/95 p-4 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.8)] backdrop-blur sm:right-5 sm:bottom-5"
+      className={cn(
+        "fixed right-3 bottom-3 z-40 w-[min(22rem,calc(100vw-1.5rem))] rounded-xl border bg-wood-900/95 p-4 shadow-[0_12px_40px_-8px_rgba(0,0,0,0.8)] backdrop-blur sm:right-5 sm:bottom-5",
+        warnung ? "border-rose-400/50" : "border-brass-400/40",
+      )}
     >
       <button
         type="button"
@@ -80,11 +96,14 @@ export function NextStepPopup({ schluessel, titel, text }: { schluessel: string;
         <X className="size-4" />
       </button>
 
-      <p className="eyebrow text-[10px]">Dein nächster Schritt</p>
+      <p className={cn("eyebrow text-[10px]", warnung && "text-rose-200")}>
+        {warnung ? <AlertTriangle className="size-3" /> : null}
+        {warnung ? "Da stimmt etwas nicht" : "Dein nächster Schritt"}
+      </p>
       <p className="mt-1 pr-6 font-display font-bold text-cream">{titel}</p>
       <p className="mt-1 text-sm leading-relaxed text-cream/70">{text}</p>
 
-      <Link href="/dashboard" className="btn btn-brass btn-sm mt-3">
+      <Link href="/dashboard" className={cn("btn btn-sm mt-3", warnung ? "btn-outline" : "btn-brass")}>
         Zum Dashboard <ArrowRight className="size-4" />
       </Link>
     </div>

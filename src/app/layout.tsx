@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Chakra_Petch, Inter, JetBrains_Mono } from "next/font/google";
+import { Chakra_Petch, Inter, JetBrains_Mono, Silkscreen } from "next/font/google";
 import "./globals.css";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 import { CookieBanner } from "@/components/legal/CookieBanner";
@@ -21,6 +21,20 @@ const body = Inter({
 const mono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
+});
+
+/**
+ * Pixelschrift für den Start-Countdown.
+ *
+ * Die echte Minecraft-Schrift gehört Mojang und darf hier nicht mit
+ * ausgeliefert werden. Silkscreen ist eine frei lizenzierte Pixelschrift mit
+ * demselben Raster; zusammen mit dem harten Schlagschatten (siehe
+ * ServerCountdown) sieht es aus wie die Oberfläche im Spiel.
+ */
+const pixel = Silkscreen({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-pixel",
 });
 
 export const metadata: Metadata = {
@@ -70,7 +84,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="de"
-      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
+      className={`${display.variable} ${body.variable} ${mono.variable} ${pixel.variable} h-full antialiased`}
       // Das Intro-Skript setzt data-intro noch vor der Hydration. React kennt
       // das Attribut aus dem Server-HTML nicht und meldet sonst einen
       // Hydration-Mismatch – hier ist die Abweichung gewollt.

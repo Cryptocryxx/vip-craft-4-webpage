@@ -1,6 +1,7 @@
-import { AlertTriangle, CheckCircle2, HeartPulse, Plug, Power, ScrollText, Terminal, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, HeartPulse, Plug, Power, ScrollText, ShieldOff, Terminal, XCircle } from "lucide-react";
 import { ServerPowerPanel } from "@/components/admin/ServerPowerPanel";
 import { WatchdogPanel } from "@/components/admin/WatchdogPanel";
+import { WhitelistSuspendPanel } from "@/components/admin/WhitelistSuspendPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -10,15 +11,17 @@ import { recentCommands } from "@/lib/server-commands";
 import { getAutoRestart, getServerLiveState, recentServerEvents } from "@/lib/server-power";
 import { isServerEventType, serverEventLabels, serverEventTones } from "@/lib/server-power-types";
 import { getWatchdogStatus } from "@/lib/server-watchdog";
+import { prisma } from "@/lib/prisma";
 import { getStatsSourceError, loadAllPlayerStats } from "@/lib/stats-source";
 
 export default async function AdminServerPage() {
-  const [liveState, autoRestart, events, players, commands] = await Promise.all([
+  const [liveState, autoRestart, events, players, commands, ausgesetzt] = await Promise.all([
     getServerLiveState(),
     getAutoRestart(),
     recentServerEvents(25),
     craftyConfigured ? loadAllPlayerStats() : Promise.resolve(null),
     recentCommands(25),
+    prisma.user.count({ where: { whitelistSuspended: true } }),
   ]);
   const statsError = getStatsSourceError();
   const watchdog = { ...getWatchdogStatus(), autoRestart };
@@ -34,6 +37,17 @@ export default async function AdminServerPage() {
           className="mb-5"
         />
         <ServerPowerPanel initial={liveState} />
+      </section>
+
+      <section>
+        <SectionHeading
+          eyebrow="Zugang"
+          icon={ShieldOff}
+          title="Whitelist vorübergehend aussetzen"
+          description="Für Wartung oder wenn kurz Ruhe einkehren soll. Admins bleiben drauf, damit der Weg zurück offen bleibt."
+          className="mb-5"
+        />
+        <WhitelistSuspendPanel ausgesetzt={ausgesetzt} />
       </section>
 
       <section>

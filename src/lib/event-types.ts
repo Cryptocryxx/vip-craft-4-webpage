@@ -49,6 +49,36 @@ export function getUpcomingEvents(now: Date = new Date()): CommunityEvent[] {
     .sort((a, b) => a.start.localeCompare(b.start));
 }
 
+export type StartCountdown = {
+  zielIso: string;
+  titel: string;
+  /** Die Uhrzeit, mit der die Seite gebaut wurde – siehe ServerCountdown. */
+  jetzt: number;
+};
+
+/**
+ * Alles, was der Countdown auf der Startseite braucht – oder `null`, wenn der
+ * Start lange genug her ist.
+ *
+ * Einen Tag lang bleibt er nach dem Start stehen, damit Nachzügler noch sehen,
+ * dass es losgegangen ist. Danach verschwindet der Abschnitt von selbst; ein
+ * Countdown auf ein vergangenes Datum ist nur noch Ballast.
+ *
+ * Die aktuelle Uhrzeit wird bewusst hier geholt und nicht in der Seite: Ein
+ * `Date.now()` mitten im Rendern ist unrein, und React beanstandet das zu
+ * Recht – das Ergebnis würde sich bei jedem erneuten Rendern ändern.
+ */
+export function getServerStartCountdown(): StartCountdown | null {
+  const jetzt = Date.now();
+  const start = events.find((event) => event.id === "season4-start");
+  if (!start) return null;
+
+  const einTag = 24 * 60 * 60 * 1000;
+  if (jetzt - new Date(start.start).getTime() > einTag) return null;
+
+  return { zielIso: start.start, titel: start.title, jetzt };
+}
+
 /** Alle Termine, auch vergangene. */
 export function getAllEvents(): CommunityEvent[] {
   return [...events].sort((a, b) => a.start.localeCompare(b.start));

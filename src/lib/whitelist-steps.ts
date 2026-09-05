@@ -17,10 +17,14 @@ export type SchrittBeschreibung = {
   titel: string;
   text: string;
   erledigt: boolean;
+  /** „warnung" für Dinge, die kaputt sind – nicht bloß noch offen. */
+  ton?: "hinweis" | "warnung";
 };
 
 export type SchrittLage = {
   gamertagDa: boolean;
+  /** Mojang kennt den hinterlegten Namen nicht (siehe lib/name-check.ts). */
+  nameUngueltig: boolean;
   discordJoined: boolean;
   /** Ohne DISCORD_GUILD_ID lässt sich die Mitgliedschaft nicht abfragen. */
   discordCheckable: boolean;
@@ -35,12 +39,25 @@ export function whitelistSchritte(lage: SchrittLage): SchrittBeschreibung[] {
       text: "Erledigt – sonst wärst du nicht hier.",
       erledigt: true,
     },
-    {
-      schluessel: "gamertag",
-      titel: "Minecraft-Username eintragen",
-      text: "Ohne deinen Username kann das Team dich nicht freischalten. Trag ihn unten ein.",
-      erledigt: lage.gamertagDa,
-    },
+    /*
+     * Ein hinterlegter, aber ungueltiger Name ist schlimmer als gar keiner:
+     * Er sieht erledigt aus, und der Whitelist-Befehl laeuft auf dem Server ins
+     * Leere. Deshalb faellt der Schritt dann zurueck – mit deutlicherem Text.
+     */
+    lage.nameUngueltig
+      ? {
+          schluessel: "gamertag" as const,
+          titel: "Minecraft-Username stimmt nicht",
+          text: "Den Namen, der bei uns steht, kennt Mojang nicht – wahrscheinlich ein Tippfehler. Trag im Dashboard deinen richtigen Namen ein, sonst kommst du nicht auf den Server.",
+          erledigt: false,
+          ton: "warnung" as const,
+        }
+      : {
+          schluessel: "gamertag" as const,
+          titel: "Minecraft-Username eintragen",
+          text: "Ohne deinen Username kann das Team dich nicht freischalten. Trag ihn unten ein.",
+          erledigt: lage.gamertagDa,
+        },
     {
       schluessel: "discord",
       titel: "Unserem Discord beitreten",

@@ -1,6 +1,7 @@
 import "server-only";
 import { auth } from "@/auth";
 import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
+import { ensureNameChecked } from "@/lib/name-check";
 import { prisma } from "@/lib/prisma";
 import { naechsterSchritt, type SchrittBeschreibung } from "@/lib/whitelist-steps";
 
@@ -21,6 +22,8 @@ export async function offenerSchritt(): Promise<SchrittBeschreibung | null> {
     select: {
       id: true,
       minecraftName: true,
+      minecraftNameValid: true,
+      minecraftNameCheckedAt: true,
       discordJoined: true,
       discordCheckedAt: true,
       modpackDownloadedAt: true,
@@ -29,6 +32,8 @@ export async function offenerSchritt(): Promise<SchrittBeschreibung | null> {
   });
   if (!user) return null;
 
+  const name = await ensureNameChecked(user);
+
   // Mit Bot-Token kostet das eine Abfrage pro Minute und Person; ohne wird nur
   // der gespeicherte Stand gelesen. So zeigt der Hinweis nicht noch tagelang
   // „tritt dem Discord bei", wenn das laengst passiert ist.
@@ -36,6 +41,7 @@ export async function offenerSchritt(): Promise<SchrittBeschreibung | null> {
 
   return naechsterSchritt({
     gamertagDa: Boolean(user.applications[0]?.minecraftName ?? user.minecraftName),
+    nameUngueltig: name.gueltig === false,
     discordJoined: discord.joined,
     discordCheckable: discordCheckEnabled,
     modpackGeladen: user.modpackDownloadedAt !== null,

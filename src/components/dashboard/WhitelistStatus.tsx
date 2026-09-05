@@ -33,6 +33,10 @@ type WhitelistStatusProps = {
   discordNeuAnmelden: boolean;
   /** Wurde der Modpack-Link schon geklickt? */
   modpackGeladen: boolean;
+  /** Mojang kennt den hinterlegten Namen nicht (siehe lib/name-check.ts). */
+  nameUngueltig: boolean;
+  /** Vom Team vorübergehend von der Server-Whitelist genommen. */
+  whitelistSuspended: boolean;
 };
 
 type View = {
@@ -140,6 +144,8 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
     discordCheckable,
     discordNeuAnmelden,
     modpackGeladen,
+    nameUngueltig,
+    whitelistSuspended,
   } = props;
   const view = buildView(props);
   const Icon = view.icon;
@@ -169,12 +175,13 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
    * Kein Schritt „Freigabe abwarten": Der Status steht schon gross in dieser
    * Karte, und Warten ist ohnehin nichts, was man abhaken koennte.
    */
-  const beschreibungen = whitelistSchritte({ gamertagDa, discordJoined, discordCheckable, modpackGeladen });
+  const beschreibungen = whitelistSchritte({ gamertagDa, nameUngueltig, discordJoined, discordCheckable, modpackGeladen });
 
   const mitBedienelement = (schritt: (typeof beschreibungen)[number]): Schritt => ({
     titel: schritt.titel,
     text: schritt.text,
     erledigt: schritt.erledigt,
+    ton: schritt.ton,
     aktion:
       schritt.schluessel === "discord" && !schritt.erledigt ? (
         <DiscordStep
@@ -192,13 +199,16 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
   const schritte: Schritt[] = [...beschreibungen.map(mitBedienelement), verknuepfungsSchritt];
 
   /**
-   * Freigeschaltet, aber das Modpack fehlt noch? Dann bleibt dieser eine Punkt
-   * stehen. Sonst haette der Hinweis auf der Startseite einen Schritt genannt,
-   * den es hier gar nicht gibt – und ohne Modpack kommt man trotz Freigabe
-   * nicht auf den Server.
+   * Freigeschaltet? Dann bleiben nur die Punkte stehen, die trotzdem noch
+   * blockieren: ein Name, den es nicht gibt, und das fehlende Modpack. Sonst
+   * haette der Hinweis auf der Startseite einen Schritt genannt, den es hier
+   * gar nicht gibt – und mit beidem kommt man trotz Freigabe nicht auf den
+   * Server.
    */
   const restSchritte: Schritt[] = [
-    ...beschreibungen.filter((s) => s.schluessel === "modpack" && !s.erledigt).map(mitBedienelement),
+    ...beschreibungen
+      .filter((s) => (s.schluessel === "modpack" || s.schluessel === "gamertag") && !s.erledigt)
+      .map(mitBedienelement),
     verknuepfungsSchritt,
   ];
 
@@ -236,17 +246,26 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       <div className="relative mt-5 space-y-4 text-sm text-cream/75">
         {whitelisted ? (
           <>
-            <p>
-              Du kannst dich jederzeit verbinden: <span className="font-mono text-cream">{serverIp}</span>
-              {minecraftName ? (
-                <>
-                  {" "}
-                  mit dem Account <span className="font-mono text-cream">{minecraftName}</span>.
-                </>
-              ) : (
-                "."
-              )}
-            </p>
+            {whitelistSuspended ? (
+              // Sonst steht hier „du kannst dich jederzeit verbinden", waehrend
+              // der Server einen abweist – und niemand wuesste, warum.
+              <p className="rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-brass-100">
+                Der Zugang ist gerade vorübergehend ausgesetzt – das Team arbeitet am Server. Deine Freischaltung bleibt
+                bestehen, du kommst wieder rein, sobald sie aufgehoben ist.
+              </p>
+            ) : (
+              <p>
+                Du kannst dich jederzeit verbinden: <span className="font-mono text-cream">{serverIp}</span>
+                {minecraftName ? (
+                  <>
+                    {" "}
+                    mit dem Account <span className="font-mono text-cream">{minecraftName}</span>.
+                  </>
+                ) : (
+                  "."
+                )}
+              </p>
+            )}
             <WhitelistSteps schritte={restSchritte} />
           </>
         ) : application?.status === "PENDING" ? (

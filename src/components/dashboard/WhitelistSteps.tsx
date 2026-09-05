@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Check, Plus } from "lucide-react";
+import { AlertTriangle, Check, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,8 @@ export type Schritt = {
    * „das ist als Naechstes dran" hervorgehoben.
    */
   optional?: boolean;
+  /** „warnung" färbt den Schritt rot – für Dinge, die kaputt sind. */
+  ton?: "hinweis" | "warnung";
   /** Optionaler Inhalt unter dem Schritt, etwa ein Formular oder Knoepfe. */
   aktion?: ReactNode;
 };
@@ -41,15 +43,19 @@ export function WhitelistSteps({ schritte }: { schritte: Schritt[] }) {
                 "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold",
                 schritt.erledigt
                   ? "border-emerald-400/60 bg-emerald-500/20 text-emerald-200"
-                  : schritt.optional
-                    ? "border-diamond-400/50 bg-diamond-500/15 text-diamond-200"
-                    : istNaechster
-                      ? "border-brass-300 bg-brass-500/25 text-brass-100"
-                      : "border-white/15 bg-white/5 text-cream/40",
+                  : schritt.ton === "warnung"
+                    ? "border-rose-400/60 bg-rose-500/20 text-rose-200"
+                    : schritt.optional
+                      ? "border-diamond-400/50 bg-diamond-500/15 text-diamond-200"
+                      : istNaechster
+                        ? "border-brass-300 bg-brass-500/25 text-brass-100"
+                        : "border-white/15 bg-white/5 text-cream/40",
               )}
             >
               {schritt.erledigt ? (
                 <Check className="size-3.5" />
+              ) : schritt.ton === "warnung" ? (
+                <AlertTriangle className="size-3.5" />
               ) : schritt.optional ? (
                 <Plus className="size-3.5" />
               ) : (
@@ -62,7 +68,11 @@ export function WhitelistSteps({ schritte }: { schritte: Schritt[] }) {
                 <span
                   className={cn(
                     "font-display text-sm font-bold",
-                    schritt.erledigt ? "text-cream/55 line-through decoration-cream/25" : "text-cream",
+                    schritt.erledigt
+                      ? "text-cream/55 line-through decoration-cream/25"
+                      : schritt.ton === "warnung"
+                        ? "text-rose-100"
+                        : "text-cream",
                   )}
                 >
                   {schritt.titel}

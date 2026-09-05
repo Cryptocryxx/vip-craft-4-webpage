@@ -11,6 +11,7 @@ import { WhitelistStatus } from "@/components/dashboard/WhitelistStatus";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
+import { ensureNameChecked } from "@/lib/name-check";
 import { prisma } from "@/lib/prisma";
 import { getSiteSettings } from "@/lib/settings";
 import { listShopsForUser } from "@/lib/shops";
@@ -59,12 +60,13 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
   // Discord-Mitgliedschaft nebenbei nachziehen: Wer nach dem Login beitritt,
   // sieht den Schritt beim naechsten Aufruf des Dashboards von selbst abgehakt,
   // ohne auf „Erneut pruefen" zu druecken.
-  const [application, settings, suggestions, shops, discord] = await Promise.all([
+  const [application, settings, suggestions, shops, discord, name] = await Promise.all([
     getApplicationForUser(user.id),
     getSiteSettings(),
     listSuggestions(user.id),
     listShopsForUser(user.id),
     ensureMembershipFresh(user),
+    ensureNameChecked(user),
   ]);
 
   return (
@@ -100,6 +102,8 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               discordCheckable={discordCheckEnabled}
               discordNeuAnmelden={discord.neuAnmelden}
               modpackGeladen={user.modpackDownloadedAt !== null}
+              nameUngueltig={name.gueltig === false}
+              whitelistSuspended={user.whitelistSuspended}
             />
           </div>
         </div>

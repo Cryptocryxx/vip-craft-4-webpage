@@ -35,6 +35,19 @@ model User {
   /// wissen - ob die Datei wirklich ankam, sieht nur der Rechner davor.
   modpackDownloadedAt DateTime?
 
+  /// Ergebnis der letzten Mojang-Pruefung des gespeicherten Namens.
+  /// null = noch nie geprueft (etwa bei Namen von vor der Pruefung).
+  minecraftNameValid     Boolean?
+  minecraftNameCheckedAt DateTime?
+
+  /// Freigeschaltet, aber der Serverbefehl steht noch aus - der Server war
+  /// offline. Wird nachgeholt, sobald er wieder laeuft (lib/whitelist-queue.ts).
+  whitelistPending Boolean @default(false)
+
+  /// Vom Team voruebergehend von der Server-Whitelist genommen. `whitelisted`
+  /// bleibt dabei true, sonst wuesste niemand mehr, wer zurueckdarf.
+  whitelistSuspended Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
