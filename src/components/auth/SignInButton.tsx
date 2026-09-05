@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { authConfigured, signIn } from "@/auth";
 import { buttonClasses, type ButtonSize } from "@/components/ui/Button";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
@@ -10,15 +11,18 @@ type SignInButtonProps = {
 };
 
 /** Discord-Login (Server Component mit Server Action). */
-export function SignInButton({ size = "md", className, redirectTo = "/dashboard", label = "Login mit Discord" }: SignInButtonProps) {
+export async function SignInButton({ size = "md", className, redirectTo = "/dashboard", label }: SignInButtonProps) {
+  const t = await getTranslations("Auth");
+  const beschriftung = label ?? t("signInWithDiscord");
+
   if (!authConfigured) {
     return (
       <span
-        title="Discord-Login ist noch nicht konfiguriert – AUTH_DISCORD_ID und AUTH_DISCORD_SECRET in der .env setzen."
+        title={t("signInNotConfigured")}
         className={buttonClasses("outline", size, `cursor-not-allowed opacity-60 ${className ?? ""}`)}
       >
         <DiscordIcon className="size-4" />
-        {label}
+        {beschriftung}
       </span>
     );
   }
@@ -32,7 +36,7 @@ export function SignInButton({ size = "md", className, redirectTo = "/dashboard"
     >
       <button type="submit" className={buttonClasses("brass", size, className)}>
         <DiscordIcon className="size-4" />
-        {label}
+        {beschriftung}
       </button>
     </form>
   );

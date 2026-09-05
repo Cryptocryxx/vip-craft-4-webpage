@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { navItems } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -13,10 +13,11 @@ type NavLinksProps = {
 
 export function NavLinks({ className, orientation = "horizontal", onNavigate }: NavLinksProps) {
   const pathname = usePathname();
+  const t = useTranslations("Nav");
   const horizontal = orientation === "horizontal";
 
   return (
-    <nav aria-label="Hauptnavigation" className={cn(horizontal ? "flex items-center gap-1" : "flex flex-col gap-1", className)}>
+    <nav aria-label={t("ariaLabel")} className={cn(horizontal ? "flex items-center gap-1" : "flex flex-col gap-1", className)}>
       {navItems.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
         return (
@@ -31,7 +32,7 @@ export function NavLinks({ className, orientation = "horizontal", onNavigate }: 
               !horizontal && active && "bg-white/5",
             )}
           >
-            {item.label}
+            {t(item.key)}
             {horizontal && active && (
               <span className="absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-linear-to-r from-transparent via-diamond-400 to-transparent" />
             )}

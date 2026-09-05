@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Cog, LayoutDashboard } from "lucide-react";
 import { auth, authConfigured } from "@/auth";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
@@ -35,7 +35,7 @@ const authErrorMessages: Record<string, string> = {
   Verification: "Der Login-Link ist abgelaufen oder wurde bereits verwendet.",
 };
 
-export default async function DashboardPage(props: PageProps<"/dashboard">) {
+export default async function DashboardPage(props: PageProps<"/[locale]/dashboard">) {
   const searchParams = await props.searchParams;
   const errorCode = typeof searchParams.error === "string" ? searchParams.error : undefined;
   const errorMessage = errorCode ? (authErrorMessages[errorCode] ?? "Der Login ist fehlgeschlagen. Bitte versuche es erneut.") : undefined;

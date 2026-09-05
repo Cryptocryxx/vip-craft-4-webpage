@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ShieldCheck } from "lucide-react";
 import { LegalPage } from "@/components/legal/LegalPage";
 import { addressLines, legal } from "@/lib/legal";

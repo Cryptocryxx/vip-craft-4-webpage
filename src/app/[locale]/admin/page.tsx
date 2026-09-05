@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight, Clock, MessageSquare, ShieldCheck, Users } from "lucide-react";
 import { StatTile } from "@/components/admin/StatTile";
 import { Badge } from "@/components/ui/Badge";

@@ -1,0 +1,90 @@
+{
+  "Metadata": {
+    "tagline": "Der Create-Server mit Fabriken, Zügen und Flugmaschinen",
+    "description": "{name} – {tagline}. Minecraft {mcVersion} mit {createVersion} und Create Aeronautics, dazu ein gemeinsames Zugnetz, Spieler-Shops und Zugang per Whitelist.",
+    "keywords": "Minecraft, Create Mod, Create Aeronautics, NeoForge, Minecraft Server, Whitelist, VIP Craft"
+  },
+  "Nav": {
+    "home": "Home",
+    "map": "Map",
+    "shops": "Shops",
+    "spieler": "Spieler",
+    "community": "Community",
+    "leaderboards": "Leaderboards",
+    "schematics": "Schematics",
+    "streams": "Streams",
+    "ariaLabel": "Hauptnavigation"
+  },
+  "Header": {
+    "homeAriaLabel": "VIP Craft 4 – Startseite"
+  },
+  "MobileNav": {
+    "openMenu": "Menü öffnen",
+    "closeMenu": "Menü schließen",
+    "dashboard": "Dashboard",
+    "login": "Login",
+    "controlRoom": "Kontrollraum"
+  },
+  "UserMenu": {
+    "login": "Login",
+    "controlRoom": "Kontrollraum",
+    "toDashboard": "Zum Dashboard",
+    "profileFallback": "Profil"
+  },
+  "Auth": {
+    "signInWithDiscord": "Login mit Discord",
+    "signInNotConfigured": "Discord-Login ist noch nicht konfiguriert – AUTH_DISCORD_ID und AUTH_DISCORD_SECRET in der .env setzen.",
+    "signOut": "Logout",
+    "signOutAriaLabel": "Ausloggen"
+  },
+  "ServerStatusWidget": {
+    "checking": "Prüfe…",
+    "online": "Online",
+    "offline": "Offline",
+    "addressAfterWhitelist": "Adresse nach der Freischaltung",
+    "onlinePlayers": "Online:",
+    "fetchFailed": "Der Status konnte gerade nicht abgerufen werden.",
+    "unreachable": "Der Server ist gerade nicht erreichbar.",
+    "source": "Quelle: mcsrvstat.us · alle 60 s"
+  },
+  "Footer": {
+    "tagline": "Der Create-Server mit Fabriken, Zügen und Flugmaschinen. Gebaut mit Zahnrädern, Messing und viel zu wenig Schlaf.",
+    "serverIpLabel": "Server-IP:",
+    "serverIpHidden": "Server-IP gibt es nach der Freischaltung.",
+    "pagesHeading": "Seiten",
+    "communityHeading": "Community",
+    "legalHeading": "Rechtliches",
+    "dashboard": "Dashboard",
+    "discord": "Discord",
+    "downloadModpack": "Modpack herunterladen",
+    "mapNewTab": "Karte in neuem Tab",
+    "legalNav": "Rechtliche Hinweise",
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutz",
+    "nutzungsbedingungen": "Nutzungsbedingungen",
+    "legalLanguageNote": "",
+    "copyright": "© {year} {name} · Kein offizielles Minecraft-Produkt. Nicht von Mojang oder Microsoft genehmigt oder mit ihnen verbunden."
+  },
+  "CookieSettingsLink": {
+    "label": "Cookie-Einstellungen"
+  },
+  "NotFound": {
+    "eyebrow": "Fehler 404",
+    "title": "Diese Maschine gibt es nicht",
+    "description": "Die Seite wurde abgebaut, verschoben oder nie gebaut. Vermutlich war ein Creeper beteiligt.",
+    "back": "Zurück zum Spawn"
+  },
+  "MenuCards": {
+    "map": "Die ganze Welt im Browser, mit allen Spielern in Echtzeit.",
+    "shops": "Wer was verkauft und wo der Laden steht.",
+    "spieler": "Wer gerade spielt – und die Zahlen aller anderen.",
+    "community": "Termine und die Chronik des Servers.",
+    "leaderboards": "Ranglisten aus der Welt und die Wirtschaft in Cog.",
+    "schematics": "Blaupausen zum Nachbauen mit der Schematicannon.",
+    "streams": "Wer aus der Community gerade sendet.",
+    "shopsOpen": "{count, plural, one {# Laden hat geöffnet} other {# Läden haben geöffnet}}",
+    "playersOnline": "{count, plural, one {# Spieler ist gerade online} other {# Spieler sind gerade online}}",
+    "streamsLive": "{count, plural, one {# Kanal ist gerade live} other {# Kanäle sind gerade live}}",
+    "nextEvent": "{title} – {relative}"
+  }
+}

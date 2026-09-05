@@ -1,5 +1,5 @@
 import { Cog, HardHat, Map as MapIcon, Plane, ShieldCheck, Store, type LucideIcon } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Container } from "@/components/ui/Container";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, Users } from "lucide-react";
 import type { ServerStatusResponse } from "@/lib/server-status";
 import { Badge } from "@/components/ui/Badge";
@@ -12,6 +13,7 @@ const POLL_INTERVAL_MS = 60_000;
 export function ServerStatusWidget({ className }: { className?: string }) {
   const [status, setStatus] = useState<ServerStatusResponse | null>(null);
   const [failed, setFailed] = useState(false);
+  const t = useTranslations("ServerStatusWidget");
 
   useEffect(() => {
     let cancelled = false;
@@ -66,7 +68,7 @@ export function ServerStatusWidget({ className }: { className?: string }) {
             <span className={cn("relative inline-flex size-2.5 rounded-full", online ? "bg-emerald-400" : "bg-rose-400")} />
           </span>
         )}
-        <span className="uppercase">{loading ? "Prüfe…" : online ? "Online" : "Offline"}</span>
+        <span className="uppercase">{loading ? t("checking") : online ? t("online") : t("offline")}</span>
         {online && status && (
           <span className="flex items-center gap-1 border-l border-white/10 pl-2 font-mono text-[11px] text-cream/90">
             <Users className="size-3.5" />
@@ -87,24 +89,22 @@ export function ServerStatusWidget({ className }: { className?: string }) {
         <div className="panel p-3 text-xs">
           <div className="flex items-center justify-between gap-2">
             <span className="truncate font-mono text-cream/80">
-              {status ? (status.address ?? "Adresse nach der Freischaltung") : "…"}
+              {status ? (status.address ?? t("addressAfterWhitelist")) : "…"}
             </span>
             {status?.version && <Badge tone="diamond">{status.version}</Badge>}
           </div>
           {status && status.motd.length > 0 && <p className="mt-2 text-cream/70">{status.motd.join(" · ")}</p>}
           {online && status && status.players.sample.length > 0 && (
             <p className="mt-2 text-cream/60">
-              <span className="text-cream/40">Online:</span> {status.players.sample.join(", ")}
+              <span className="text-cream/40">{t("onlinePlayers")}</span> {status.players.sample.join(", ")}
             </p>
           )}
           {!loading && !online && (
             <p className="mt-2 text-cream/60">
-              {failed || status?.error
-                ? "Der Status konnte gerade nicht abgerufen werden."
-                : "Der Server ist gerade nicht erreichbar."}
+              {failed || status?.error ? t("fetchFailed") : t("unreachable")}
             </p>
           )}
-          <p className="mt-2 text-[10px] tracking-wider text-cream/40 uppercase">Quelle: mcsrvstat.us · alle 60 s</p>
+          <p className="mt-2 text-[10px] tracking-wider text-cream/40 uppercase">{t("source")}</p>
         </div>
       </div>
     </div>

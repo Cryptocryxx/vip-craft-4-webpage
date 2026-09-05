@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Ban, Eye, Loader2, LogOut, Undo2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { PlayerHead } from "@/components/ui/PlayerHead";

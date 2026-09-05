@@ -1,21 +1,23 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { auth } from "@/auth";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NavLinks } from "@/components/layout/NavLinks";
 import { ServerStatusWidget } from "@/components/layout/ServerStatusWidget";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { UserMenu } from "@/components/layout/UserMenu";
 import { imTeam } from "@/lib/roles";
 
 export async function Header() {
-  const session = await auth();
+  const [session, t] = await Promise.all([auth(), getTranslations("Header")]);
   const teamMitglied = imTeam(session?.user?.role);
 
   return (
     <header className="sticky top-0 z-40 border-b border-brass-500/25 bg-wood-950/85 backdrop-blur-md">
       <div className="brass-line absolute inset-x-0 top-0 opacity-70" />
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="VIP Craft 4 – Startseite">
+        <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label={t("homeAriaLabel")}>
           <Image
             src="/logo.png"
             alt=""
@@ -29,6 +31,9 @@ export async function Header() {
         <NavLinks className="ml-4 hidden lg:flex" />
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          {/* Nur für nicht angemeldete Besucher - wer eingeloggt ist, hat den
+              Umschalter dezent im Dashboard (siehe dort). */}
+          {!session?.user && <LanguageSwitcher className="hidden sm:flex" />}
           <ServerStatusWidget />
           <UserMenu session={session} />
           <MobileNav teamMitglied={teamMitglied} loggedIn={Boolean(session?.user)} />

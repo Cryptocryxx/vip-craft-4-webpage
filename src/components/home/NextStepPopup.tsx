@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { AlertTriangle, ArrowRight, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 

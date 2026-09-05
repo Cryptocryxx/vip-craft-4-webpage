@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Cog, LayoutDashboard, Menu, X } from "lucide-react";
 import { NavLinks } from "@/components/layout/NavLinks";
 
@@ -15,12 +16,13 @@ export function MobileNav({
 }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+  const t = useTranslations("MobileNav");
 
   return (
     <div className="lg:hidden">
       <button
         type="button"
-        aria-label={open ? "Menü schließen" : "Menü öffnen"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className="btn btn-ghost size-9"
@@ -38,7 +40,7 @@ export function MobileNav({
               className="mt-2 flex items-center gap-2 rounded-md border-t border-white/5 px-3 py-3 font-display text-sm font-semibold text-cream/70 hover:bg-white/5 hover:text-cream"
             >
               <LayoutDashboard className="size-4" />
-              {loggedIn ? "Dashboard" : "Login"}
+              {loggedIn ? t("dashboard") : t("login")}
             </Link>
             {teamMitglied && (
               <Link
@@ -47,7 +49,7 @@ export function MobileNav({
                 className="flex items-center gap-2 rounded-md px-3 py-3 font-display text-sm font-semibold text-brass-200 hover:bg-white/5 hover:text-brass-100"
               >
                 <Cog className="size-4" />
-                Kontrollraum
+                {t("controlRoom")}
               </Link>
             )}
           </div>

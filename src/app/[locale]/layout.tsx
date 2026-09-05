@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
+import { hasLocale } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import { Chakra_Petch, Inter, JetBrains_Mono, Silkscreen } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import { AnnouncementBanner } from "@/components/layout/AnnouncementBanner";
 import { CookieBanner } from "@/components/legal/CookieBanner";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { routing } from "@/i18n/routing";
 import { siteConfig } from "@/lib/config";
 
 const display = Chakra_Petch({
@@ -37,22 +42,31 @@ const pixel = Silkscreen({
   variable: "--font-pixel",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: siteConfig.name,
-    template: `%s | ${siteConfig.name}`,
-  },
-  description: `${siteConfig.name} – ${siteConfig.tagline}. Minecraft ${siteConfig.minecraftVersion} mit ${siteConfig.createVersion} und Create Aeronautics, dazu ein gemeinsames Zugnetz, Spieler-Shops und Zugang per Whitelist.`,
-  keywords: [
-    "Minecraft",
-    "Create Mod",
-    "Create Aeronautics",
-    "NeoForge",
-    "Minecraft Server",
-    "Whitelist",
-    "VIP Craft",
-  ],
-};
+/** Beide Sprachen vorab bauen, statt sie erst beim ersten Aufruf zu erzeugen. */
+export function generateStaticParams(): Array<{ locale: string }> {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
+type Props = LayoutProps<"/[locale]">;
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+
+  return {
+    title: {
+      default: siteConfig.name,
+      template: `%s | ${siteConfig.name}`,
+    },
+    description: t("description", {
+      name: siteConfig.name,
+      tagline: t("tagline"),
+      mcVersion: siteConfig.minecraftVersion,
+      createVersion: siteConfig.createVersion,
+    }),
+    keywords: t("keywords").split(", "),
+  };
+}
 
 /**
  * Entscheidet noch vor dem ersten Bildaufbau, ob das Intro laufen soll.
@@ -71,19 +85,29 @@ export const metadata: Metadata = {
  *
  * Reihenfolge mit Absicht: erst das Attribut, dann der Merker. Schlaegt der
  * Speicherzugriff fehl (privates Fenster), laeuft das Intro trotzdem.
+ *
+ * Der Pfad-Test deckt beide Sprachfassungen der Startseite ab: "/" (Deutsch,
+ * ohne Präfix) und "/en" (Englisch) - siehe i18n/routing.ts.
  */
 const introSkript = `(function(){try{
-  if(location.pathname!=="/")return;
+  if(!/^\\/(en)?$/.test(location.pathname))return;
   if(localStorage.getItem("vipcraft:intro-gesehen"))return;
   if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
   document.documentElement.dataset.intro="pending";
   localStorage.setItem("vipcraft:intro-gesehen","1");
 }catch(e){}})();`;
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children, params }: Props) {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+
+  // Aktiviert statisches Rendern für diese Sprache - next-intl braucht das,
+  // um zu wissen, dass die Sprache für die ganze Anfrage feststeht.
+  setRequestLocale(locale);
+
   return (
     <html
-      lang="de"
+      lang={locale}
       className={`${display.variable} ${body.variable} ${mono.variable} ${pixel.variable} h-full antialiased`}
       // Das Intro-Skript setzt data-intro noch vor der Hydration. React kennt
       // das Attribut aus dem Server-HTML nicht und meldet sonst einen
@@ -94,11 +118,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: introSkript }} />
       </head>
       <body className="flex min-h-full flex-col">
-        <AnnouncementBanner />
-        <Header />
-        <main className="flex-1">{children}</main>
-        <Footer />
-        <CookieBanner />
+        <NextIntlClientProvider>
+          <AnnouncementBanner />
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CookieBanner />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

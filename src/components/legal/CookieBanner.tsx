@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Check, Cookie, ExternalLink, SlidersHorizontal, X } from "lucide-react";
 import {
   CONSENT_CATEGORIES,

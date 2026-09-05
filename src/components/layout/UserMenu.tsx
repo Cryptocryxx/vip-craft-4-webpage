@@ -1,5 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Cog, User } from "lucide-react";
 import type { Session } from "next-auth";
 import { SignInButton } from "@/components/auth/SignInButton";
@@ -7,9 +8,11 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { imTeam } from "@/lib/roles";
 
 /** Login-Button bzw. Avatar + Logout im Header. */
-export function UserMenu({ session }: { session: Session | null }) {
+export async function UserMenu({ session }: { session: Session | null }) {
+  const t = await getTranslations("UserMenu");
+
   if (!session?.user) {
-    return <SignInButton size="sm" label="Login" className="hidden sm:inline-flex" />;
+    return <SignInButton size="sm" label={t("login")} className="hidden sm:inline-flex" />;
   }
 
   const { name, image, role } = session.user;
@@ -19,8 +22,8 @@ export function UserMenu({ session }: { session: Session | null }) {
       {imTeam(role) && (
         <Link
           href="/admin"
-          title="Kontrollraum"
-          aria-label="Kontrollraum"
+          title={t("controlRoom")}
+          aria-label={t("controlRoom")}
           className="btn btn-ghost btn-sm hidden size-9 px-0 text-brass-200 hover:text-brass-100 sm:inline-flex"
         >
           <Cog className="size-4" />
@@ -29,7 +32,7 @@ export function UserMenu({ session }: { session: Session | null }) {
       <Link
         href="/dashboard"
         className="flex h-9 items-center gap-2 rounded-lg border border-brass-500/30 bg-wood-900/60 pr-3 pl-1.5 text-sm transition-colors hover:border-brass-400 hover:bg-wood-800"
-        title="Zum Dashboard"
+        title={t("toDashboard")}
       >
         {image ? (
           <Image src={image} alt="" width={26} height={26} className="rounded-full ring-1 ring-brass-500/40" />
@@ -38,7 +41,7 @@ export function UserMenu({ session }: { session: Session | null }) {
             <User className="size-4" />
           </span>
         )}
-        <span className="hidden max-w-28 truncate font-display font-semibold text-cream sm:inline">{name ?? "Profil"}</span>
+        <span className="hidden max-w-28 truncate font-display font-semibold text-cream sm:inline">{name ?? t("profileFallback")}</span>
       </Link>
       <SignOutButton iconOnly className="hidden sm:inline-flex" />
     </div>

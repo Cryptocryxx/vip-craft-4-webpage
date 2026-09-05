@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { ChevronDown, Loader2, MessageSquare } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { ladeAeltereAction, ladeKontextAction } from "@/lib/actions/game-log";

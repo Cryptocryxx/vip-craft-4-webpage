@@ -1,15 +1,22 @@
+/**
+ * Die Hauptnavigation. Nur Adresse und Schlüssel – die Beschriftung kommt aus
+ * den Übersetzungen (Namespace "Nav" in messages/*.json), damit dieselbe
+ * Liste in Deutsch und Englisch funktioniert.
+ */
+export type NavKey = "home" | "map" | "shops" | "spieler" | "community" | "leaderboards" | "schematics" | "streams";
+
 export type NavItem = {
-  href: "/" | "/map" | "/shops" | "/spieler" | "/community" | "/leaderboards" | "/schematics" | "/streams" | "/dashboard";
-  label: string;
+  href: "/" | "/map" | "/shops" | "/spieler" | "/community" | "/leaderboards" | "/schematics" | "/streams";
+  key: NavKey;
 };
 
 export const navItems: NavItem[] = [
-  { href: "/", label: "Home" },
-  { href: "/map", label: "Map" },
-  { href: "/shops", label: "Shops" },
-  { href: "/spieler", label: "Spieler" },
-  { href: "/community", label: "Community" },
-  { href: "/leaderboards", label: "Leaderboards" },
-  { href: "/schematics", label: "Schematics" },
-  { href: "/streams", label: "Streams" },
+  { href: "/", key: "home" },
+  { href: "/map", key: "map" },
+  { href: "/shops", key: "shops" },
+  { href: "/spieler", key: "spieler" },
+  { href: "/community", key: "community" },
+  { href: "/leaderboards", key: "leaderboards" },
+  { href: "/schematics", key: "schematics" },
+  { href: "/streams", key: "streams" },
 ];

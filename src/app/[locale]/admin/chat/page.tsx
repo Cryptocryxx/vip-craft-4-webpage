@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { AlertTriangle, MessagesSquare, Search, Trash2 } from "lucide-react";
 import { GameLogDeletePanel } from "@/components/admin/GameLogDeletePanel";
 import { GameLogList } from "@/components/admin/GameLogList";
