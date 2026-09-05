@@ -6,11 +6,22 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { Gear } from "@/components/ui/Gear";
+import { ServerCountdown } from "@/components/home/ServerCountdown";
 import { ModpackLink } from "@/components/ui/ModpackLink";
 import { siteConfig } from "@/lib/config";
+import type { StartCountdown } from "@/lib/event-types";
 
 /** `serverIp` ist null, solange der Besucher nicht freigeschaltet ist. */
-export function Hero({ serverIp, discordInvite }: { serverIp: string | null; discordInvite: string }) {
+export function Hero({
+  serverIp,
+  discordInvite,
+  countdown,
+}: {
+  serverIp: string | null;
+  discordInvite: string;
+  /** `null`, sobald der Start lange genug her ist. */
+  countdown: StartCountdown | null;
+}) {
   return (
     <section className="relative overflow-hidden border-b border-brass-500/20">
       {/* Zahnrad-Kulisse */}
@@ -60,20 +71,10 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string | null; dis
             </Button>
           </div>
 
-          <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-brass-500/20 pt-6 text-sm">
-            <div>
-              <dt className="eyebrow text-[10px]">Modpack</dt>
-              <dd className="mt-1 font-semibold text-cream">{siteConfig.modpackName}</dd>
-            </div>
-            <div>
-              <dt className="eyebrow text-[10px]">Slots</dt>
-              <dd className="mt-1 font-semibold text-cream">{siteConfig.maxPlayers} Spieler</dd>
-            </div>
-            <div>
-              <dt className="eyebrow text-[10px]">Zugang</dt>
-              <dd className="mt-1 font-semibold text-cream">Whitelist per Login</dd>
-            </div>
-          </dl>
+          {/* Hier standen Modpack, Slots und Zugang – die Angaben stehen ohnehin
+              weiter unten im Modpack-Abschnitt. Der Countdown ist an dieser
+              Stelle das Interessantere. */}
+          {countdown && <ServerCountdown zielIso={countdown.zielIso} serverJetzt={countdown.jetzt} />}
         </div>
 
         {/* Auf dem Handy weggelassen: Das Logo steht schon im Header, und hier

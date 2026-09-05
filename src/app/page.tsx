@@ -5,7 +5,6 @@ import { HowToJoin } from "@/components/home/HowToJoin";
 import { MenuCards } from "@/components/home/MenuCards";
 import { ModpackCard } from "@/components/home/ModpackCard";
 import { NextStepPopup } from "@/components/home/NextStepPopup";
-import { ServerCountdown } from "@/components/home/ServerCountdown";
 import { IntroVideo } from "@/components/intro/IntroVideo";
 import { getServerStartCountdown } from "@/lib/event-types";
 import { offenerSchritt } from "@/lib/onboarding";
@@ -23,10 +22,11 @@ export default async function HomePage() {
   return (
     <>
       <IntroVideo src="/IntroVipCraft4.mp4" />
-      <Hero serverIp={darfIpSehen ? settings.serverIp : null} discordInvite={settings.discordInvite} />
-      {countdown && (
-        <ServerCountdown zielIso={countdown.zielIso} serverJetzt={countdown.jetzt} titel={countdown.titel} />
-      )}
+      <Hero
+        serverIp={darfIpSehen ? settings.serverIp : null}
+        discordInvite={settings.discordInvite}
+        countdown={countdown}
+      />
       <MenuCards />
       <HowToJoin serverIp={darfIpSehen ? settings.serverIp : null} discordInvite={settings.discordInvite} />
       <ModpackCard />
