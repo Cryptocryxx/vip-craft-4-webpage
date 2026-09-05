@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Clock, ShieldAlert, ShieldCheck, ShieldQuestion, type LucideIcon } from "lucide-react";
 import { DiscordStep } from "@/components/dashboard/DiscordStep";
+import { MissingReferenceForm } from "@/components/dashboard/MissingReferenceForm";
 import { ModpackStep } from "@/components/dashboard/ModpackStep";
 import { WhitelistApplicationForm } from "@/components/dashboard/WhitelistApplicationForm";
 import { WhitelistSteps, type Schritt } from "@/components/dashboard/WhitelistSteps";
@@ -163,6 +164,10 @@ export async function WhitelistStatus(props: WhitelistStatusProps) {
 
   const showForm = !whitelisted && whitelistOpen && (application === null || application.status !== "APPROVED");
   const gamertagDa = Boolean(application?.minecraftName ?? minecraftName);
+  // Alte Anträge von vor der Pflichtangabe "wen kennst du auf dem Server":
+  // Wer schon einen Antrag hat, aber noch keine Nachricht dazu, soll das
+  // nachreichen - unabhängig vom Status.
+  const needsReference = Boolean(application) && !application?.message;
 
   /**
    * Kür: Minecraft-Account mit Discord verknüpfen.
@@ -287,6 +292,7 @@ export async function WhitelistStatus(props: WhitelistStatusProps) {
               </p>
             )}
             <WhitelistSteps schritte={restSchritte} />
+            {needsReference && <MissingReferenceForm />}
           </>
         ) : application?.status === "PENDING" ? (
           <>
@@ -310,6 +316,12 @@ export async function WhitelistStatus(props: WhitelistStatusProps) {
           <p>{t("whitelistClosed")}</p>
         )}
 
+
+        {showForm && needsReference && (
+          <p className="rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-brass-100">
+            {t("missingReferenceNotice")}
+          </p>
+        )}
 
         {showForm && (
           <div className="rounded-lg border border-white/10 bg-black/25 p-4">

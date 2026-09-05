@@ -286,7 +286,9 @@
     "canApplyAgain": "Du kannst unten einen neuen Antrag stellen.",
     "whitelistClosed": "Die Whitelist ist gerade geschlossen. Sobald wieder Plätze frei sind, kannst du hier einen Antrag stellen.",
     "updateApplication": "Antrag aktualisieren",
-    "applyWhitelist": "Whitelist beantragen"
+    "applyWhitelist": "Whitelist beantragen",
+    "missingReferenceNotice": "Bei deinem Antrag fehlt noch eine Angabe: Wen kennst du auf dem Server? Trag es kurz nach.",
+    "submitReference": "Nachtragen"
   },
   "WhitelistSteps": {
     "optional": "Optional"
@@ -450,7 +452,9 @@
     "discordUnclear": "Das ließ sich gerade nicht klären. Bitte versuch es in ein paar Minuten noch einmal.",
     "whitelistClosed": "Die Whitelist ist gerade geschlossen. Schau später noch einmal vorbei.",
     "alreadyLinked": "Dieser Minecraft-Username ist bereits mit einem anderen Discord-Account verknüpft.",
-    "submitted": "Antrag abgeschickt. Das Team schaut ihn sich an."
+    "submitted": "Antrag abgeschickt. Das Team schaut ihn sich an.",
+    "referenceSubmitted": "Danke, ist nachgetragen.",
+    "referenceNotApplicable": "Dafür gibt es hier gerade nichts nachzutragen."
   },
   "Events": {
     "season4-start": {

@@ -48,6 +48,31 @@ export type ApplicationInput = { minecraftName: string; message: string | null }
 /** `t` ist der Übersetzer für den Namespace "Validation". */
 export type ValidationTranslator = (key: string) => string;
 
+/**
+ * Nur die Referenz-Frage ("wen kennst du auf dem Server") für sich geprüft -
+ * genutzt sowohl vom vollen Antragsformular als auch vom kleinen Nachreich-
+ * Formular für alte Anträge ohne diese Angabe (siehe addApplicationReference
+ * in lib/whitelist.ts).
+ */
+export function validateReferenceMessage(
+  raw: unknown,
+  t: ValidationTranslator,
+): { ok: true; message: string } | { ok: false; error: string } {
+  const message = typeof raw === "string" ? raw.trim() : "";
+
+  // Pflichtfeld: Wer niemanden auf dem Server kennt, soll das trotzdem kurz
+  // dazuschreiben (z. B. "niemanden, kam über Discord") - leer soll es aber
+  // nicht bleiben, sonst laesst sich der Antrag nicht einordnen.
+  if (message.length === 0) {
+    return { ok: false, error: t("messageRequired") };
+  }
+  if (message.length > 1000) {
+    return { ok: false, error: t("messageTooLong") };
+  }
+
+  return { ok: true, message };
+}
+
 export function validateApplicationInput(
   raw: {
     minecraftName?: unknown;
@@ -56,20 +81,13 @@ export function validateApplicationInput(
   t: ValidationTranslator,
 ): { ok: true; data: ApplicationInput } | { ok: false; error: string } {
   const minecraftName = typeof raw.minecraftName === "string" ? raw.minecraftName.trim() : "";
-  const messageRaw = typeof raw.message === "string" ? raw.message.trim() : "";
 
   if (!GAMERTAG_RE.test(minecraftName)) {
     return { ok: false, error: t("minecraftNamePattern") };
   }
-  // Pflichtfeld: Wer niemanden auf dem Server kennt, soll das trotzdem kurz
-  // dazuschreiben (z. B. "niemanden, kam über Discord") - leer soll es aber
-  // nicht bleiben, sonst laesst sich der Antrag nicht einordnen.
-  if (messageRaw.length === 0) {
-    return { ok: false, error: t("messageRequired") };
-  }
-  if (messageRaw.length > 1000) {
-    return { ok: false, error: t("messageTooLong") };
-  }
 
-  return { ok: true, data: { minecraftName, message: messageRaw } };
+  const parsedMessage = validateReferenceMessage(raw.message, t);
+  if (!parsedMessage.ok) return parsedMessage;
+
+  return { ok: true, data: { minecraftName, message: parsedMessage.message } };
 }

@@ -286,7 +286,9 @@
     "canApplyAgain": "You can submit a new application below.",
     "whitelistClosed": "The whitelist is currently closed. Once spots open up again, you can apply here.",
     "updateApplication": "Update application",
-    "applyWhitelist": "Apply for whitelist"
+    "applyWhitelist": "Apply for whitelist",
+    "missingReferenceNotice": "Your application is missing one thing: who do you know on the server? Please add it below.",
+    "submitReference": "Submit"
   },
   "WhitelistSteps": {
     "optional": "Optional"
@@ -450,7 +452,9 @@
     "discordUnclear": "That couldn't be resolved right now. Please try again in a few minutes.",
     "whitelistClosed": "The whitelist is currently closed. Check back later.",
     "alreadyLinked": "This Minecraft username is already linked to another Discord account.",
-    "submitted": "Application submitted. The team will take a look."
+    "submitted": "Application submitted. The team will take a look.",
+    "referenceSubmitted": "Thanks, added.",
+    "referenceNotApplicable": "There's nothing to add here right now."
   },
   "Events": {
     "season4-start": {

@@ -177,6 +177,30 @@ export async function upsertApplication(userId: string, input: ApplicationInput)
   });
 }
 
+/**
+ * Ergänzt nachträglich die Referenz-Angabe ("wen kennst du auf dem Server")
+ * bei einem bestehenden Antrag, der noch aus der Zeit vor dieser Pflicht-
+ * angabe stammt - ohne Status oder Minecraft-Namen anzufassen und ohne
+ * erneute Mojang-Prüfung. Betrifft vor allem schon angenommene Anträge: Die
+ * grosse Bewerbungsform mit Mojang-Check zeigt sich Freigeschalteten nicht
+ * mehr (siehe WhitelistStatus.tsx), die fehlende Angabe soll sich trotzdem
+ * nachreichen lassen.
+ *
+ * Liefert false, wenn es nichts nachzutragen gibt (kein Antrag, oder schon
+ * eine Angabe vorhanden) - der Aufrufer meldet das dann statt stillschweigend
+ * nichts zu tun.
+ */
+export async function addApplicationReference(userId: string, message: string): Promise<boolean> {
+  const current = await prisma.whitelistApplication.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!current || current.message) return false;
+
+  await prisma.whitelistApplication.update({ where: { id: current.id }, data: { message } });
+  return true;
+}
+
 /** Antrag annehmen: User wird gewhitelisted, Gamertag wird übernommen. */
 export async function approveApplication(applicationId: string, reviewerId: string, note: string | null): Promise<void> {
   const application = await prisma.whitelistApplication.findUnique({

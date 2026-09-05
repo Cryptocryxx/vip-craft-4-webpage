@@ -6,7 +6,7 @@ import { auth } from "@/auth";
 import { refreshMembership } from "@/lib/discord";
 import { pruefeGamertag } from "@/lib/mojang";
 import { getSiteSettings } from "@/lib/settings";
-import { upsertApplication, validateApplicationInput } from "@/lib/whitelist";
+import { addApplicationReference, upsertApplication, validateApplicationInput, validateReferenceMessage } from "@/lib/whitelist";
 
 export type ApplicationFormState = { error?: string; success?: string };
 
@@ -81,4 +81,32 @@ export async function submitApplicationAction(
   revalidatePath("/dashboard");
   revalidatePath("/admin", "layout");
   return { success: t("submitted") };
+}
+
+/**
+ * Nachreichen der Referenz-Angabe bei einem alten Antrag, der noch von vor
+ * dieser Pflichtangabe stammt (siehe addApplicationReference). Bewusst eine
+ * eigene, schlanke Action statt submitApplicationAction wiederzuverwenden:
+ * die würde den Minecraft-Namen erneut gegen Mojang prüfen und - bei einem
+ * schon angenommenen Antrag - über upsertApplication versehentlich einen
+ * zweiten, neuen PENDING-Antrag anlegen.
+ */
+export async function submitReferenceAction(
+  _prev: ApplicationFormState,
+  formData: FormData,
+): Promise<ApplicationFormState> {
+  const [t, tValidation] = await Promise.all([getTranslations("WhitelistActions"), getTranslations("Validation")]);
+
+  const session = await auth();
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
+
+  const parsed = validateReferenceMessage(formData.get("message"), tValidation);
+  if (!parsed.ok) return { error: parsed.error };
+
+  const changed = await addApplicationReference(session.user.id, parsed.message);
+  if (!changed) return { error: t("referenceNotApplicable") };
+
+  revalidatePath("/dashboard");
+  revalidatePath("/admin", "layout");
+  return { success: t("referenceSubmitted") };
 }
