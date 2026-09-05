@@ -17,6 +17,8 @@ export const navItems: NavItem[] = [
   { href: "/spieler", key: "spieler" },
   { href: "/community", key: "community" },
   { href: "/leaderboards", key: "leaderboards" },
-  { href: "/schematics", key: "schematics" },
+  // Schematics-Seite vorübergehend deaktiviert (siehe app/[locale]/schematics/page.tsx) -
+  // kein Nav-Eintrag mehr, damit nirgends ein Link auf die abgeschaltete Seite zeigt.
+  // { href: "/schematics", key: "schematics" },
   { href: "/streams", key: "streams" },
 ];

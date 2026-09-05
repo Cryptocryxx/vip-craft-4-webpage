@@ -1,3 +1,15 @@
+import { notFound } from "next/navigation";
+
+// Schematics-Seite vorübergehend deaktiviert (auf Wunsch, nicht gelöscht -
+// bei Bedarf einfach den Kommentar unten wieder entfernen und diesen Stub
+// raus). Next.js verlangt trotzdem einen gültigen Default-Export von jeder
+// page.tsx, deshalb dieser kurze Platzhalter statt der ganzen Datei als
+// Kommentar.
+export default function SchematicsPage(): never {
+  notFound();
+}
+
+/*
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { DraftingCompass, FolderOpen, Download, Wand2 } from "lucide-react";
@@ -62,3 +74,4 @@ export default async function SchematicsPage() {
     </>
   );
 }
+*/
