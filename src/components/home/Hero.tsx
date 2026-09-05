@@ -77,10 +77,11 @@ export function Hero({
           {countdown && <ServerCountdown zielIso={countdown.zielIso} serverJetzt={countdown.jetzt} />}
         </div>
 
-        {/* Auf dem Handy weggelassen: Das Logo steht schon im Header, und hier
-            wuerde es fast einen ganzen Bildschirm fuellen, bevor irgendetwas
-            Nuetzliches kommt. Ab sm ist genug Platz dafuer. */}
-        <div className="relative mx-auto hidden w-full max-w-md sm:block lg:max-w-none">
+        {/* Nur in der zweispaltigen Anordnung, also ab lg – dieselbe Grenze wie
+            beim Raster oben. Darunter steht das Logo nicht mehr neben dem Text,
+            sondern faellt unter den Countdown und schiebt alles Weitere nach
+            unten, ohne etwas beizutragen: Im Header steht es ohnehin schon. */}
+        <div className="relative mx-auto hidden w-full max-w-md lg:block lg:max-w-none">
           <div className="absolute inset-8 -z-10 rounded-full bg-diamond-400/10 blur-3xl" />
           <Image
             src="/logo.png"
