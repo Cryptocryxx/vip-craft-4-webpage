@@ -260,6 +260,27 @@ export default function DatenschutzPage() {
         Interesse liegt darin, den Mitgliedern der Community den Spielstand transparent zu machen.
       </p>
 
+      <h3>Chat, Befehle und Spielereignisse</h3>
+      <p>
+        Der Spielserver zeichnet auf, was im Spiel geschrieben und getan wird, und stellt es dem Team im geschützten
+        Kontrollraum dar. Aufgezeichnet werden: <strong>Chatnachrichten</strong>, <strong>Befehle</strong> von Spielern
+        und aus der Serverkonsole, <strong>Beitritt und Verlassen</strong> des Servers sowie <strong>Tode</strong> –
+        jeweils mit Minecraft-Benutzernamen, Minecraft-Benutzerkennung (UUID) und Zeitpunkt. Nicht aufgezeichnet werden
+        private Unterhaltungen außerhalb des Spiels, Sprachchat und Befehle aus Befehlsblöcken.
+      </p>
+      <p>
+        Zweck ist die Moderation des Servers: Regelverstöße sollen sich auch dann noch nachvollziehen lassen, wenn
+        gerade niemand aus dem Team online war. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO; unser berechtigtes
+        Interesse liegt an einem Server, auf dem Belästigungen und Griefing aufgeklärt werden können.
+      </p>
+      <p>
+        Einsehen können die Aufzeichnungen ausschließlich Administratorinnen, Administratoren und Moderatorinnen und
+        Moderatoren; öffentlich sichtbar sind sie an keiner Stelle. Eine feste Löschfrist ist derzeit nicht gesetzt –
+        die Aufzeichnungen bleiben so lange erhalten, wie sie für die Moderation von Nutzen sind; im Kontrollraum lässt
+        sich eine automatische Löschfrist einstellen. Unabhängig davon können Sie nach Ziffer 14 jederzeit die Löschung
+        Ihrer Daten verlangen.
+      </p>
+
       <h3>IP-Adressen im Kontrollraum</h3>
       <p>
         Administratorinnen und Administratoren können sich im geschützten Kontrollraum die zuletzt bekannte IP-Adresse
@@ -356,6 +377,10 @@ export default function DatenschutzPage() {
         </li>
         <li>
           <strong>Server-Logfiles:</strong> längstens sieben Tage.
+        </li>
+        <li>
+          <strong>Chat, Befehle und Spielereignisse:</strong> ohne feste Frist, solange sie für die Moderation von
+          Nutzen sind (siehe Ziffer 9). Im Kontrollraum lässt sich eine automatische Löschfrist einstellen.
         </li>
       </ul>
       <p>Bestehen gesetzliche Aufbewahrungspflichten, tritt an die Stelle der Löschung eine Einschränkung der Verarbeitung.</p>
