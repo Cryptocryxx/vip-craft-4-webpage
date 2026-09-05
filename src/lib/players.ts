@@ -1,5 +1,6 @@
 import { unstable_rethrow } from "next/navigation";
 import "server-only";
+import { getTranslations } from "next-intl/server";
 import { craftyConfigured, craftyLiveStats, craftyLogLines, craftyReadJson, craftySendCommand } from "@/lib/crafty";
 import { buildUuidToName, type UserCacheEntry } from "@/lib/minecraft-stats";
 import { prisma } from "@/lib/prisma";
@@ -136,14 +137,16 @@ export type RefreshErgebnis = { gespeichert: boolean; hinweis: string };
  * gleich aus, nur ohne Last.
  */
 export async function saveAndRefresh(): Promise<RefreshErgebnis> {
+  const t = await getTranslations("PlayersActions");
+
   if (!craftyConfigured) {
-    return { gespeichert: false, hinweis: "Server ist nicht angebunden." };
+    return { gespeichert: false, hinweis: t("notConnected") };
   }
 
   const seitLetztem = Date.now() - letztesSpeichern;
   if (seitLetztem < GLOBALE_SPERRE_MS) {
     invalidateStatsCache();
-    return { gespeichert: false, hinweis: "Die Daten waren gerade eben schon frisch – neu eingelesen." };
+    return { gespeichert: false, hinweis: t("freshAlready") };
   }
 
   try {
@@ -151,7 +154,7 @@ export async function saveAndRefresh(): Promise<RefreshErgebnis> {
     letztesSpeichern = Date.now();
   } catch (error) {
     console.error("[players] save-all fehlgeschlagen:", error);
-    return { gespeichert: false, hinweis: "Der Server hat den Speicherbefehl nicht angenommen." };
+    return { gespeichert: false, hinweis: t("saveRejected") };
   }
 
   // Dem Server einen Moment geben, die Dateien tatsaechlich zu schreiben.
@@ -159,7 +162,7 @@ export async function saveAndRefresh(): Promise<RefreshErgebnis> {
   invalidateStatsCache();
   await loadAllPlayerStats(true);
 
-  return { gespeichert: true, hinweis: "Server hat gespeichert, Zahlen sind aktuell." };
+  return { gespeichert: true, hinweis: t("saved") };
 }
 
 // ---------------------------------------------------------------------------

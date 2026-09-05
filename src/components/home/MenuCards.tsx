@@ -40,7 +40,7 @@ export async function MenuCards() {
     getTranslations("Nav"),
   ]);
   const online = spieler.filter((p) => p.online).length;
-  const nextEvent = getUpcomingEvents(now)[0];
+  const nextEvent = (await getUpcomingEvents(now))[0];
   const openShops = shops.filter((shop) => shop.open).length;
 
   /** Aktuelles schlägt die allgemeine Beschreibung – aber nur, wenn es etwas gibt. */

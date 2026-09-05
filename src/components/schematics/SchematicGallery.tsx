@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Search, X } from "lucide-react";
 import { SchematicCard } from "@/components/schematics/SchematicCard";
 import { Panel } from "@/components/ui/Panel";
@@ -10,6 +11,7 @@ import { cn } from "@/lib/utils";
 type SortKey = "new" | "downloads" | "likes";
 
 export function SchematicGallery({ schematics, tags }: { schematics: Schematic[]; tags: string[] }) {
+  const t = useTranslations("SchematicGallery");
   const [query, setQuery] = useState("");
   const [tag, setTag] = useState<string | null>(null);
   const [sort, setSort] = useState<SortKey>("new");
@@ -43,17 +45,17 @@ export function SchematicGallery({ schematics, tags }: { schematics: Schematic[]
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Suche nach Titel, Autor oder Tag…"
+            placeholder={t("searchPlaceholder")}
             className="input pl-9"
-            aria-label="Schematics durchsuchen"
+            aria-label={t("searchAriaLabel")}
           />
         </label>
         <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-black/20 p-1 text-xs">
           {(
             [
-              ["new", "Neu"],
-              ["downloads", "Downloads"],
-              ["likes", "Likes"],
+              ["new", t("sortNew")],
+              ["downloads", t("sortDownloads")],
+              ["likes", t("sortLikes")],
             ] as Array<[SortKey, string]>
           ).map(([key, label]) => (
             <button
@@ -78,7 +80,7 @@ export function SchematicGallery({ schematics, tags }: { schematics: Schematic[]
           onClick={() => setTag(null)}
           className={cn("chip transition-colors", tag === null ? "border-diamond-400/60 bg-diamond-500/15 text-diamond-100" : "border-white/10 text-cream/60 hover:text-cream")}
         >
-          Alle
+          {t("all")}
         </button>
         {tags.map((t) => (
           <button
@@ -91,16 +93,12 @@ export function SchematicGallery({ schematics, tags }: { schematics: Schematic[]
             {tag === t && <X className="size-3" />}
           </button>
         ))}
-        <span className="ml-auto text-xs text-cream/50">
-          {filtered.length} von {schematics.length}
-        </span>
+        <span className="ml-auto text-xs text-cream/50">{t("countOf", { filtered: filtered.length, total: schematics.length })}</span>
       </div>
 
       {filtered.length === 0 ? (
         <Panel className="p-12 text-center text-cream/60">
-          {schematics.length === 0
-            ? "Noch keine Blaupause hochgeladen. Der Upload wird gerade gebaut – bis dahin tauscht ihr sie am besten im Discord."
-            : "Keine Schematic passt zu deiner Suche. Vielleicht baust du sie einfach selbst?"}
+          {schematics.length === 0 ? t("emptyNoUploads") : t("emptyNoMatch")}
         </Panel>
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">

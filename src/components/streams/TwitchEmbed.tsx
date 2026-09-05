@@ -1,6 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { useTranslations } from "next-intl";
 
 const noopSubscribe = () => () => {};
 
@@ -18,6 +19,7 @@ function useHostname(): string | null {
  * Der `parent`-Parameter muss der Hostname der einbettenden Seite sein – daher wird er clientseitig ermittelt.
  */
 export function TwitchEmbed({ channel, title, className }: { channel: string; title?: string; className?: string }) {
+  const t = useTranslations("TwitchEmbed");
   const parent = useHostname();
 
   if (!parent) {
@@ -34,7 +36,7 @@ export function TwitchEmbed({ channel, title, className }: { channel: string; ti
   return (
     <iframe
       src={`https://player.twitch.tv/?${params.toString()}`}
-      title={title ?? `Twitch-Stream von ${channel}`}
+      title={title ?? t("titleOf", { channel })}
       className={className ?? "aspect-video w-full"}
       allowFullScreen
       allow="autoplay; fullscreen; picture-in-picture"

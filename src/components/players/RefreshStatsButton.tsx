@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Loader2, RefreshCw } from "lucide-react";
 import { refreshPlayerStatsAction, type PlayerActionState } from "@/lib/actions/players";
 
@@ -12,6 +13,7 @@ import { refreshPlayerStatsAction, type PlayerActionState } from "@/lib/actions/
  * Server Action durch, hier steht nur die Rückmeldung.
  */
 export function RefreshStatsButton({ eingeloggt }: { eingeloggt: boolean }) {
+  const t = useTranslations("PlayersActions");
   const [rueckmeldung, setRueckmeldung] = useState<PlayerActionState>({});
   const [pending, startTransition] = useTransition();
 
@@ -26,7 +28,7 @@ export function RefreshStatsButton({ eingeloggt }: { eingeloggt: boolean }) {
         className="btn btn-outline btn-sm disabled:opacity-50"
       >
         {pending ? <Loader2 className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-        Zahlen aktualisieren
+        {t("refresh")}
       </button>
 
       {rueckmeldung.error && <span className="text-sm text-brass-200">{rueckmeldung.error}</span>}

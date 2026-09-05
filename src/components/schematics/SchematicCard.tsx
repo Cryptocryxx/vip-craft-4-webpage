@@ -1,4 +1,7 @@
+"use client";
+
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Box, Download, Heart } from "lucide-react";
 import { BlueprintPreview } from "@/components/schematics/BlueprintPreview";
 import { Badge } from "@/components/ui/Badge";
@@ -7,7 +10,13 @@ import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatNumber, formatShortDate } from "@/lib/format";
 import type { Schematic } from "@/lib/schematic-types";
 
+/**
+ * "use client", weil SchematicGallery (die einzige Aufrufstelle) selbst eine
+ * Client-Komponente ist - eine async Server-Komponente ließe sich von dort
+ * nicht direkt importieren.
+ */
 export function SchematicCard({ schematic, onTagClick }: { schematic: Schematic; onTagClick?: (tag: string) => void }) {
+  const t = useTranslations("SchematicCard");
   const volume = schematic.size.x * schematic.size.y * schematic.size.z;
 
   return (
@@ -16,7 +25,7 @@ export function SchematicCard({ schematic, onTagClick }: { schematic: Schematic;
         {schematic.image ? (
           <Image
             src={schematic.image}
-            alt={`Screenshot: ${schematic.title}`}
+            alt={t("screenshotAlt", { title: schematic.title })}
             width={800}
             height={450}
             className="aspect-video w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
@@ -24,7 +33,7 @@ export function SchematicCard({ schematic, onTagClick }: { schematic: Schematic;
         ) : (
           <BlueprintPreview
             seed={schematic.id}
-            label={`Blaupause: ${schematic.title}`}
+            label={t("blueprintAlt", { title: schematic.title })}
             className="aspect-video w-full transition-transform duration-500 group-hover:scale-[1.03]"
           />
         )}
@@ -57,21 +66,21 @@ export function SchematicCard({ schematic, onTagClick }: { schematic: Schematic;
 
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/5 pt-3">
           <div className="flex items-center gap-3 text-xs text-cream/60">
-            <span className="inline-flex items-center gap-1" title="Downloads">
+            <span className="inline-flex items-center gap-1" title={t("downloads")}>
               <Download className="size-3.5" /> {formatNumber(schematic.downloads)}
             </span>
-            <span className="inline-flex items-center gap-1" title="Likes">
+            <span className="inline-flex items-center gap-1" title={t("likes")}>
               <Heart className="size-3.5" /> {formatNumber(schematic.likes)}
             </span>
-            <span className="hidden items-center gap-1 sm:inline-flex" title="Volumen">
-              <Box className="size-3.5" /> {formatNumber(volume)} Blöcke
+            <span className="hidden items-center gap-1 sm:inline-flex" title={t("volume")}>
+              <Box className="size-3.5" /> {formatNumber(volume)} {t("blocksUnit")}
             </span>
           </div>
           <a
             href={`/api/schematics/${schematic.id}/download`}
             download={schematic.fileName}
             className="btn btn-brass btn-sm"
-            title={`${schematic.fileName} herunterladen`}
+            title={t("downloadTitle", { fileName: schematic.fileName })}
           >
             <Download className="size-3.5" /> .nbt
           </a>

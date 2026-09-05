@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { AlertTriangle, ExternalLink, Eye, Gamepad2, Radio, Tv } from "lucide-react";
 import { TwitchEmbed } from "@/components/streams/TwitchEmbed";
 import { Badge } from "@/components/ui/Badge";
@@ -39,7 +40,8 @@ function StreamerAvatar({ streamer, size }: { streamer: Streamer; size: number }
   );
 }
 
-export function StreamerGrid({ data }: { data: StreamerList }) {
+export async function StreamerGrid({ data }: { data: StreamerList }) {
+  const t = await getTranslations("StreamerGrid");
   const { streamers, liveStatusAvailable } = data;
   const live = streamers.filter((s) => s.live);
   const offline = streamers.filter((s) => !s.live);
@@ -50,13 +52,10 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
         <span className="mx-auto flex size-12 items-center justify-center rounded-full border border-diamond-300/50 bg-diamond-950 text-diamond-200">
           <Tv className="size-6" />
         </span>
-        <h2 className="mt-4 text-xl font-bold text-cream">Noch kein Kanal verknüpft</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm text-cream/65">
-          Sobald jemand seinen Twitch-Kanal im Dashboard hinterlegt, taucht er hier auf – und sein Stream erscheint
-          automatisch, wenn er live geht.
-        </p>
+        <h2 className="mt-4 text-xl font-bold text-cream">{t("emptyTitle")}</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cream/65">{t("emptyText")}</p>
         <Button href="/dashboard" className="mt-6">
-          <TwitchIcon className="size-4" /> Kanal verknüpfen
+          <TwitchIcon className="size-4" /> {t("linkChannel")}
         </Button>
       </Panel>
     );
@@ -68,28 +67,24 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
         <div className="flex items-start gap-2.5 rounded-xl border border-brass-400/40 bg-brass-500/10 p-4 text-sm text-brass-100">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" />
           <p>
-            Der Live-Status kann nicht abgefragt werden, weil noch keine Twitch-Zugangsdaten hinterlegt sind. Trage{" "}
-            <code className="font-mono">TWITCH_CLIENT_ID</code> und <code className="font-mono">TWITCH_CLIENT_SECRET</code>{" "}
-            in der <code className="font-mono">.env</code> ein. Die Kanäle werden bis dahin als offline angezeigt.
+            {t.rich("noCredentials", {
+              code1: (chunks) => <code className="font-mono">{chunks}</code>,
+              code2: (chunks) => <code className="font-mono">{chunks}</code>,
+              code3: (chunks) => <code className="font-mono">{chunks}</code>,
+            })}
           </p>
         </div>
       )}
 
       <section>
         <SectionHeading
-          eyebrow="Jetzt live"
+          eyebrow={t("liveNowEyebrow")}
           icon={Radio}
-          title={
-            live.length > 0
-              ? `${live.length} ${live.length === 1 ? "Stream" : "Streams"} live vom Server`
-              : "Gerade streamt niemand"
-          }
-          description="Aus Datenschutzgründen lädt der Twitch-Player erst, wenn du ihn anforderst – danach startet er stumm."
+          title={live.length > 0 ? t("streamsLiveTitle", { count: live.length }) : t("noneStreamingTitle")}
+          description={t("liveDescription")}
         />
         {live.length === 0 ? (
-          <Panel className="p-12 text-center text-cream/60">
-            Aktuell ist niemand live. Schau später wieder vorbei oder folge den Kanälen unten.
-          </Panel>
+          <Panel className="p-12 text-center text-cream/60">{t("noneLive")}</Panel>
         ) : (
           <div className="grid gap-6 lg:grid-cols-2">
             {live.map((streamer) => (
@@ -98,19 +93,19 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
                   <ConsentGate
                     category="twitch"
                     provider="Twitch"
-                    description="Beim Laden des Players werden deine IP-Adresse und Angaben zu deinem Browser an Twitch übertragen. Twitch kann dabei Cookies setzen. Deine Entscheidung merken wir uns lokal in deinem Browser."
+                    description={t("consentDescription")}
                     privacyUrl="https://www.twitch.tv/p/legal/privacy-notice/"
                   >
-                    <TwitchEmbed channel={streamer.channel} title={`Twitch-Stream von ${streamer.displayName}`} />
+                    <TwitchEmbed channel={streamer.channel} title={t("streamOf", { name: streamer.displayName })} />
                   </ConsentGate>
                 </div>
                 <div className="p-4 pt-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge tone="rose">
-                      <span className="size-1.5 animate-pulse-soft rounded-full bg-rose-300" /> Live
+                      <span className="size-1.5 animate-pulse-soft rounded-full bg-rose-300" /> {t("live")}
                     </Badge>
                     <span className="inline-flex items-center gap-1 text-xs text-cream/60">
-                      <Eye className="size-3.5" /> {streamer.viewers} Zuschauer
+                      <Eye className="size-3.5" /> {streamer.viewers} {t("viewers")}
                     </span>
                     {streamer.gameName && (
                       <span className="inline-flex items-center gap-1 text-xs text-cream/60">
@@ -137,7 +132,7 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
                       rel="noopener noreferrer"
                       className="btn btn-outline btn-sm shrink-0"
                     >
-                      <TwitchIcon className="size-3.5" /> Twitch
+                      <TwitchIcon className="size-3.5" /> {t("twitch")}
                     </a>
                   </div>
                 </div>
@@ -149,10 +144,10 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
 
       <section>
         <SectionHeading
-          eyebrow="Alle Kanäle"
+          eyebrow={t("allChannelsEyebrow")}
           icon={Tv}
-          title="Die Sendeplätze des Servers"
-          description="Alle verknüpften Twitch-Kanäle aus der Community. Folge ihnen, dann verpasst du keinen Absturz."
+          title={t("allChannelsTitle")}
+          description={t("allChannelsDescription")}
         />
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...live, ...offline].map((streamer) => (
@@ -165,7 +160,7 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {streamer.live ? <Badge tone="rose">Live</Badge> : <Badge tone="neutral">Offline</Badge>}
+                {streamer.live ? <Badge tone="rose">{t("live")}</Badge> : <Badge tone="neutral">{t("offline")}</Badge>}
                 {streamer.minecraftName && (
                   <span className="inline-flex items-center gap-1.5 text-xs text-cream/60">
                     <PlayerHead name={streamer.minecraftName} size={16} />
@@ -179,7 +174,7 @@ export function StreamerGrid({ data }: { data: StreamerList }) {
                 rel="noopener noreferrer"
                 className="mt-4 inline-flex items-center gap-1.5 text-xs text-brass-200 transition-colors hover:text-brass-100"
               >
-                Kanal öffnen <ExternalLink className="size-3" />
+                {t("openChannel")} <ExternalLink className="size-3" />
               </a>
             </Panel>
           ))}

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { DraftingCompass, FolderOpen, Download, Wand2 } from "lucide-react";
 import { SchematicGallery } from "@/components/schematics/SchematicGallery";
 import { Button } from "@/components/ui/Button";
@@ -9,32 +10,27 @@ import { Panel } from "@/components/ui/Panel";
 import { getAllTags, getSchematics } from "@/lib/schematic-types";
 import { getSiteSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
-  title: "Schematics",
-  description: "Bauplan-Galerie: Create-Maschinen aus der Community als .nbt herunterladen.",
-};
-
-const howTo = [
-  { icon: Download, title: ".nbt herunterladen", text: "Über den Button auf der Karte – die Datei landet in deinem Download-Ordner." },
-  { icon: FolderOpen, title: "In den Schematics-Ordner", text: "Datei nach .minecraft/schematics kopieren (bei Prism: im Instanz-Ordner)." },
-  { icon: Wand2, title: "Ingame platzieren", text: "Leere Schematic & Quill nehmen, Datei auswählen, mit der Schematicannon oder per Hand bauen." },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("SchematicsPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function SchematicsPage() {
   const schematics = getSchematics();
   const tags = getAllTags();
-  const settings = await getSiteSettings();
+  const [settings, t] = await Promise.all([getSiteSettings(), getTranslations("SchematicsPage")]);
+
+  const howTo = [
+    { icon: Download, title: t("step1Title"), text: t("step1Text") },
+    { icon: FolderOpen, title: t("step2Title"), text: t("step2Text") },
+    { icon: Wand2, title: t("step3Title"), text: t("step3Text") },
+  ];
 
   return (
     <>
-      <PageHeader
-        eyebrow="Bauplan-Galerie"
-        icon={DraftingCompass}
-        title="Schematics"
-        description="Blaupausen für Create-Maschinen aus der Community. Herunterladen, in den Schematics-Ordner legen und mit der Schematicannon nachbauen."
-      >
+      <PageHeader eyebrow={t("eyebrow")} icon={DraftingCompass} title={t("title")} description={t("description")}>
         <Button href={settings.discordInvite} variant="diamond" size="sm" target="_blank" rel="noopener noreferrer">
-          <DiscordIcon className="size-4" /> Eigene Schematic einreichen
+          <DiscordIcon className="size-4" /> {t("submitOwn")}
         </Button>
       </PageHeader>
 
@@ -42,7 +38,7 @@ export default async function SchematicsPage() {
         <SchematicGallery schematics={schematics} tags={tags} />
 
         <Panel variant="blueprint" className="p-6 sm:p-8">
-          <p className="eyebrow">So nutzt du eine Schematic</p>
+          <p className="eyebrow">{t("howToEyebrow")}</p>
           <ol className="mt-5 grid gap-6 sm:grid-cols-3">
             {howTo.map((step, index) => {
               const Icon = step.icon;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ArrowDownToLine,
   Blocks,
@@ -38,6 +39,7 @@ const rankStyle: Record<number, string> = {
 };
 
 export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone: "fame" | "shame" }) {
+  const t = useTranslations("LeaderboardTabs");
   const [activeId, setActiveId] = useState(boards[0]?.id);
   const active = boards.find((b) => b.id === activeId) ?? boards[0];
 
@@ -45,10 +47,8 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
     return (
       <div className="panel p-10 text-center">
         <Trophy className="mx-auto size-10 text-brass-500/40" />
-        <p className="mt-3 font-display text-lg font-bold text-cream">Noch keine Zahlen</p>
-        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">
-          Die Rangliste baut sich aus den Statistikdateien des Servers. Sobald dort Werte stehen, taucht sie hier auf.
-        </p>
+        <p className="mt-3 font-display text-lg font-bold text-cream">{t("noDataTitle")}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">{t("noDataText")}</p>
       </div>
     );
   }
@@ -59,7 +59,7 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
   return (
     <div className="panel overflow-hidden">
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b border-white/5 bg-black/20 p-2" role="tablist" aria-label="Kategorien">
+      <div className="flex gap-1 overflow-x-auto border-b border-white/5 bg-black/20 p-2" role="tablist" aria-label={t("categoriesAriaLabel")}>
         {boards.map((board) => {
           const Icon = icons[board.icon];
           const selected = board.id === active.id;
@@ -93,7 +93,7 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
             <thead>
               <tr>
                 <th className="w-16">#</th>
-                <th>Spieler</th>
+                <th>{t("player")}</th>
                 <th className="text-right">{active.unit}</th>
               </tr>
             </thead>
@@ -132,21 +132,19 @@ export function LeaderboardTabs({ boards, tone }: { boards: Leaderboard[]; tone:
           <p className="mt-1 text-sm text-cream/60">{active.description}</p>
           <dl className="mt-5 space-y-2 text-sm">
             <div className="flex justify-between border-t border-white/5 pt-2">
-              <dt className="text-cream/50">Spitzenreiter</dt>
+              <dt className="text-cream/50">{t("topScorer")}</dt>
               <dd className="font-semibold text-cream">{active.entries[0]?.player}</dd>
             </div>
             <div className="flex justify-between border-t border-white/5 pt-2">
-              <dt className="text-cream/50">Bestwert</dt>
+              <dt className="text-cream/50">{t("bestValue")}</dt>
               <dd className="font-mono text-cream">{active.entries[0]?.display}</dd>
             </div>
             <div className="flex justify-between border-t border-white/5 pt-2">
-              <dt className="text-cream/50">Gewertet</dt>
-              <dd className="text-cream">{active.entries.length} Spieler</dd>
+              <dt className="text-cream/50">{t("ranked")}</dt>
+              <dd className="text-cream">{t("playersUnit", { count: active.entries.length })}</dd>
             </div>
           </dl>
-          <p className="mt-5 text-[10px] tracking-wider text-cream/35 uppercase">
-            Quelle: Statistikdateien des Servers
-          </p>
+          <p className="mt-5 text-[10px] tracking-wider text-cream/35 uppercase">{t("source")}</p>
         </aside>
       </div>
     </div>

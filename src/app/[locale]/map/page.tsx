@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import { Compass, Layers, Map as MapIcon, Store } from "lucide-react";
 import { MapFrame } from "@/components/map/MapFrame";
 import { Container } from "@/components/ui/Container";
@@ -16,41 +17,24 @@ async function getOwnOrigin(): Promise<string> {
   return `${proto}://${host}`;
 }
 
-export const metadata: Metadata = {
-  title: "Live-Map",
-  description: "Die Live-Karte von VIP Craft 4 – Basen, Shops und Spieler in Echtzeit.",
-};
-
-const tips = [
-  {
-    icon: Layers,
-    title: "Ebenen & Dimensionen",
-    text: "Über das Menü oben links zwischen Overworld, Nether und End wechseln. Unter „Markers“ lassen sich einzelne Marker-Ebenen ausblenden.",
-  },
-  {
-    icon: Compass,
-    title: "Spieler finden",
-    text: "Wer gerade online ist, taucht als Marker direkt auf der Karte auf.",
-  },
-  {
-    icon: Store,
-    title: "Shops suchen",
-    text: "Die Koordinaten aller eingetragenen Läden stehen im Shop-Bereich – auf der Karte eingeben und hinfliegen.",
-  },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("MapPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function MapPage() {
-  const [settings, ownOrigin] = await Promise.all([getSiteSettings(), getOwnOrigin()]);
+  const [settings, ownOrigin, t] = await Promise.all([getSiteSettings(), getOwnOrigin(), getTranslations("MapPage")]);
   const availability = await checkIframeEmbeddable(settings.mapUrl, ownOrigin);
+
+  const tips = [
+    { icon: Layers, title: t("tip1Title"), text: t("tip1Text") },
+    { icon: Compass, title: t("tip2Title"), text: t("tip2Text") },
+    { icon: Store, title: t("tip3Title"), text: t("tip3Text") },
+  ];
 
   return (
     <>
-      <PageHeader
-        eyebrow="BlueMap"
-        icon={MapIcon}
-        title="Live-Karte"
-        description="Basen, Landeplätze und wer gerade wo unterwegs ist – direkt aus der Welt gerendert und alle paar Minuten aktualisiert."
-      />
+      <PageHeader eyebrow={t("eyebrow")} icon={MapIcon} title={t("title")} description={t("description")} />
       <Container className="py-8">
         <MapFrame src={settings.mapUrl} availability={availability} />
 

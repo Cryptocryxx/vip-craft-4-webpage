@@ -12,8 +12,9 @@ async function DimensionBadge({ dimension }: { dimension: ShopDTO["dimension"] }
   return null;
 }
 
-function ShopCard({ shop }: { shop: ShopDTO }) {
-  const ownerName = shop.owner.minecraftName ?? shop.owner.name ?? "Unbekannt";
+async function ShopCard({ shop }: { shop: ShopDTO }) {
+  const t = await getTranslations("ShopGridExtra");
+  const ownerName = shop.owner.minecraftName ?? shop.owner.name ?? "?";
 
   return (
     <Panel rivets className="flex h-full flex-col p-5">
@@ -25,7 +26,7 @@ function ShopCard({ shop }: { shop: ShopDTO }) {
             {ownerName}
           </p>
         </div>
-        {shop.open ? <Badge tone="emerald">Offen</Badge> : <Badge tone="rose">Geschlossen</Badge>}
+        {shop.open ? <Badge tone="emerald">{t("open")}</Badge> : <Badge tone="rose">{t("closed")}</Badge>}
       </div>
 
       {shop.description && <p className="mt-3 text-sm leading-relaxed text-cream/70">{shop.description}</p>}
@@ -47,16 +48,15 @@ function ShopCard({ shop }: { shop: ShopDTO }) {
   );
 }
 
-export function ShopGrid({ shops }: { shops: ShopDTO[] }) {
+export async function ShopGrid({ shops }: { shops: ShopDTO[] }) {
+  const t = await getTranslations("ShopGridExtra");
+
   if (shops.length === 0) {
     return (
       <Panel className="p-10 text-center">
         <Store className="mx-auto size-10 text-brass-500/40" />
-        <p className="mt-3 font-display text-lg font-bold text-cream">Noch kein Shop eingetragen</p>
-        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">
-          Sei der Erste: Im Dashboard trägst du deinen Laden in einer Minute ein. Er ist sofort öffentlich sichtbar,
-          eine Freigabe braucht es nicht.
-        </p>
+        <p className="mt-3 font-display text-lg font-bold text-cream">{t("emptyTitle")}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">{t("emptyText")}</p>
       </Panel>
     );
   }
@@ -75,7 +75,7 @@ export function ShopGrid({ shops }: { shops: ShopDTO[] }) {
       {closed.length > 0 && (
         <section>
           <h2 className="mb-4 font-display text-sm font-bold tracking-wide text-cream/50 uppercase">
-            Zurzeit geschlossen
+            {t("currentlyClosed")}
           </h2>
           <div className="grid gap-5 opacity-60 sm:grid-cols-2 lg:grid-cols-3">
             {closed.map((shop) => (

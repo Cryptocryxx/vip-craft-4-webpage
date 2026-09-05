@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { CalendarDays, ScrollText, Users } from "lucide-react";
 import { EventGrid } from "@/components/community/EventGrid";
 import { Timeline } from "@/components/community/Timeline";
@@ -11,30 +12,28 @@ import { getUpcomingEvents } from "@/lib/event-types";
 import { milestones } from "@/lib/timeline-types";
 import { getSiteSettings } from "@/lib/settings";
 
-export const metadata: Metadata = {
-  title: "Community & Events",
-  description: "Event-Kalender und Server-Timeline von VIP Craft 4.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("CommunityPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function CommunityPage() {
   const now = new Date();
-  const events = getUpcomingEvents(now);
-  const settings = await getSiteSettings();
+  const [events, settings, t] = await Promise.all([
+    getUpcomingEvents(now),
+    getSiteSettings(),
+    getTranslations("CommunityPage"),
+  ]);
 
   return (
     <>
-      <PageHeader
-        eyebrow="Community-Hub"
-        icon={Users}
-        title="Events & Lore"
-        description="Was auf dem Server ansteht – und was bisher passiert ist. Vom ersten Wasserrad bis zur letzten Explosion."
-      >
+      <PageHeader eyebrow={t("eyebrow")} icon={Users} title={t("title")} description={t("description")}>
         <div className="flex flex-wrap gap-2">
           <Button href="#events" variant="outline" size="sm">
-            <CalendarDays className="size-4" /> Kalender
+            <CalendarDays className="size-4" /> {t("calendar")}
           </Button>
           <Button href="#lore" variant="outline" size="sm">
-            <ScrollText className="size-4" /> Timeline
+            <ScrollText className="size-4" /> {t("timeline")}
           </Button>
         </div>
       </PageHeader>
@@ -42,13 +41,13 @@ export default async function CommunityPage() {
       <Container className="space-y-24 py-12">
         <section id="events" className="scroll-mt-24">
           <SectionHeading
-            eyebrow="Kalender"
+            eyebrow={t("eventsEyebrow")}
             icon={CalendarDays}
-            title="Kommende Ingame-Events"
-            description="Alle Zeiten in deutscher Zeit (Europe/Berlin). Für Erinnerungen abonniere die Events im Discord."
+            title={t("eventsTitle")}
+            description={t("eventsDescription")}
             action={
               <Button href={settings.discordInvite} variant="outline" size="sm" target="_blank" rel="noopener noreferrer">
-                <DiscordIcon className="size-4" /> Event vorschlagen
+                <DiscordIcon className="size-4" /> {t("suggestEvent")}
               </Button>
             }
           />
@@ -56,12 +55,7 @@ export default async function CommunityPage() {
         </section>
 
         <section id="lore" className="scroll-mt-24">
-          <SectionHeading
-            eyebrow="Die Lore"
-            icon={ScrollText}
-            title="Server-Timeline"
-            description="Meilensteine der Season – neueste zuerst. Wer etwas Erwähnenswertes gebaut (oder gesprengt) hat, meldet sich im Discord."
-          />
+          <SectionHeading eyebrow={t("loreEyebrow")} icon={ScrollText} title={t("loreTitle")} description={t("loreDescription")} />
           <Timeline milestones={milestones} />
         </section>
       </Container>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Coins, Skull, Trophy } from "lucide-react";
 import { EconomyOverview } from "@/components/leaderboards/EconomyOverview";
 import { LeaderboardTabs } from "@/components/leaderboards/LeaderboardTabs";
@@ -10,35 +11,31 @@ import { SPURS_PER_COG } from "@/lib/currency";
 import { getEconomyData } from "@/lib/economy-source";
 import { getLeaderboardData } from "@/lib/leaderboard-source";
 
-export const metadata: Metadata = {
-  title: "Leaderboards & Economy",
-  description: "Hall of Fame, Hall of Shame und die Wirtschaft von VIP Craft 4.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("LeaderboardsPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function LeaderboardsPage() {
-  const [fame, shame, economy] = await Promise.all([
+  const [fame, shame, economy, t] = await Promise.all([
     getLeaderboardData("fame"),
     getLeaderboardData("shame"),
     getEconomyData(),
+    getTranslations("LeaderboardsPage"),
   ]);
 
   return (
     <>
-      <PageHeader
-        eyebrow="Rankings"
-        icon={Trophy}
-        title="Leaderboards & Economy"
-        description="Globale Rankings aus der Welt – Ruhm für die Fleißigen, Spott für alle, die schon wieder in die Lava gefallen sind."
-      >
+      <PageHeader eyebrow={t("eyebrow")} icon={Trophy} title={t("title")} description={t("description")}>
         <div className="flex flex-wrap gap-2">
           <Button href="#hall-of-fame" variant="outline" size="sm">
-            <Trophy className="size-4" /> Hall of Fame
+            <Trophy className="size-4" /> {t("hallOfFame")}
           </Button>
           <Button href="#hall-of-shame" variant="outline" size="sm">
-            <Skull className="size-4" /> Hall of Shame
+            <Skull className="size-4" /> {t("hallOfShame")}
           </Button>
           <Button href="#economy" variant="outline" size="sm">
-            <Coins className="size-4" /> Wirtschaft
+            <Coins className="size-4" /> {t("economy")}
           </Button>
         </div>
       </PageHeader>
@@ -46,38 +43,30 @@ export default async function LeaderboardsPage() {
       <Container className="space-y-24 py-12">
         <section id="hall-of-fame" className="scroll-mt-24">
           <SectionHeading
-            eyebrow="Hall of Fame"
+            eyebrow={t("hallOfFame")}
             icon={Trophy}
-            title="Die Fleißigen"
-            description={
-              fame.source === "live"
-                ? "Live aus den Statistikdateien des Servers – die Top 10 jeder Kategorie."
-                : "Sobald der Server Statistiken geschrieben hat, stehen hier die Top 10 jeder Kategorie."
-            }
+            title={t("fameTitle")}
+            description={fame.source === "live" ? t("fameLive") : t("famePending")}
           />
           <LeaderboardTabs boards={fame.boards} tone="fame" />
         </section>
 
         <section id="hall-of-shame" className="scroll-mt-24">
           <SectionHeading
-            eyebrow="Hall of Shame"
+            eyebrow={t("hallOfShame")}
             icon={Skull}
-            title="Die Unvorsichtigen"
-            description={
-              shame.source === "live"
-                ? "Wer zählt, verliert. Tode, Creeper und eingesteckter Schaden – direkt vom Server."
-                : "Tode, Creeper und eingesteckter Schaden – sobald es etwas zu zählen gibt."
-            }
+            title={t("shameTitle")}
+            description={shame.source === "live" ? t("shameLive") : t("shamePending")}
           />
           <LeaderboardTabs boards={shame.boards} tone="shame" />
         </section>
 
         <section id="economy" className="scroll-mt-24">
           <SectionHeading
-            eyebrow="Wirtschaft"
+            eyebrow={t("economy")}
             icon={Coins}
-            title="Cogs & Sparfüchse"
-            description={`Bezahlt wird mit Create: Numismatics. Gerechnet wird in Cog – ein Cog sind ${SPURS_PER_COG} Spurs. Hier siehst du, wie viel Geld im Umlauf ist und wer am meisten davon gehortet hat.`}
+            title={t("economyTitle")}
+            description={t("economyDescription", { spursPerCog: SPURS_PER_COG })}
           />
           <EconomyOverview data={economy.overview} source={economy.source} />
         </section>

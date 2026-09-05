@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Bomb, Cog, Flag, Flame, TrainFront, Users, type LucideIcon } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
@@ -24,16 +25,12 @@ const kindStyle: Record<MilestoneKind, string> = {
 };
 
 /** Vertikaler Zeitstrahl – "Die Lore" des Servers. */
-export function Timeline({ milestones }: { milestones: Milestone[] }) {
+export async function Timeline({ milestones }: { milestones: Milestone[] }) {
+  const t = await getTranslations("Timeline");
   const sorted = [...milestones].sort((a, b) => b.date.localeCompare(a.date));
 
   if (sorted.length === 0) {
-    return (
-      <Panel className="p-10 text-center text-cream/60">
-        Die Chronik ist noch leer. Sobald jemand etwas gebaut hat, das in die Geschichtsbücher gehört – oder etwas
-        spektakulär in die Luft geflogen ist – steht es hier.
-      </Panel>
-    );
+    return <Panel className="p-10 text-center text-cream/60">{t("empty")}</Panel>;
   }
 
   return (

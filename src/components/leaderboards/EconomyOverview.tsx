@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Coins, Wallet } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
@@ -11,25 +12,23 @@ type Props = {
   source: "live" | "unavailable";
 };
 
-export function EconomyOverview({ data, source }: Props) {
+export async function EconomyOverview({ data, source }: Props) {
+  const t = await getTranslations("EconomyOverview");
   const { summary, richest } = data;
 
   if (source !== "live" || richest.length === 0) {
     return (
       <Panel className="p-10 text-center">
         <Coins className="mx-auto size-10 text-brass-500/40" />
-        <p className="mt-3 font-display text-lg font-bold text-cream">Noch keine Kontodaten</p>
-        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">
-          Sobald auf dem Server die ersten Numismatics-Konten Guthaben haben, stehen hier der Umlauf und die reichsten
-          Spieler.
-        </p>
+        <p className="mt-3 font-display text-lg font-bold text-cream">{t("noAccountsTitle")}</p>
+        <p className="mx-auto mt-2 max-w-md text-sm text-cream/60">{t("noAccountsText")}</p>
       </Panel>
     );
   }
 
   const tiles = [
-    { label: "Im Umlauf", value: formatCogsLong(summary.totalCirculationSpurs), icon: Coins },
-    { label: "Konten", value: formatNumber(summary.accountCount), icon: Wallet },
+    { label: t("inCirculation"), value: formatCogsLong(summary.totalCirculationSpurs), icon: Coins },
+    { label: t("accounts"), value: formatNumber(summary.accountCount), icon: Wallet },
   ];
 
   return (
@@ -53,7 +52,7 @@ export function EconomyOverview({ data, source }: Props) {
 
       <Panel className="overflow-hidden">
         <div className="flex items-center justify-between border-b border-white/5 bg-black/20 px-5 py-3">
-          <h3 className="font-display text-sm font-bold tracking-wide text-brass-200 uppercase">Reichste Spieler</h3>
+          <h3 className="font-display text-sm font-bold tracking-wide text-brass-200 uppercase">{t("richestPlayers")}</h3>
           <Badge tone="brass">Cog</Badge>
         </div>
         <ol>
@@ -69,11 +68,9 @@ export function EconomyOverview({ data, source }: Props) {
           ))}
         </ol>
         <div className="border-t border-white/5 bg-black/15 px-5 py-3 text-xs leading-relaxed text-cream/50">
-          <p>
-            Gerechnet wird in <span className="text-cream/80">Cog</span> – ein Cog sind {SPURS_PER_COG} Spurs.
-          </p>
+          <p>{t.rich("coinsCalculatedIn", { spursPerCog: SPURS_PER_COG, b: (chunks) => <span className="text-cream/80">{chunks}</span> })}</p>
           <p className="mt-1">
-            Münzen:{" "}
+            {t("coinsLabel")}{" "}
             {COINS.map((coin, index) => (
               <span key={coin.name}>
                 {index > 0 && " · "}
@@ -83,7 +80,7 @@ export function EconomyOverview({ data, source }: Props) {
           </p>
         </div>
         <p className="border-t border-white/5 bg-black/15 px-5 py-2 text-[10px] tracking-wider text-cream/35 uppercase">
-          Quelle: Bankkonten des Servers
+          {t("source")}
         </p>
       </Panel>
     </div>

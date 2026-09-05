@@ -31,24 +31,15 @@ export type ConsentState = {
 /** "unknown" = serverseitig bzw. während der Hydration noch nicht bekannt. */
 export type ConsentSnapshot = ConsentState | null | "unknown";
 
-export const consentCategoryInfo: Record<
-  ConsentCategory,
-  { label: string; provider: string; description: string; privacyUrl: string }
-> = {
-  twitch: {
-    label: "Twitch-Streams",
-    provider: "Twitch Interactive, Inc. (USA)",
-    description:
-      "Zeigt Übertragungen direkt auf der Streams-Seite. Beim Laden werden deine IP-Adresse und Browserdaten an Twitch übertragen; Twitch kann dabei Cookies setzen.",
-    privacyUrl: "https://www.twitch.tv/p/legal/privacy-notice/",
-  },
-  map: {
-    label: "Kartenansicht",
-    provider: "Anbieter der eingebetteten Weltkarte",
-    description:
-      "Bindet die Weltkarte auf der Map-Seite ein. Beim Laden wird deine IP-Adresse an den Anbieter der Karte übertragen.",
-    privacyUrl: "/datenschutz",
-  },
+/**
+ * Nur der Datenschutzlink je Kategorie - Anbieter, Beschriftung und
+ * Beschreibung stehen in den Uebersetzungen, Namespace "CookieBanner"
+ * (siehe CookieBanner.tsx), damit auch "Anbieter der eingebetteten
+ * Weltkarte" auf Englisch existiert.
+ */
+export const consentCategoryPrivacyUrl: Record<ConsentCategory, string> = {
+  twitch: "https://www.twitch.tv/p/legal/privacy-notice/",
+  map: "/datenschutz",
 };
 
 function emptyState(granted: boolean): ConsentState {

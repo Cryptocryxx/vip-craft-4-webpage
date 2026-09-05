@@ -1,7 +1,8 @@
+import { getTranslations, getLocale } from "next-intl/server";
 import { Clock, GraduationCap, MapPin, PartyPopper, Skull, TrainFront, Trophy, User, Users, type LucideIcon } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
-import { eventTypeLabels, type EventType, type CommunityEvent } from "@/lib/event-types";
+import type { EventType, CommunityEvent } from "@/lib/event-types";
 import { formatTime, relativeDays } from "@/lib/format";
 
 const typeIcon: Record<EventType, LucideIcon> = {
@@ -22,17 +23,19 @@ const typeTone: Record<EventType, BadgeTone> = {
   party: "copper",
 };
 
-const dayFormatter = new Intl.DateTimeFormat("de-DE", { day: "2-digit", timeZone: "Europe/Berlin" });
-const monthFormatter = new Intl.DateTimeFormat("de-DE", { month: "short", timeZone: "Europe/Berlin" });
-const weekdayFormatter = new Intl.DateTimeFormat("de-DE", { weekday: "long", timeZone: "Europe/Berlin" });
+export async function EventGrid({ events, now }: { events: CommunityEvent[]; now: Date }) {
+  const [t, tType, locale] = await Promise.all([
+    getTranslations("EventGrid"),
+    getTranslations("EventTypes"),
+    getLocale(),
+  ]);
 
-export function EventGrid({ events, now }: { events: CommunityEvent[]; now: Date }) {
+  const dayFormatter = new Intl.DateTimeFormat(locale, { day: "2-digit", timeZone: "Europe/Berlin" });
+  const monthFormatter = new Intl.DateTimeFormat(locale, { month: "short", timeZone: "Europe/Berlin" });
+  const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: "long", timeZone: "Europe/Berlin" });
+
   if (events.length === 0) {
-    return (
-      <Panel className="p-10 text-center text-cream/60">
-        Gerade sind keine Events geplant – schau im Discord vorbei, dort entstehen die nächsten.
-      </Panel>
-    );
+    return <Panel className="p-10 text-center text-cream/60">{t("empty")}</Panel>;
   }
 
   return (
@@ -57,9 +60,9 @@ export function EventGrid({ events, now }: { events: CommunityEvent[]; now: Date
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <Badge tone={typeTone[event.type]}>
-                    <Icon className="size-3" /> {eventTypeLabels[event.type]}
+                    <Icon className="size-3" /> {tType(event.type)}
                   </Badge>
-                  {isNext && <Badge tone="diamond">Als Nächstes</Badge>}
+                  {isNext && <Badge tone="diamond">{t("upNext")}</Badge>}
                 </div>
                 <h3 className="mt-2 text-lg leading-snug font-bold text-cream">{event.title}</h3>
               </div>
@@ -70,7 +73,7 @@ export function EventGrid({ events, now }: { events: CommunityEvent[]; now: Date
             <dl className="mt-4 grid grid-cols-1 gap-1.5 border-t border-white/5 pt-4 text-xs text-cream/70">
               <div className="flex items-center gap-2">
                 <Clock className="size-3.5 text-brass-300" />
-                <dt className="sr-only">Zeit</dt>
+                <dt className="sr-only">{t("timeLabel")}</dt>
                 <dd>
                   {relativeDays(start, now)} · {formatTime(start)}
                   {event.end ? ` – ${formatTime(event.end)}` : ""}
@@ -78,13 +81,13 @@ export function EventGrid({ events, now }: { events: CommunityEvent[]; now: Date
               </div>
               <div className="flex items-center gap-2">
                 <MapPin className="size-3.5 text-brass-300" />
-                <dt className="sr-only">Ort</dt>
+                <dt className="sr-only">{t("locationLabel")}</dt>
                 <dd>{event.location}</dd>
               </div>
               <div className="flex items-center gap-2">
                 <User className="size-3.5 text-brass-300" />
-                <dt className="sr-only">Host</dt>
-                <dd>Host: {event.host}</dd>
+                <dt className="sr-only">{t("hostLabel")}</dt>
+                <dd>{t("hostPrefix", { name: event.host })}</dd>
               </div>
             </dl>
           </Panel>

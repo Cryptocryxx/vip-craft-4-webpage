@@ -1,4 +1,5 @@
 import "server-only";
+import { getTranslations } from "next-intl/server";
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
 import type { Leaderboard } from "@/lib/leaderboard-types";
 import { loadAllPlayerStats, type PlayerStatsEntry } from "@/lib/stats-source";
@@ -12,94 +13,29 @@ export type LeaderboardResult = {
 
 type BoardSpec = {
   id: string;
-  title: string;
-  description: string;
-  unit: string;
   kind: "fame" | "shame";
   icon: Leaderboard["icon"];
   value: (stats: ParsedStats) => number;
   format?: (value: number) => string;
 };
 
-/** Nur Kategorien, die Vanilla tatsächlich in world/stats erfasst. */
+/**
+ * Nur Kategorien, die Vanilla tatsächlich in world/stats erfasst.
+ * Titel, Beschreibung und Einheit stehen im Namespace "LeaderboardCategories"
+ * (verschachtelt unter der jeweiligen `id`), damit sie auf Englisch existieren.
+ */
 const specs: BoardSpec[] = [
-  {
-    id: "playtime",
-    title: "Meiste Spielzeit",
-    description: "Wer wohnt eigentlich auf dem Server?",
-    unit: "Stunden",
-    kind: "fame",
-    icon: "clock",
-    value: (s) => s.playtimeHours,
-    format: formatHours,
-  },
-  {
-    id: "iron",
-    title: "Meistes Eisen abgebaut",
-    description: "Rohstoff Nummer eins für jede Create-Fabrik.",
-    unit: "Eisenerz",
-    kind: "fame",
-    icon: "pickaxe",
-    value: (s) => s.ironMined,
-  },
-  {
-    id: "mined",
-    title: "Meiste Blöcke abgebaut",
-    description: "Wer sich am tiefsten gegraben hat.",
-    unit: "Blöcke",
-    kind: "fame",
-    icon: "blocks",
-    value: (s) => s.blocksMined,
-  },
-  {
-    id: "andesite",
-    title: "Meiste Andesit-Legierung hergestellt",
-    description: "Das Rückgrat jeder Create-Maschine.",
-    unit: "Stück",
-    kind: "fame",
-    icon: "cog",
-    value: (s) => s.andesiteAlloyCrafted,
-  },
-  {
-    id: "walked",
-    title: "Weiteste Strecke zu Fuß",
-    description: "Laufen, sprinten, schleichen – alles zusammen.",
-    unit: "km",
-    kind: "fame",
-    icon: "train",
-    value: (s) => s.walkedKm,
-    format: formatDistanceKm,
-  },
-  {
-    id: "deaths",
-    title: "Meiste Tode",
-    description: "Aller Anfang ist tödlich.",
-    unit: "Tode",
-    kind: "shame",
-    icon: "skull",
-    value: (s) => s.deaths,
-  },
-  {
-    id: "creeper",
-    title: "Meiste Tode durch Creeper",
-    description: "Ssssss… und die Fabrik ist weg.",
-    unit: "Tode",
-    kind: "shame",
-    icon: "bomb",
-    value: (s) => s.deathsByCreeper,
-  },
-  {
-    id: "damage",
-    title: "Meister Schaden eingesteckt",
-    description: "Gemessen in Herzen. Autsch.",
-    unit: "Herzen",
-    kind: "shame",
-    icon: "flame",
-    value: (s) => s.damageTaken,
-  },
+  { id: "playtime", kind: "fame", icon: "clock", value: (s) => s.playtimeHours, format: formatHours },
+  { id: "iron", kind: "fame", icon: "pickaxe", value: (s) => s.ironMined },
+  { id: "mined", kind: "fame", icon: "blocks", value: (s) => s.blocksMined },
+  { id: "andesite", kind: "fame", icon: "cog", value: (s) => s.andesiteAlloyCrafted },
+  { id: "walked", kind: "fame", icon: "train", value: (s) => s.walkedKm, format: formatDistanceKm },
+  { id: "deaths", kind: "shame", icon: "skull", value: (s) => s.deaths },
+  { id: "creeper", kind: "shame", icon: "bomb", value: (s) => s.deathsByCreeper },
+  { id: "damage", kind: "shame", icon: "flame", value: (s) => s.damageTaken },
 ];
 
-function buildBoard(spec: BoardSpec, players: PlayerStatsEntry[]): Leaderboard {
+function buildBoard(spec: BoardSpec, players: PlayerStatsEntry[], t: Awaited<ReturnType<typeof getTranslations>>): Leaderboard {
   const format = spec.format ?? formatNumber;
   const entries = players
     .map((player) => ({ player: player.name, value: spec.value(player.stats) }))
@@ -110,9 +46,9 @@ function buildBoard(spec: BoardSpec, players: PlayerStatsEntry[]): Leaderboard {
 
   return {
     id: spec.id,
-    title: spec.title,
-    description: spec.description,
-    unit: spec.unit,
+    title: t(`${spec.id}.title`),
+    description: t(`${spec.id}.description`),
+    unit: t(`${spec.id}.unit`),
     kind: spec.kind,
     icon: spec.icon,
     entries,
@@ -121,7 +57,7 @@ function buildBoard(spec: BoardSpec, players: PlayerStatsEntry[]): Leaderboard {
 
 /** Leaderboards aus echten Serverdaten. Ohne Daten bleibt die Liste leer. */
 export async function getLeaderboardData(kind?: "fame" | "shame"): Promise<LeaderboardResult> {
-  const players = await loadAllPlayerStats();
+  const [players, t] = await Promise.all([loadAllPlayerStats(), getTranslations("LeaderboardCategories")]);
 
   if (!players || players.length === 0) {
     return { boards: [], source: "unavailable" };
@@ -129,7 +65,7 @@ export async function getLeaderboardData(kind?: "fame" | "shame"): Promise<Leade
 
   const boards = specs
     .filter((spec) => (kind ? spec.kind === kind : true))
-    .map((spec) => buildBoard(spec, players))
+    .map((spec) => buildBoard(spec, players, t))
     // Kategorien ohne einen einzigen Wert gar nicht erst anzeigen.
     .filter((board) => board.entries.length > 0);
 

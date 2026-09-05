@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { gearPath, ringPath } from "@/components/ui/Gear";
 import { hashString, mulberry32 } from "@/lib/utils";
 
@@ -9,6 +10,7 @@ const H = 225;
  * Deterministisch pro `seed`, damit jede Schematic ihr eigenes "Bild" behält.
  */
 export function BlueprintPreview({ seed, label, className }: { seed: string; label?: string; className?: string }) {
+  const t = useTranslations("BlueprintPreview");
   const rnd = mulberry32(hashString(seed));
   const id = `bp-${hashString(seed).toString(36)}`;
 
@@ -37,7 +39,7 @@ export function BlueprintPreview({ seed, label, className }: { seed: string; lab
   const dims = { x: boxes[0].x, y: boxes[0].y + boxes[0].h + 12, w: boxes[0].w };
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className={className} role="img" aria-label={label ?? "Blaupause"}>
+    <svg viewBox={`0 0 ${W} ${H}`} className={className} role="img" aria-label={label ?? t("fallbackLabel")}>
       <defs>
         <pattern id={`${id}-grid`} width="10" height="10" patternUnits="userSpaceOnUse">
           <path d="M10 0H0V10" fill="none" stroke="rgba(124,230,246,0.10)" strokeWidth="0.5" />

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { requireAdmin, requireTeam } from "@/lib/admin";
 import { findPlayerIp, protokolliere, saveAndRefresh } from "@/lib/players";
@@ -32,14 +33,16 @@ function verbleibendeMinuten(schluessel: string): number {
 
 /** Stößt ein Speichern auf dem Server an, damit die Statistiken aktuell werden. */
 export async function refreshPlayerStatsAction(): Promise<PlayerActionState> {
+  const t = await getTranslations("PlayersActions");
+
   const session = await auth();
   if (!session?.user?.id) {
-    return { error: "Dafür musst du eingeloggt sein – sonst ließe sich die Wartezeit nicht zuordnen." };
+    return { error: t("notLoggedIn") };
   }
 
   const rest = verbleibendeMinuten(session.user.id);
   if (rest > 0) {
-    return { error: `Schon aktualisiert. Nächster Versuch in ${rest} ${rest === 1 ? "Minute" : "Minuten"}.` };
+    return { error: t("alreadyUpdated", { minutes: rest }) };
   }
 
   const ergebnis = await saveAndRefresh();

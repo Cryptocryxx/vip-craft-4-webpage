@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Store } from "lucide-react";
 import { ShopGrid } from "@/components/shops/ShopGrid";
 import { Button } from "@/components/ui/Button";
@@ -7,24 +8,24 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SPURS_PER_COG } from "@/lib/currency";
 import { listShops } from "@/lib/shops";
 
-export const metadata: Metadata = {
-  title: "Shops",
-  description: "Alle Spieler-Shops auf VIP Craft 4 – wer was verkauft und wo.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("ShopsPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function ShopsPage() {
-  const shops = await listShops();
+  const [shops, t] = await Promise.all([listShops(), getTranslations("ShopsPage")]);
 
   return (
     <>
       <PageHeader
-        eyebrow="Handel"
+        eyebrow={t("eyebrow")}
         icon={Store}
-        title="Spieler-Shops"
-        description={`Wer verkauft was, und wo steht der Laden? Bezahlt wird mit Create: Numismatics – gerechnet in Cog, einem Cog entsprechen ${SPURS_PER_COG} Spurs.`}
+        title={t("title")}
+        description={t("description", { spursPerCog: SPURS_PER_COG })}
       >
         <Button href="/dashboard#shops" variant="outline" size="sm">
-          <Store className="size-4" /> Eigenen Shop eintragen
+          <Store className="size-4" /> {t("addOwn")}
         </Button>
       </PageHeader>
 

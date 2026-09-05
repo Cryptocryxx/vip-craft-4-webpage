@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Users } from "lucide-react";
 import { auth } from "@/auth";
 import { PlayerCard } from "@/components/players/PlayerCard";
@@ -9,39 +10,32 @@ import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { listPlayers } from "@/lib/players";
 
-export const metadata: Metadata = {
-  title: "Spieler",
-  description: "Wer gerade auf VIP Craft 4 online ist – und die Statistiken aller Spieler.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("SpielerPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function SpielerPage() {
-  const [spieler, session] = await Promise.all([listPlayers(), auth()]);
+  const [spieler, session, t] = await Promise.all([listPlayers(), auth(), getTranslations("SpielerPage")]);
   const online = spieler.filter((p) => p.online);
   const offline = spieler.filter((p) => !p.online);
 
   return (
     <>
-      <PageHeader
-        eyebrow="Wer ist da?"
-        icon={Users}
-        title="Spieler"
-        description="Wer gerade auf dem Server unterwegs ist – und was alle anderen bisher angestellt haben. Klick auf jemanden für die vollständigen Zahlen."
-      />
+      <PageHeader eyebrow={t("eyebrow")} icon={Users} title={t("title")} description={t("description")} />
 
       <Container className="space-y-12 py-10">
         <section>
           <SectionHeading
-            eyebrow="Gerade online"
+            eyebrow={t("onlineEyebrow")}
             icon={Users}
-            title={online.length === 1 ? "1 Spieler ist da" : `${online.length} Spieler sind da`}
-            description="Live vom Server, aktualisiert sich etwa jede Minute."
+            title={t("onlineTitle", { count: online.length })}
+            description={t("onlineDescription")}
             className="mb-5"
           />
 
           {online.length === 0 ? (
-            <Panel className="p-10 text-center text-sm text-cream/60">
-              Gerade ist niemand online. Vielleicht ein guter Moment, selbst anzufangen.
-            </Panel>
+            <Panel className="p-10 text-center text-sm text-cream/60">{t("noneOnline")}</Panel>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {online.map((p) => (
@@ -53,10 +47,10 @@ export default async function SpielerPage() {
 
         <section>
           <SectionHeading
-            eyebrow="Alle"
+            eyebrow={t("allEyebrow")}
             icon={Users}
-            title="Schon mal da gewesen"
-            description="Nach Spielzeit sortiert. Die Zahlen schreibt Minecraft beim Ausloggen – wer gerade spielt, ist hier also noch nicht auf dem neuesten Stand."
+            title={t("allTitle")}
+            description={t("allDescription")}
             className="mb-5"
           />
 
@@ -65,9 +59,7 @@ export default async function SpielerPage() {
           </div>
 
           {offline.length === 0 ? (
-            <Panel className="p-10 text-center text-sm text-cream/60">
-              Außer den gerade Anwesenden war noch niemand hier.
-            </Panel>
+            <Panel className="p-10 text-center text-sm text-cream/60">{t("noneOffline")}</Panel>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {offline.map((p) => (

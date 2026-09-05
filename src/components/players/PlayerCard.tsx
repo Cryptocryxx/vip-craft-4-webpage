@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
@@ -8,7 +9,9 @@ import { formatHours } from "@/lib/format";
 import type { PlayerProfile } from "@/lib/players";
 
 /** Eine Kachel in der Spielerliste – klickbar zur Detailseite. */
-export function PlayerCard({ player }: { player: PlayerProfile }) {
+export async function PlayerCard({ player }: { player: PlayerProfile }) {
+  const t = await getTranslations("PlayerCard");
+
   return (
     <Link href={`/spieler/${encodeURIComponent(player.name)}`} className="group block">
       <Panel className="flex h-full items-center gap-4 p-4 transition-colors group-hover:border-brass-400/60">
@@ -17,7 +20,7 @@ export function PlayerCard({ player }: { player: PlayerProfile }) {
           {player.online && (
             <span
               className="absolute -right-0.5 -bottom-0.5 size-3.5 rounded-full border-2 border-wood-900 bg-emerald-400"
-              title="Gerade online"
+              title={t("onlineNow")}
             />
           )}
         </div>
@@ -30,16 +33,16 @@ export function PlayerCard({ player }: { player: PlayerProfile }) {
           <p className="mt-0.5 truncate text-xs text-cream/55">
             {player.stats ? (
               <>
-                {formatHours(player.stats.playtimeHours)} gespielt
+                {t("played", { hours: formatHours(player.stats.playtimeHours) })}
                 {player.balanceSpurs !== null && <> · {formatCogs(player.balanceSpurs)} Cog</>}
               </>
             ) : (
-              "Noch keine Statistiken"
+              t("noStatsYet")
             )}
           </p>
         </div>
 
-        {player.online && <Badge tone="emerald">Online</Badge>}
+        {player.online && <Badge tone="emerald">{t("online")}</Badge>}
       </Panel>
     </Link>
   );

@@ -1,9 +1,15 @@
+import { getTranslations } from "next-intl/server";
+
 /**
  * Der Event-Kalender.
  *
  * Die Termine werden hier von Hand gepflegt – eine Datenbank oder ein Sync mit
  * den Discord-Events gibt es noch nicht. Ausgedachte Einträge stehen hier keine:
  * Was drinsteht, findet wirklich statt.
+ *
+ * Titel und Beschreibung stehen in den Übersetzungen (Namespace "Events",
+ * verschachtelt unter der jeweiligen `id`) statt fest im Array unten – nur so
+ * bekommt ein echtes, im Code gepflegtes Ereignis auch eine englische Fassung.
  */
 
 export type EventType = "race" | "contest" | "boss" | "workshop" | "meeting" | "party";
@@ -20,21 +26,12 @@ export type CommunityEvent = {
   type: EventType;
 };
 
-export const eventTypeLabels: Record<EventType, string> = {
-  race: "Zugrennen",
-  contest: "Build-Contest",
-  boss: "Boss-Fight",
-  workshop: "Workshop",
-  meeting: "Community",
-  party: "Party",
-};
+/** Wie die rohen Daten unten, nur ohne Titel/Beschreibung – die kommen erst beim Abruf dazu. */
+type EventSeed = Omit<CommunityEvent, "title" | "description">;
 
-const events: CommunityEvent[] = [
+const events: EventSeed[] = [
   {
     id: "season4-start",
-    title: "Server-Start: Gemeinsame Erkundung",
-    description:
-      "Der Startschuss für VIP Craft 4. Wir treffen uns alle am Spawn und sehen uns die Welt zum ersten Mal gemeinsam an – wer will, sucht sich direkt einen Platz für seine Basis. Kommt pünktlich, gestartet wird zusammen.",
     start: "2026-09-06T15:00:00+02:00",
     location: "Spawn",
     host: "Team",
@@ -42,11 +39,21 @@ const events: CommunityEvent[] = [
   },
 ];
 
+async function mitText(seed: EventSeed): Promise<CommunityEvent> {
+  const t = await getTranslations("Events");
+  return {
+    ...seed,
+    title: t(`${seed.id}.title`),
+    description: t(`${seed.id}.description`),
+  };
+}
+
 /** Alle Termine, die noch bevorstehen – nächster zuerst. */
-export function getUpcomingEvents(now: Date = new Date()): CommunityEvent[] {
-  return events
+export async function getUpcomingEvents(now: Date = new Date()): Promise<CommunityEvent[]> {
+  const kommend = events
     .filter((event) => new Date(event.end ?? event.start).getTime() >= now.getTime())
     .sort((a, b) => a.start.localeCompare(b.start));
+  return Promise.all(kommend.map(mitText));
 }
 
 /**
@@ -61,7 +68,6 @@ export function serverStartZeit(): Date | null {
 
 export type StartCountdown = {
   zielIso: string;
-  titel: string;
   /** Die Uhrzeit, mit der die Seite gebaut wurde – siehe ServerCountdown. */
   jetzt: number;
 };
@@ -77,6 +83,9 @@ export type StartCountdown = {
  * Die aktuelle Uhrzeit wird bewusst hier geholt und nicht in der Seite: Ein
  * `Date.now()` mitten im Rendern ist unrein, und React beanstandet das zu
  * Recht – das Ergebnis würde sich bei jedem erneuten Rendern ändern.
+ *
+ * Keinen Titel mehr im Rückgabewert: ServerCountdown texted sich selbst, den
+ * Titel des Kalendereintrags hat ohnehin nie jemand angezeigt.
  */
 export function getServerStartCountdown(): StartCountdown | null {
   const jetzt = Date.now();
@@ -86,10 +95,11 @@ export function getServerStartCountdown(): StartCountdown | null {
   const einTag = 24 * 60 * 60 * 1000;
   if (jetzt - new Date(start.start).getTime() > einTag) return null;
 
-  return { zielIso: start.start, titel: start.title, jetzt };
+  return { zielIso: start.start, jetzt };
 }
 
 /** Alle Termine, auch vergangene. */
-export function getAllEvents(): CommunityEvent[] {
-  return [...events].sort((a, b) => a.start.localeCompare(b.start));
+export async function getAllEvents(): Promise<CommunityEvent[]> {
+  const sortiert = [...events].sort((a, b) => a.start.localeCompare(b.start));
+  return Promise.all(sortiert.map(mitText));
 }

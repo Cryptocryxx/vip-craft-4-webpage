@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import {
@@ -33,9 +34,10 @@ type Props = { params: Promise<{ name: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { name } = await params;
   const spieler = decodeURIComponent(name);
+  const t = await getTranslations("PlayerDetailPage");
   return {
-    title: `${spieler} – Spieler`,
-    description: `Ingame-Statistiken von ${spieler} auf VIP Craft 4.`,
+    title: t("metaTitle", { name: spieler }),
+    description: t("metaDescription", { name: spieler }),
   };
 }
 
@@ -68,39 +70,39 @@ function Gruppe({ titel, kacheln }: { titel: string; kacheln: Kachel[] }) {
 
 export default async function SpielerDetailPage({ params }: Props) {
   const { name } = await params;
-  const spieler = await findPlayer(decodeURIComponent(name));
+  const [spieler, t] = await Promise.all([findPlayer(decodeURIComponent(name)), getTranslations("PlayerDetailPage")]);
   if (!spieler) notFound();
 
   const s = spieler.stats;
 
   const aktivitaet: Kachel[] = s
     ? [
-        { icon: Clock, label: "Spielzeit", wert: formatHours(s.playtimeHours) },
-        { icon: Pickaxe, label: "Blöcke abgebaut", wert: formatNumber(s.blocksMined) },
-        { icon: Footprints, label: "Strecke zu Fuß", wert: formatDistanceKm(s.walkedKm) },
-        { icon: Plane, label: "Strecke geflogen", wert: formatDistanceKm(s.flownKm) },
+        { icon: Clock, label: t("playtime"), wert: formatHours(s.playtimeHours) },
+        { icon: Pickaxe, label: t("blocksMined"), wert: formatNumber(s.blocksMined) },
+        { icon: Footprints, label: t("walkedDistance"), wert: formatDistanceKm(s.walkedKm) },
+        { icon: Plane, label: t("flownDistance"), wert: formatDistanceKm(s.flownKm) },
       ]
     : [];
 
   const create: Kachel[] = s
     ? [
-        { icon: Cog, label: "Andesit-Legierung", wert: formatNumber(s.andesiteAlloyCrafted), hinweis: "hergestellt" },
-        { icon: Cog, label: "Zahnräder", wert: formatNumber(s.cogwheelsPlaced), hinweis: "kleine, platziert" },
-        { icon: Cog, label: "Große Zahnräder", wert: formatNumber(s.largeCogwheelsPlaced), hinweis: "platziert" },
-        { icon: TrainTrack, label: "Zugschienen", wert: formatNumber(s.trackPlaced), hinweis: "verlegt" },
-        { icon: Wrench, label: "Create-Bauteile", wert: formatNumber(s.createParts), hinweis: "benutzt" },
-        { icon: Plane, label: "Aeronautics-Teile", wert: formatNumber(s.aeronauticsParts), hinweis: "benutzt" },
+        { icon: Cog, label: t("andesiteAlloy"), wert: formatNumber(s.andesiteAlloyCrafted), hinweis: t("andesiteAlloyHint") },
+        { icon: Cog, label: t("cogwheels"), wert: formatNumber(s.cogwheelsPlaced), hinweis: t("cogwheelsHint") },
+        { icon: Cog, label: t("largeCogwheels"), wert: formatNumber(s.largeCogwheelsPlaced), hinweis: t("largeCogwheelsHint") },
+        { icon: TrainTrack, label: t("railTrack"), wert: formatNumber(s.trackPlaced), hinweis: t("railTrackHint") },
+        { icon: Wrench, label: t("createParts"), wert: formatNumber(s.createParts), hinweis: t("createPartsHint") },
+        { icon: Plane, label: t("aeronauticsParts"), wert: formatNumber(s.aeronauticsParts), hinweis: t("aeronauticsPartsHint") },
       ]
     : [];
 
   const rest: Kachel[] = s
     ? [
-        { icon: Skull, label: "Tode", wert: formatNumber(s.deaths) },
-        { icon: Bomb, label: "Tode durch Creeper", wert: formatNumber(s.deathsByCreeper) },
-        { icon: Swords, label: "Mobs erledigt", wert: formatNumber(s.mobKills) },
-        { icon: Heart, label: "Schaden erlitten", wert: `${formatNumber(s.damageTaken)} ♥` },
-        { icon: Store, label: "Shop & Bank", wert: formatNumber(s.shopInteractions), hinweis: "Interaktionen" },
-        { icon: Cake, label: "Kuchen", wert: formatNumber(s.cakeUsed), hinweis: "benutzt" },
+        { icon: Skull, label: t("deaths"), wert: formatNumber(s.deaths) },
+        { icon: Bomb, label: t("deathsByCreeper"), wert: formatNumber(s.deathsByCreeper) },
+        { icon: Swords, label: t("mobKills"), wert: formatNumber(s.mobKills) },
+        { icon: Heart, label: t("damageTaken"), wert: `${formatNumber(s.damageTaken)} ♥` },
+        { icon: Store, label: t("shopAndBank"), wert: formatNumber(s.shopInteractions), hinweis: t("shopAndBankHint") },
+        { icon: Cake, label: t("cake"), wert: formatNumber(s.cakeUsed), hinweis: t("cakeHint") },
       ]
     : [];
 
@@ -108,7 +110,7 @@ export default async function SpielerDetailPage({ params }: Props) {
   return (
     <Container className="py-10">
       <Link href="/spieler" className="btn btn-ghost btn-sm mb-6">
-        <ArrowLeft className="size-4" /> Alle Spieler
+        <ArrowLeft className="size-4" /> {t("allPlayers")}
       </Link>
 
       <Panel rivets className="flex flex-wrap items-center gap-5 p-6">
@@ -116,7 +118,7 @@ export default async function SpielerDetailPage({ params }: Props) {
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-3xl font-bold text-cream">{spieler.name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {spieler.online ? <Badge tone="emerald">Gerade online</Badge> : <Badge tone="neutral">Offline</Badge>}
+            {spieler.online ? <Badge tone="emerald">{t("onlineNow")}</Badge> : <Badge tone="neutral">{t("offline")}</Badge>}
             {spieler.balanceSpurs !== null && (
               <Badge tone="brass">
                 <Coins className="size-3" /> {formatCogsLong(spieler.balanceSpurs)}
@@ -128,23 +130,23 @@ export default async function SpielerDetailPage({ params }: Props) {
 
       {s ? (
         <div className="mt-8 space-y-8">
-          <Gruppe titel="Aktivität" kacheln={aktivitaet} />
-          <Gruppe titel="Create & Aeronautics" kacheln={create} />
-          <Gruppe titel="Leben und Handel" kacheln={rest} />
+          <Gruppe titel={t("activity")} kacheln={aktivitaet} />
+          <Gruppe titel={t("createAndAeronautics")} kacheln={create} />
+          <Gruppe titel={t("lifeAndTrade")} kacheln={rest} />
 
           <p className="text-xs leading-relaxed text-cream/45">
-            Minecraft schreibt diese Zahlen erst beim Ausloggen oder wenn der Server speichert.
-            {spieler.online && " Weil dieser Spieler gerade online ist, fehlt hier alles aus der laufenden Sitzung."} Auf
-            der Übersicht lässt sich ein Speichern anstoßen.
+            {t("statsNote")}
+            {spieler.online && t("onlineNote")}
+            {t("statsNoteEnd")}
           </p>
         </div>
       ) : (
         <Panel className="mt-8 p-10 text-center">
           <SectionHeading
-            eyebrow="Noch nichts da"
+            eyebrow={t("noStatsEyebrow")}
             icon={Clock}
-            title="Keine Statistiken"
-            description={`Der Server hat für ${spieler.name} noch keine Statistikdatei geschrieben. Sie entsteht beim ersten Ausloggen.`}
+            title={t("noStatsTitle")}
+            description={t("noStatsDescription", { name: spieler.name })}
           />
         </Panel>
       )}

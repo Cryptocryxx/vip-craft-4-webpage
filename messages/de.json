@@ -448,5 +448,348 @@
     "whitelistClosed": "Die Whitelist ist gerade geschlossen. Schau später noch einmal vorbei.",
     "alreadyLinked": "Dieser Minecraft-Username ist bereits mit einem anderen Discord-Account verknüpft.",
     "submitted": "Antrag abgeschickt. Das Team schaut ihn sich an."
+  },
+  "Events": {
+    "season4-start": {
+      "title": "Server-Start: Gemeinsame Erkundung",
+      "description": "Der Startschuss für VIP Craft 4. Wir treffen uns alle am Spawn und sehen uns die Welt zum ersten Mal gemeinsam an – wer will, sucht sich direkt einen Platz für seine Basis. Kommt pünktlich, gestartet wird zusammen."
+    }
+  },
+  "EventTypes": {
+    "race": "Zugrennen",
+    "contest": "Build-Contest",
+    "boss": "Boss-Fight",
+    "workshop": "Workshop",
+    "meeting": "Community",
+    "party": "Party"
+  },
+  "MapPage": {
+    "metaTitle": "Live-Map",
+    "metaDescription": "Die Live-Karte von VIP Craft 4 – Basen, Shops und Spieler in Echtzeit.",
+    "eyebrow": "BlueMap",
+    "title": "Live-Karte",
+    "description": "Basen, Landeplätze und wer gerade wo unterwegs ist – direkt aus der Welt gerendert und alle paar Minuten aktualisiert.",
+    "tip1Title": "Ebenen & Dimensionen",
+    "tip1Text": "Über das Menü oben links zwischen Overworld, Nether und End wechseln. Unter „Markers“ lassen sich einzelne Marker-Ebenen ausblenden.",
+    "tip2Title": "Spieler finden",
+    "tip2Text": "Wer gerade online ist, taucht als Marker direkt auf der Karte auf.",
+    "tip3Title": "Shops suchen",
+    "tip3Text": "Die Koordinaten aller eingetragenen Läden stehen im Shop-Bereich – auf der Karte eingeben und hinfliegen."
+  },
+  "MapFrame": {
+    "blockedTitle": "Karte kann hier nicht eingebettet werden",
+    "blockedText": "Der Kartenserver erlaubt das Einbetten auf dieser Seite gerade nicht. Das ist eine Servereinstellung, keine Sache bei dir.",
+    "unreachableTitle": "Karte gerade nicht erreichbar",
+    "unreachableText": "Der Kartenserver antwortet gerade nicht. Versuch es später noch einmal.",
+    "openDirectly": "Karte direkt öffnen",
+    "reload": "Karte neu laden",
+    "reloadShort": "Neu laden",
+    "openNewTab": "In neuem Tab öffnen",
+    "openNewTabShort": "Neuer Tab",
+    "consentDescription": "Die Weltkarte wird als eingebettete Seite von diesem Anbieter geladen. Dabei wird deine IP-Adresse dorthin übertragen. Deine Entscheidung merken wir uns lokal in deinem Browser.",
+    "consentButton": "Karte laden",
+    "consentPrivacyLabel": "Mehr dazu in unserer Datenschutzerklärung",
+    "loading": "Karte wird geladen…",
+    "title": "VIP Craft 4 – Live-Karte (BlueMap)"
+  },
+  "CommunityPage": {
+    "metaTitle": "Community & Events",
+    "metaDescription": "Event-Kalender und Server-Timeline von VIP Craft 4.",
+    "eyebrow": "Community-Hub",
+    "title": "Events & Lore",
+    "description": "Was auf dem Server ansteht – und was bisher passiert ist. Vom ersten Wasserrad bis zur letzten Explosion.",
+    "calendar": "Kalender",
+    "timeline": "Timeline",
+    "eventsEyebrow": "Kalender",
+    "eventsTitle": "Kommende Ingame-Events",
+    "eventsDescription": "Alle Zeiten in deutscher Zeit (Europe/Berlin). Für Erinnerungen abonniere die Events im Discord.",
+    "suggestEvent": "Event vorschlagen",
+    "loreEyebrow": "Die Lore",
+    "loreTitle": "Server-Timeline",
+    "loreDescription": "Meilensteine der Season – neueste zuerst. Wer etwas Erwähnenswertes gebaut (oder gesprengt) hat, meldet sich im Discord."
+  },
+  "EventGrid": {
+    "empty": "Gerade sind keine Events geplant – schau im Discord vorbei, dort entstehen die nächsten.",
+    "upNext": "Als Nächstes",
+    "timeLabel": "Zeit",
+    "locationLabel": "Ort",
+    "hostLabel": "Host",
+    "hostPrefix": "Host: {name}"
+  },
+  "Timeline": {
+    "empty": "Die Chronik ist noch leer. Sobald jemand etwas gebaut hat, das in die Geschichtsbücher gehört – oder etwas spektakulär in die Luft geflogen ist – steht es hier."
+  },
+  "LeaderboardsPage": {
+    "metaTitle": "Leaderboards & Economy",
+    "metaDescription": "Hall of Fame, Hall of Shame und die Wirtschaft von VIP Craft 4.",
+    "eyebrow": "Rankings",
+    "title": "Leaderboards & Economy",
+    "description": "Globale Rankings aus der Welt – Ruhm für die Fleißigen, Spott für alle, die schon wieder in die Lava gefallen sind.",
+    "hallOfFame": "Hall of Fame",
+    "hallOfShame": "Hall of Shame",
+    "economy": "Wirtschaft",
+    "fameTitle": "Die Fleißigen",
+    "fameLive": "Live aus den Statistikdateien des Servers – die Top 10 jeder Kategorie.",
+    "famePending": "Sobald der Server Statistiken geschrieben hat, stehen hier die Top 10 jeder Kategorie.",
+    "shameTitle": "Die Unvorsichtigen",
+    "shameLive": "Wer zählt, verliert. Tode, Creeper und eingesteckter Schaden – direkt vom Server.",
+    "shamePending": "Tode, Creeper und eingesteckter Schaden – sobald es etwas zu zählen gibt.",
+    "economyTitle": "Cogs & Sparfüchse",
+    "economyDescription": "Bezahlt wird mit Create: Numismatics. Gerechnet wird in Cog – ein Cog sind {spursPerCog} Spurs. Hier siehst du, wie viel Geld im Umlauf ist und wer am meisten davon gehortet hat."
+  },
+  "SchematicsPage": {
+    "metaTitle": "Schematics",
+    "metaDescription": "Bauplan-Galerie: Create-Maschinen aus der Community als .nbt herunterladen.",
+    "eyebrow": "Bauplan-Galerie",
+    "title": "Schematics",
+    "description": "Blaupausen für Create-Maschinen aus der Community. Herunterladen, in den Schematics-Ordner legen und mit der Schematicannon nachbauen.",
+    "submitOwn": "Eigene Schematic einreichen",
+    "howToEyebrow": "So nutzt du eine Schematic",
+    "step1Title": ".nbt herunterladen",
+    "step1Text": "Über den Button auf der Karte – die Datei landet in deinem Download-Ordner.",
+    "step2Title": "In den Schematics-Ordner",
+    "step2Text": "Datei nach .minecraft/schematics kopieren (bei Prism: im Instanz-Ordner).",
+    "step3Title": "Ingame platzieren",
+    "step3Text": "Leere Schematic & Quill nehmen, Datei auswählen, mit der Schematicannon oder per Hand bauen."
+  },
+  "ShopsPage": {
+    "metaTitle": "Shops",
+    "metaDescription": "Alle Spieler-Shops auf VIP Craft 4 – wer was verkauft und wo.",
+    "eyebrow": "Handel",
+    "title": "Spieler-Shops",
+    "description": "Wer verkauft was, und wo steht der Laden? Bezahlt wird mit Create: Numismatics – gerechnet in Cog, einem Cog entsprechen {spursPerCog} Spurs.",
+    "addOwn": "Eigenen Shop eintragen"
+  },
+  "ShopGrid": {
+    "empty": "Noch kein Shop eingetragen. Sei der Erste – trag deinen im Dashboard ein.",
+    "closed": "Geschlossen"
+  },
+  "StreamsPage": {
+    "metaTitle": "Streams",
+    "metaDescription": "Alle Live-Streamer von VIP Craft 4 – direkt auf der Seite anschauen.",
+    "eyebrow": "Live vom Server",
+    "title": "Streamer",
+    "description": "Wer gerade vom Server streamt, läuft hier direkt im offiziellen Twitch-Player. Verknüpfe deinen Kanal im Dashboard, dann erscheinst du automatisch, sobald du live gehst.",
+    "linkOwnChannel": "Eigenen Kanal verknüpfen"
+  },
+  "SpielerPage": {
+    "metaTitle": "Spieler",
+    "metaDescription": "Wer gerade auf VIP Craft 4 online ist – und die Statistiken aller Spieler.",
+    "eyebrow": "Wer ist da?",
+    "title": "Spieler",
+    "description": "Wer gerade auf dem Server unterwegs ist – und was alle anderen bisher angestellt haben. Klick auf jemanden für die vollständigen Zahlen.",
+    "onlineEyebrow": "Gerade online",
+    "onlineTitle": "{count, plural, one {1 Spieler ist da} other {# Spieler sind da}}",
+    "onlineDescription": "Live vom Server, aktualisiert sich etwa jede Minute.",
+    "noneOnline": "Gerade ist niemand online. Vielleicht ein guter Moment, selbst anzufangen.",
+    "allEyebrow": "Alle",
+    "allTitle": "Schon mal da gewesen",
+    "allDescription": "Nach Spielzeit sortiert. Die Zahlen schreibt Minecraft beim Ausloggen – wer gerade spielt, ist hier also noch nicht auf dem neuesten Stand.",
+    "noneOffline": "Außer den gerade Anwesenden war noch niemand hier."
+  },
+  "PlayerDetailPage": {
+    "metaTitle": "{name} – Spieler",
+    "metaDescription": "Ingame-Statistiken von {name} auf VIP Craft 4.",
+    "allPlayers": "Alle Spieler",
+    "onlineNow": "Gerade online",
+    "offline": "Offline",
+    "activity": "Aktivität",
+    "createAndAeronautics": "Create & Aeronautics",
+    "lifeAndTrade": "Leben und Handel",
+    "playtime": "Spielzeit",
+    "blocksMined": "Blöcke abgebaut",
+    "walkedDistance": "Strecke zu Fuß",
+    "flownDistance": "Strecke geflogen",
+    "andesiteAlloy": "Andesit-Legierung",
+    "andesiteAlloyHint": "hergestellt",
+    "cogwheels": "Zahnräder",
+    "cogwheelsHint": "kleine, platziert",
+    "largeCogwheels": "Große Zahnräder",
+    "largeCogwheelsHint": "platziert",
+    "railTrack": "Zugschienen",
+    "railTrackHint": "verlegt",
+    "createParts": "Create-Bauteile",
+    "createPartsHint": "benutzt",
+    "aeronauticsParts": "Aeronautics-Teile",
+    "aeronauticsPartsHint": "benutzt",
+    "deaths": "Tode",
+    "deathsByCreeper": "Tode durch Creeper",
+    "mobKills": "Mobs erledigt",
+    "damageTaken": "Schaden erlitten",
+    "shopAndBank": "Shop & Bank",
+    "shopAndBankHint": "Interaktionen",
+    "cake": "Kuchen",
+    "cakeHint": "benutzt",
+    "statsNote": "Minecraft schreibt diese Zahlen erst beim Ausloggen oder wenn der Server speichert.",
+    "onlineNote": " Weil dieser Spieler gerade online ist, fehlt hier alles aus der laufenden Sitzung.",
+    "statsNoteEnd": " Auf der Übersicht lässt sich ein Speichern anstoßen.",
+    "noStatsEyebrow": "Noch nichts da",
+    "noStatsTitle": "Keine Statistiken",
+    "noStatsDescription": "Der Server hat für {name} noch keine Statistikdatei geschrieben. Sie entsteht beim ersten Ausloggen."
+  },
+  "LeaderboardCategories": {
+    "playtime": {
+      "title": "Meiste Spielzeit",
+      "description": "Wer wohnt eigentlich auf dem Server?",
+      "unit": "Stunden"
+    },
+    "iron": {
+      "title": "Meistes Eisen abgebaut",
+      "description": "Rohstoff Nummer eins für jede Create-Fabrik.",
+      "unit": "Eisenerz"
+    },
+    "mined": {
+      "title": "Meiste Blöcke abgebaut",
+      "description": "Wer sich am tiefsten gegraben hat.",
+      "unit": "Blöcke"
+    },
+    "andesite": {
+      "title": "Meiste Andesit-Legierung hergestellt",
+      "description": "Das Rückgrat jeder Create-Maschine.",
+      "unit": "Stück"
+    },
+    "walked": {
+      "title": "Weiteste Strecke zu Fuß",
+      "description": "Laufen, sprinten, schleichen – alles zusammen.",
+      "unit": "km"
+    },
+    "deaths": {
+      "title": "Meiste Tode",
+      "description": "Aller Anfang ist tödlich.",
+      "unit": "Tode"
+    },
+    "creeper": {
+      "title": "Meiste Tode durch Creeper",
+      "description": "Ssssss… und die Fabrik ist weg.",
+      "unit": "Tode"
+    },
+    "damage": {
+      "title": "Meister Schaden eingesteckt",
+      "description": "Gemessen in Herzen. Autsch.",
+      "unit": "Herzen"
+    }
+  },
+  "EconomyOverview": {
+    "noAccountsTitle": "Noch keine Kontodaten",
+    "noAccountsText": "Sobald auf dem Server die ersten Numismatics-Konten Guthaben haben, stehen hier der Umlauf und die reichsten Spieler.",
+    "inCirculation": "Im Umlauf",
+    "accounts": "Konten",
+    "richestPlayers": "Reichste Spieler",
+    "coinsCalculatedIn": "Gerechnet wird in <b>Cog</b> – ein Cog sind {spursPerCog} Spurs.",
+    "coinsLabel": "Münzen:",
+    "source": "Quelle: Bankkonten des Servers"
+  },
+  "LeaderboardTabs": {
+    "noDataTitle": "Noch keine Zahlen",
+    "noDataText": "Die Rangliste baut sich aus den Statistikdateien des Servers. Sobald dort Werte stehen, taucht sie hier auf.",
+    "categoriesAriaLabel": "Kategorien",
+    "player": "Spieler",
+    "topScorer": "Spitzenreiter",
+    "bestValue": "Bestwert",
+    "ranked": "Gewertet",
+    "playersUnit": "{count} Spieler",
+    "source": "Quelle: Statistikdateien des Servers"
+  },
+  "SchematicGallery": {
+    "searchPlaceholder": "Suche nach Titel, Autor oder Tag…",
+    "searchAriaLabel": "Schematics durchsuchen",
+    "sortNew": "Neu",
+    "sortDownloads": "Downloads",
+    "sortLikes": "Likes",
+    "all": "Alle",
+    "countOf": "{filtered} von {total}",
+    "emptyNoUploads": "Noch keine Blaupause hochgeladen. Der Upload wird gerade gebaut – bis dahin tauscht ihr sie am besten im Discord.",
+    "emptyNoMatch": "Keine Schematic passt zu deiner Suche. Vielleicht baust du sie einfach selbst?"
+  },
+  "SchematicCard": {
+    "screenshotAlt": "Screenshot: {title}",
+    "blueprintAlt": "Blaupause: {title}",
+    "downloads": "Downloads",
+    "likes": "Likes",
+    "volume": "Volumen",
+    "blocksUnit": "Blöcke",
+    "downloadTitle": "{fileName} herunterladen"
+  },
+  "BlueprintPreview": {
+    "fallbackLabel": "Blaupause"
+  },
+  "ShopGridExtra": {
+    "open": "Offen",
+    "closed": "Geschlossen",
+    "currentlyClosed": "Zurzeit geschlossen",
+    "emptyTitle": "Noch kein Shop eingetragen",
+    "emptyText": "Sei der Erste: Im Dashboard trägst du deinen Laden in einer Minute ein. Er ist sofort öffentlich sichtbar, eine Freigabe braucht es nicht."
+  },
+  "StreamerGrid": {
+    "emptyTitle": "Noch kein Kanal verknüpft",
+    "emptyText": "Sobald jemand seinen Twitch-Kanal im Dashboard hinterlegt, taucht er hier auf – und sein Stream erscheint automatisch, wenn er live geht.",
+    "linkChannel": "Kanal verknüpfen",
+    "noCredentials": "Der Live-Status kann nicht abgefragt werden, weil noch keine Twitch-Zugangsdaten hinterlegt sind. Trage <code1>TWITCH_CLIENT_ID</code1> und <code2>TWITCH_CLIENT_SECRET</code2> in der <code3>.env</code3> ein. Die Kanäle werden bis dahin als offline angezeigt.",
+    "liveNowEyebrow": "Jetzt live",
+    "streamsLiveTitle": "{count, plural, one {1 Stream live vom Server} other {# Streams live vom Server}}",
+    "noneStreamingTitle": "Gerade streamt niemand",
+    "liveDescription": "Aus Datenschutzgründen lädt der Twitch-Player erst, wenn du ihn anforderst – danach startet er stumm.",
+    "noneLive": "Aktuell ist niemand live. Schau später wieder vorbei oder folge den Kanälen unten.",
+    "live": "Live",
+    "viewers": "Zuschauer",
+    "streamOf": "Twitch-Stream von {name}",
+    "twitch": "Twitch",
+    "allChannelsEyebrow": "Alle Kanäle",
+    "allChannelsTitle": "Die Sendeplätze des Servers",
+    "allChannelsDescription": "Alle verknüpften Twitch-Kanäle aus der Community. Folge ihnen, dann verpasst du keinen Absturz.",
+    "offline": "Offline",
+    "openChannel": "Kanal öffnen",
+    "consentDescription": "Beim Laden des Players werden deine IP-Adresse und Angaben zu deinem Browser an Twitch übertragen. Twitch kann dabei Cookies setzen. Deine Entscheidung merken wir uns lokal in deinem Browser."
+  },
+  "TwitchEmbed": {
+    "titleOf": "Twitch-Stream von {channel}"
+  },
+  "PlayerCard": {
+    "onlineNow": "Gerade online",
+    "played": "{hours} gespielt",
+    "noStatsYet": "Noch keine Statistiken",
+    "online": "Online"
+  },
+  "PlayersActions": {
+    "notLoggedIn": "Dafür musst du eingeloggt sein – sonst ließe sich die Wartezeit nicht zuordnen.",
+    "alreadyUpdated": "Schon aktualisiert. {minutes, plural, one {Nächster Versuch in # Minute.} other {Nächster Versuch in # Minuten.}}",
+    "notConnected": "Server ist nicht angebunden.",
+    "freshAlready": "Die Daten waren gerade eben schon frisch – neu eingelesen.",
+    "saveRejected": "Der Server hat den Speicherbefehl nicht angenommen.",
+    "saved": "Server hat gespeichert, Zahlen sind aktuell.",
+    "refresh": "Zahlen aktualisieren"
+  },
+  "CookieBanner": {
+    "ariaLabel": "Hinweis zu Cookies und externen Inhalten",
+    "title": "Cookies und externe Inhalte",
+    "paragraph1": "Wir setzen nur <b>technisch notwendige Cookies</b> ein, damit Login und Formulare funktionieren. Dafür ist keine Einwilligung nötig, und ein Tracking findet nicht statt.",
+    "paragraph2": "Deine Einwilligung brauchen wir nur, wenn Inhalte von Dritten geladen werden – der Twitch-Player und die eingebettete Weltkarte. Dabei wird deine IP-Adresse an diese Anbieter übertragen. Du kannst deine Auswahl jederzeit im Footer unter „Cookie-Einstellungen“ ändern.",
+    "close": "Schließen",
+    "selectExternal": "Externe Inhalte auswählen",
+    "necessaryTitle": "Technisch notwendig",
+    "necessaryAlwaysActive": "– immer aktiv",
+    "necessaryAriaLabel": "Technisch notwendig – immer aktiv",
+    "necessaryDescription": "Sitzungs-Cookie für den Login und CSRF-Schutz für Formulare. Ohne diese funktioniert der geschützte Bereich nicht.",
+    "allowCategory": "{label} zulassen",
+    "providerLabel": "Anbieter: {provider}",
+    "privacyNotices": "Datenschutzhinweise",
+    "acceptAll": "Alle akzeptieren",
+    "onlyNecessary": "Nur notwendige",
+    "saveSelection": "Auswahl speichern",
+    "settings": "Einstellungen",
+    "moreInfo": "Mehr dazu in der",
+    "privacyPolicy": "Datenschutzerklärung",
+    "imprint": "Impressum",
+    "categoryTwitchLabel": "Twitch-Streams",
+    "categoryTwitchDescription": "Zeigt Übertragungen direkt auf der Streams-Seite. Beim Laden werden deine IP-Adresse und Browserdaten an Twitch übertragen; Twitch kann dabei Cookies setzen.",
+    "categoryMapLabel": "Kartenansicht",
+    "categoryMapProvider": "Anbieter der eingebetteten Weltkarte",
+    "categoryMapDescription": "Bindet die Weltkarte auf der Map-Seite ein. Beim Laden wird deine IP-Adresse an den Anbieter der Karte übertragen."
+  },
+  "ConsentGate": {
+    "externalContent": "Externer Inhalt: {provider}",
+    "loadProvider": "{provider} laden",
+    "settings": "Einstellungen",
+    "privacyPolicyOf": "Datenschutzerklärung von {provider}"
   }
 }
