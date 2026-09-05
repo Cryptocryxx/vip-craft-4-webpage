@@ -48,6 +48,7 @@ weitere Admin-Rollen im Kontrollraum unter _Spieler_.
 | `npm run db:push` | Prisma-Schema in die SQLite-DB schreiben (Prototyping) |
 | `npm run db:studio` | Prisma Studio für direkte Datenbank-Eingriffe |
 | `npm run crafty:check` | Crafty-Verbindung prüfen (`-- --command` testet zusätzlich einen Konsolenbefehl) |
+| `npm run kubejs:deploy` | KubeJS-Skripte aus `minecraft/kubejs/server_scripts/` auf den Spielserver legen (`-- insights` filtert) |
 
 ## Discord-Mitgliedschaft
 
@@ -135,19 +136,55 @@ Globale Komponenten: Ankündigungsbanner, Header mit **Live-Server-Status-Widget
 
 ## Kontrollraum (`/admin`)
 
-Nur für Accounts mit der Rolle `ADMIN`. Alle anderen sehen eine Zugriff-verweigert-Seite.
+Offen für die Rollen `ADMIN` und `MODERATOR`. Alle anderen sehen eine Zugriff-verweigert-Seite.
 
-| Bereich | Funktion |
-| --- | --- |
-| Übersicht | Kennzahlen (Registrierte, Gewhitelistete, offene Anträge, Vorschläge), neueste Spieler, aktive Konfiguration |
-| Whitelist-Anträge | Offene Anträge annehmen/ablehnen mit Notiz, Historie der Entscheidungen, Einträge löschen |
-| Spieler | Gamertag, Twitch-Kanal, Rolle und Whitelist-Flag jedes Accounts bearbeiten, Accounts löschen |
-| Vorschläge | Status der Community-Beiträge setzen (Offen/Geplant/Umgesetzt/Abgelehnt), Beiträge löschen |
-| Einstellungen | Server-Adresse, Karten-URL, Discord-Link, Whitelist offen/geschlossen, Ankündigungsbanner |
+| Bereich | Funktion | Mod |
+| --- | --- | --- |
+| Übersicht | Kennzahlen (Registrierte, Gewhitelistete, offene Anträge, Vorschläge), neueste Spieler, aktive Konfiguration | ✓ |
+| Whitelist-Anträge | Offene Anträge annehmen/ablehnen mit Notiz, Historie der Entscheidungen, Einträge löschen | ✓ |
+| Spieler | Gamertag, Twitch-Kanal, Rolle und Whitelist-Flag jedes Accounts bearbeiten, Accounts löschen, kicken/bannen, IP nachsehen | teilweise |
+| Spielerseite `/admin/users/<Name>` | Zahlen, Chat- und Befehlsverlauf, Account, Eingriffe des Teams zu einer Person | ✓ |
+| Chat & Befehle | Alles aus dem Spiel mit Filter, Suche und Kontext; Verlauf löschen | teilweise |
+| Vorschläge | Status der Community-Beiträge setzen (Offen/Geplant/Umgesetzt/Abgelehnt), Beiträge löschen | ✓ |
+| Server-Steuerung | Start/Stopp, Watchdog, Whitelist aussetzen, Befehlsprotokoll | — |
+| Einstellungen | Server-Adresse, Karten-URL, Discord-Link, Whitelist offen/geschlossen, Ankündigungsbanner, Aufbewahrung des Chatverlaufs | — |
+
+### Rollen
+
+Die drei Rollen stehen in [`src/lib/roles.ts`](src/lib/roles.ts), die Wachen in [`src/lib/admin.ts`](src/lib/admin.ts):
+`requireTeam()` für alles zur Moderation, `requireAdmin()` für den Rest.
+
+Ein **Moderator** darf nicht: Rollen vergeben, Accounts löschen, Team-Accounts bearbeiten, IP-Adressen abrufen,
+den Verlauf löschen, den Server steuern, Einstellungen ändern. Gesperrt wird auf drei Ebenen – Navigation, Seite und
+Server Action; nur die letzte zählt wirklich, die beiden anderen ersparen den Weg dorthin.
+
+Rollen setzt ein Admin im Kontrollraum. Für den Notfall (niemand mehr Admin) gibt es
+`npx tsx scripts/rolle.ts <Name> ADMIN`; ohne Argumente listet das Skript alle Accounts auf.
 
 Die Einstellungen liegen in der Tabelle `Setting` und **überschreiben die `NEXT_PUBLIC_*`-Werte aus der `.env`**.
-Solange nichts gespeichert wurde, gelten die `.env`-Vorgaben. Als Schutz gegen Aussperrung kann sich ein Admin
-weder selbst die Rolle entziehen noch den eigenen Account löschen.
+Solange nichts gespeichert wurde, gelten die `.env`-Vorgaben. Als Schutz gegen Aussperrung kann niemand die eigene
+Rolle ändern oder den eigenen Account löschen.
+
+## Chat- und Befehlsprotokoll
+
+Chat, Befehle, Kommen/Gehen und Tode kommen vom Spielserver selbst – über das KubeJS-Skript
+[`minecraft/kubejs/server_scripts/insights-log.js`](minecraft/kubejs/server_scripts/insights-log.js). Es hält die
+letzten 1000 Ereignisse im Speicher und schreibt sie alle fünf Sekunden nach `kubejs/data/insights.json`; die Website
+holt sie über den Crafty-Dateizugriff ab ([`src/lib/game-log.ts`](src/lib/game-log.ts)) und legt sie in `GameLog` ab.
+
+* **Installation:** `npm run kubejs:deploy -- insights`, danach den **Server neu starten**. `server_scripts` werden nur
+  beim Start geladen, und `kubejs reload server_scripts` scheitert auf diesem Server mit einem Parse-Fehler.
+* **Läuft es?** In `kubejs/data/insights.json` steht `"stage": "ok"` und in `"fehler"` nichts. Im Kontrollraum steht
+  unter „Chat & Befehle“ ein Warnhinweis, wenn nichts ankommt.
+* **Abgeholt** wird im Takt des Watchdogs (jede Minute), bei jedem Statusabruf und beim Öffnen der Seiten – mit einer
+  eigenen Sperre, sodass daraus höchstens alle zehn Sekunden ein echter Abruf wird.
+* **Nichts geht doppelt oder verloren:** Jedes Ereignis trägt Serverlauf und laufende Nummer, zusammen eindeutig
+  indiziert. Fängt der Ringpuffer nicht dort an, wo die Datenbank aufhört, meldet der Kontrollraum die Lücke.
+* **Warum nicht das Server-Log:** Crafty liefert entweder 70 Konsolenzeilen oder `latest.log` komplett (schon nach 45
+  Minuten Leerlauf 191 KB), und Minecraft loggt seit 1.13 längst nicht mehr jeden Spielerbefehl.
+* **Aufbewahrung:** Vorgabe unbegrenzt. In den Einstellungen lässt sich eine Frist in Tagen setzen; der Watchdog räumt
+  dann auf. Löschen von Hand geht unter „Chat & Befehle“ – nur für Admins. Der Abschnitt in der
+  Datenschutzerklärung (Ziffer 9) beschreibt, was aufgezeichnet wird.
 
 ## Rechtliches
 
@@ -409,7 +446,8 @@ pm2 logs deploy-webhook     # zeigt jeden Lauf mit allen Schritten
 ## Projektstruktur
 
 ```
-prisma/               Schema (Auth.js, WhitelistApplication, Suggestion, Vote, Shop, ServerEvent, Setting)
+prisma/               Schema (Auth.js, WhitelistApplication, Suggestion, Vote, Shop, ServerEvent, GameLog, Setting)
+minecraft/kubejs/     Skripte für den Spielserver (Numismatics-Export, Chat- und Befehlsprotokoll)
 src/app/              Routen (App Router), Admin-Bereich und API-Handler
 src/components/       UI-Bausteine, nach Bereich gruppiert (layout, home, dashboard, admin, …)
 src/lib/              Konfiguration, Prisma-Client, Server Actions, Whitelist-, Shop-, Settings- und Watchdog-Logik
