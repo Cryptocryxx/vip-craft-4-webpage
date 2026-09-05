@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { pruefeGamertag } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
@@ -19,12 +20,15 @@ export async function linkMinecraftNameAction(
   _prev: ProfileFormState,
   formData: FormData,
 ): Promise<ProfileFormState> {
+  const t = await getTranslations("LinkMinecraftForm");
+  const tValidation = await getTranslations("Validation");
+
   const session = await auth();
-  if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
 
   const eingabe = String(formData.get("minecraftName") ?? "").trim();
   if (!GAMERTAG_RE.test(eingabe)) {
-    return { error: "Ein Minecraft-Name hat 3–16 Zeichen (Buchstaben, Zahlen, Unterstrich)." };
+    return { error: tValidation("minecraftNamePattern") };
   }
 
   // Gibt es den Namen ueberhaupt? Sonst landet ein Tippfehler in der Whitelist
@@ -37,7 +41,7 @@ export async function linkMinecraftNameAction(
     await prisma.user.update({ where: { id: session.user.id }, data: { minecraftName: name } });
   } catch (err) {
     if (isUniqueViolation(err)) {
-      return { error: "Dieser Minecraft-Username ist bereits mit einem anderen Discord-Account verknüpft." };
+      return { error: t("alreadyLinked") };
     }
     throw err;
   }
@@ -50,7 +54,7 @@ export async function linkMinecraftNameAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/admin", "layout");
-  return { success: `Minecraft-Username „${name}“ verknüpft.` };
+  return { success: t("linked", { name }) };
 }
 
 /**
@@ -88,8 +92,11 @@ export async function linkTwitchNameAction(
   _prev: ProfileFormState,
   formData: FormData,
 ): Promise<ProfileFormState> {
+  const t = await getTranslations("LinkTwitchForm");
+  const tValidation = await getTranslations("Validation");
+
   const session = await auth();
-  if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
 
   const raw = String(formData.get("twitchName") ?? "").trim();
   const name = raw
@@ -100,14 +107,14 @@ export async function linkTwitchNameAction(
     .toLowerCase();
 
   if (!TWITCH_RE.test(name)) {
-    return { error: "Ein Twitch-Name hat 4–25 Zeichen (Buchstaben, Zahlen, Unterstrich)." };
+    return { error: tValidation("twitchNamePattern") };
   }
 
   try {
     await prisma.user.update({ where: { id: session.user.id }, data: { twitchName: name } });
   } catch (err) {
     if (isUniqueViolation(err)) {
-      return { error: "Dieser Twitch-Kanal ist bereits mit einem anderen Account verknüpft." };
+      return { error: t("alreadyLinked") };
     }
     throw err;
   }
@@ -116,7 +123,7 @@ export async function linkTwitchNameAction(
   revalidatePath("/streams");
   revalidatePath("/");
   revalidatePath("/admin", "layout");
-  return { success: `Kanal twitch.tv/${name} verknüpft.` };
+  return { success: t("linked", { name }) };
 }
 
 export async function unlinkTwitchNameAction(): Promise<void> {

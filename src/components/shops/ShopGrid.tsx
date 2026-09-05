@@ -1,12 +1,14 @@
+import { getTranslations } from "next-intl/server";
 import { MapPin, Store } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
-import { dimensionLabels, type ShopDTO } from "@/lib/shop-types";
+import type { ShopDTO } from "@/lib/shop-types";
 
-function DimensionBadge({ dimension }: { dimension: ShopDTO["dimension"] }) {
-  if (dimension === "nether") return <Badge tone="copper">{dimensionLabels.nether}</Badge>;
-  if (dimension === "end") return <Badge tone="diamond">{dimensionLabels.end}</Badge>;
+async function DimensionBadge({ dimension }: { dimension: ShopDTO["dimension"] }) {
+  const t = await getTranslations("ShopTypes");
+  if (dimension === "nether") return <Badge tone="copper">{t("nether")}</Badge>;
+  if (dimension === "end") return <Badge tone="diamond">{t("end")}</Badge>;
   return null;
 }
 

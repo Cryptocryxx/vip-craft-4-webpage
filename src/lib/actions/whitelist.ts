@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { refreshMembership } from "@/lib/discord";
 import { pruefeGamertag } from "@/lib/mojang";
@@ -14,24 +15,23 @@ export type ApplicationFormState = { error?: string; success?: string };
  * jemand dem Server beigetreten ist.
  */
 export async function recheckDiscordAction(): Promise<ApplicationFormState> {
+  const t = await getTranslations("WhitelistActions");
+
   const session = await auth();
-  if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
 
   const pruefung = await refreshMembership(session.user.id);
   revalidatePath("/dashboard");
 
   switch (pruefung.status) {
     case "mitglied":
-      return { success: "Passt – du bist im Discord." };
+      return { success: t("discordOk") };
     case "nicht-mitglied":
-      return { error: "Wir sehen dich noch nicht im Discord. Tritt bei und prüf es dann noch einmal." };
+      return { error: t("discordNotMember") };
     case "neu-anmelden":
-      return {
-        error:
-          "Dafür fehlt uns deine Erlaubnis: Melde dich einmal ab und wieder mit Discord an, dann prüfen wir es von selbst.",
-      };
+      return { error: t("discordNeedsRelogin") };
     default:
-      return { error: "Das ließ sich gerade nicht klären. Bitte versuch es in ein paar Minuten noch einmal." };
+      return { error: t("discordUnclear") };
   }
 }
 
@@ -44,18 +44,23 @@ export async function submitApplicationAction(
   _prev: ApplicationFormState,
   formData: FormData,
 ): Promise<ApplicationFormState> {
+  const [t, tValidation] = await Promise.all([getTranslations("WhitelistActions"), getTranslations("Validation")]);
+
   const session = await auth();
-  if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
 
   const settings = await getSiteSettings();
   if (!settings.whitelistOpen) {
-    return { error: "Die Whitelist ist gerade geschlossen. Schau später noch einmal vorbei." };
+    return { error: t("whitelistClosed") };
   }
 
-  const parsed = validateApplicationInput({
-    minecraftName: formData.get("minecraftName"),
-    message: formData.get("message"),
-  });
+  const parsed = validateApplicationInput(
+    {
+      minecraftName: formData.get("minecraftName"),
+      message: formData.get("message"),
+    },
+    tValidation,
+  );
   if (!parsed.ok) return { error: parsed.error };
 
   // Erst hier gegen Mojang pruefen: Ein Tippfehler im Namen faellt sonst erst
@@ -68,12 +73,12 @@ export async function submitApplicationAction(
     await upsertApplication(session.user.id, { ...parsed.data, minecraftName: geprueft.name });
   } catch (err) {
     if (isUniqueViolation(err)) {
-      return { error: "Dieser Minecraft-Username ist bereits mit einem anderen Discord-Account verknüpft." };
+      return { error: t("alreadyLinked") };
     }
     throw err;
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/admin", "layout");
-  return { success: "Antrag abgeschickt. Das Team schaut ihn sich an." };
+  return { success: t("submitted") };
 }

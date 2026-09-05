@@ -9,11 +9,11 @@
 export const DIMENSIONS = ["overworld", "nether", "end"] as const;
 export type Dimension = (typeof DIMENSIONS)[number];
 
-export const dimensionLabels: Record<Dimension, string> = {
-  overworld: "Overworld",
-  nether: "Nether",
-  end: "End",
-};
+/**
+ * Beschriftungen kommen aus den Übersetzungen, Namespace "ShopTypes"
+ * (`useTranslations("ShopTypes")` bzw. `getTranslations("ShopTypes")`) –
+ * die Schlüssel sind genau die Werte aus DIMENSIONS.
+ */
 
 export function toDimension(value: string): Dimension {
   return (DIMENSIONS as readonly string[]).includes(value) ? (value as Dimension) : "overworld";
@@ -55,25 +55,35 @@ function parseCoordinate(raw: unknown): number | null {
   return rounded;
 }
 
-export function validateShopInput(raw: {
-  name?: unknown;
-  description?: unknown;
-  sells?: unknown;
-  locationX?: unknown;
-  locationZ?: unknown;
-  dimension?: unknown;
-  open?: unknown;
-}): { ok: true; data: ShopInput } | { ok: false; error: string } {
+/**
+ * `t` ist der Übersetzer für den Namespace "Validation"
+ * (`getTranslations("Validation")` in Server Actions) – so bleibt diese
+ * Datei ohne next-intl-Import, aber trotzdem übersetzt.
+ */
+export type ValidationTranslator = (key: string) => string;
+
+export function validateShopInput(
+  raw: {
+    name?: unknown;
+    description?: unknown;
+    sells?: unknown;
+    locationX?: unknown;
+    locationZ?: unknown;
+    dimension?: unknown;
+    open?: unknown;
+  },
+  t: ValidationTranslator,
+): { ok: true; data: ShopInput } | { ok: false; error: string } {
   const name = typeof raw.name === "string" ? raw.name.trim() : "";
   const descriptionRaw = typeof raw.description === "string" ? raw.description.trim() : "";
   const sellsRaw = typeof raw.sells === "string" ? raw.sells : "";
   const dimension = typeof raw.dimension === "string" ? raw.dimension : "";
 
   if (name.length < 2 || name.length > 40) {
-    return { ok: false, error: "Der Shop-Name muss 2–40 Zeichen lang sein." };
+    return { ok: false, error: t("shopNameLength") };
   }
   if (descriptionRaw.length > 300) {
-    return { ok: false, error: "Die Beschreibung darf höchstens 300 Zeichen haben." };
+    return { ok: false, error: t("shopDescriptionTooLong") };
   }
 
   const sells = sellsRaw
@@ -81,23 +91,23 @@ export function validateShopInput(raw: {
     .map((item) => item.trim())
     .filter(Boolean);
   if (sells.length === 0) {
-    return { ok: false, error: "Trag mindestens einen Artikel ein (mit Komma getrennt)." };
+    return { ok: false, error: t("itemsRequired") };
   }
   if (sells.length > 10) {
-    return { ok: false, error: "Höchstens 10 Artikel." };
+    return { ok: false, error: t("itemsTooMany") };
   }
   if (sells.some((item) => item.length > 30)) {
-    return { ok: false, error: "Ein Artikelname darf höchstens 30 Zeichen haben." };
+    return { ok: false, error: t("itemNameTooLong") };
   }
 
   if (!(DIMENSIONS as readonly string[]).includes(dimension)) {
-    return { ok: false, error: "Ungültige Dimension." };
+    return { ok: false, error: t("invalidDimension") };
   }
 
   const locationX = parseCoordinate(raw.locationX);
   const locationZ = parseCoordinate(raw.locationZ);
   if (locationX === null || locationZ === null) {
-    return { ok: false, error: "X- und Z-Koordinate müssen gültige Zahlen sein." };
+    return { ok: false, error: t("invalidCoordinates") };
   }
 
   return {

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Cog, LayoutDashboard } from "lucide-react";
 import { auth, authConfigured } from "@/auth";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
 import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { ShopManagerCard } from "@/components/dashboard/ShopManagerCard";
@@ -20,25 +22,27 @@ import { listShopsForUser } from "@/lib/shops";
 import { listSuggestions } from "@/lib/suggestions";
 import { getApplicationForUser } from "@/lib/whitelist";
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-  description: "Dein Profil, Whitelist-Antrag, Statistiken und das Vorschlags-Board.",
-};
-
-/** Auth.js-Fehlercodes → verständliche Meldungen */
-const authErrorMessages: Record<string, string> = {
-  Configuration: "Der Discord-Login ist noch nicht vollständig konfiguriert.",
-  AccessDenied: "Zugriff verweigert – der Login wurde abgebrochen oder ist nicht erlaubt.",
-  OAuthAccountNotLinked: "Dieser Discord-Account ist bereits mit einem anderen Login verknüpft.",
-  OAuthCallbackError: "Discord hat den Login abgebrochen. Bitte versuche es erneut.",
-  OAuthSignin: "Der Login bei Discord konnte nicht gestartet werden.",
-  Verification: "Der Login-Link ist abgelaufen oder wurde bereits verwendet.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("DashboardPage");
+  return { title: t("metaTitle"), description: t("metaDescription") };
+}
 
 export default async function DashboardPage(props: PageProps<"/[locale]/dashboard">) {
   const searchParams = await props.searchParams;
   const errorCode = typeof searchParams.error === "string" ? searchParams.error : undefined;
-  const errorMessage = errorCode ? (authErrorMessages[errorCode] ?? "Der Login ist fehlgeschlagen. Bitte versuche es erneut.") : undefined;
+
+  const t = await getTranslations("DashboardPage");
+
+  /** Auth.js-Fehlercodes → verständliche Meldungen */
+  const authErrorMessages: Record<string, string> = {
+    Configuration: t("authErrorConfiguration"),
+    AccessDenied: t("authErrorAccessDenied"),
+    OAuthAccountNotLinked: t("authErrorAccountNotLinked"),
+    OAuthCallbackError: t("authErrorCallback"),
+    OAuthSignin: t("authErrorSignin"),
+    Verification: t("authErrorVerification"),
+  };
+  const errorMessage = errorCode ? (authErrorMessages[errorCode] ?? t("authErrorDefault")) : undefined;
 
   const session = await auth();
   const user = session?.user?.id ? await prisma.user.findUnique({ where: { id: session.user.id } }) : null;
@@ -46,11 +50,13 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
   if (!session?.user || !user) {
     return (
       <>
+        {/* Kein eigener Umschalter hier: Ohne Login steht er schon im Header
+            (siehe Header.tsx) - ein zweiter direkt darunter waere doppelt. */}
         <PageHeader
-          eyebrow="Profil & Dashboard"
+          eyebrow={t("eyebrow")}
           icon={LayoutDashboard}
-          title="Dashboard"
-          description="Whitelist beantragen, persönliche Statistiken und das Vorschlags-Board – nach dem Login mit Discord."
+          title={t("titleLoggedOut")}
+          description={t("descriptionLoggedOut")}
         />
         <Container className="py-12">
           <SignInPanel configured={authConfigured} error={errorMessage} />
@@ -62,18 +68,19 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
   // Discord-Mitgliedschaft nebenbei nachziehen: Wer nach dem Login beitritt,
   // sieht den Schritt beim naechsten Aufruf des Dashboards von selbst abgehakt,
   // ohne auf „Erneut pruefen" zu druecken.
-  const [application, settings, suggestions, shops, discord, name] = await Promise.all([
+  const [application, settings, suggestions, shops, discord, name, locale] = await Promise.all([
     getApplicationForUser(user.id),
     getSiteSettings(),
     listSuggestions(user.id),
     listShopsForUser(user.id),
     ensureMembershipFresh(user),
     ensureNameChecked(user),
+    getLocale(),
   ]);
 
   const start = serverStartZeit();
   const serverStartText =
-    start?.toLocaleString("de-DE", {
+    start?.toLocaleString(locale, {
       weekday: "long",
       day: "numeric",
       month: "long",
@@ -85,14 +92,14 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
   return (
     <>
       <PageHeader
-        eyebrow="Profil & Dashboard"
+        eyebrow={t("eyebrow")}
         icon={LayoutDashboard}
-        title={`Moin, ${user.name ?? "Spieler"}!`}
-        description="Dein Bereich auf VIP Craft 4: Whitelist beantragen, Stats ansehen und mitbestimmen, wohin der Server fährt."
+        title={t("greeting", { name: user.name ?? t("defaultPlayerName") })}
+        description={t("description")}
       >
         {imTeam(user.role) && (
           <Link href="/admin" className="btn btn-outline btn-sm">
-            <Cog className="size-4" /> Zum Kontrollraum
+            <Cog className="size-4" /> {t("toControlRoom")}
           </Link>
         )}
       </PageHeader>
@@ -130,6 +137,12 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
         </div>
 
         <SuggestionBoard suggestions={suggestions} currentUserId={user.id} />
+
+        {/* Dezent, ganz am Ende - hier sucht niemand versehentlich danach,
+            wer die Sprache wirklich wechseln will, findet sie trotzdem. */}
+        <div className="flex justify-center pt-2">
+          <LanguageSwitcher className="opacity-60" />
+        </div>
       </Container>
     </>
   );

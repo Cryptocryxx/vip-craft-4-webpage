@@ -29,7 +29,8 @@ import { bekannteSpieler, holeEreignisse, ladeVerlauf, spielerZahlen } from "@/l
 import { auditsFuer, findPlayer } from "@/lib/players";
 import { prisma } from "@/lib/prisma";
 import { istAdmin, rolleName } from "@/lib/roles";
-import { applicationStatusLabels, type ApplicationStatus } from "@/lib/whitelist-types";
+import type { ApplicationStatus } from "@/lib/whitelist-types";
+import { getTranslations } from "next-intl/server";
 
 /**
  * Alles über einen Spieler an einem Ort: Zahlen, Chat, Befehle, Eingriffe.
@@ -61,6 +62,7 @@ export default async function AdminSpielerDetailPage({ params }: Props) {
 
   // Frisch nachsehen, bevor die Seite gebaut wird (eigene Sperre, siehe game-log).
   await Promise.all([holeEreignisse(), holeDiscordNachrichten()]);
+  const tApplicationStatus = await getTranslations("ApplicationStatuses");
 
   // Die Schreibweise aus dem Spiel gewinnt: Danach wird der Verlauf gesucht,
   // und SQLite vergleicht Zeichenketten Zeichen für Zeichen.
@@ -231,7 +233,7 @@ export default async function AdminSpielerDetailPage({ params }: Props) {
                   {account.applications.map((antrag) => (
                     <li key={antrag.id} className="flex flex-wrap items-center gap-2 text-sm">
                       <Badge tone={antrag.status === "APPROVED" ? "emerald" : antrag.status === "REJECTED" ? "rose" : "brass"}>
-                        {applicationStatusLabels[antrag.status as ApplicationStatus] ?? antrag.status}
+                        {tApplicationStatus(antrag.status as ApplicationStatus) ?? antrag.status}
                       </Badge>
                       <span className="text-xs text-cream/45">{formatDate(antrag.createdAt)}</span>
                       {antrag.reviewNote && <span className="text-cream/60">{antrag.reviewNote}</span>}

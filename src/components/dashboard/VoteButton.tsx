@@ -1,6 +1,7 @@
 "use client";
 
 import { useOptimistic, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronUp } from "lucide-react";
 import { toggleVoteAction } from "@/lib/actions/suggestions";
 import { cn } from "@/lib/utils";
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils";
 type VoteState = { votes: number; hasVoted: boolean };
 
 export function VoteButton({ suggestionId, votes, hasVoted }: { suggestionId: string } & VoteState) {
+  const t = useTranslations("VoteButton");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [optimistic, setOptimistic] = useOptimistic<VoteState, VoteState>({ votes, hasVoted }, (_current, next) => next);
@@ -21,6 +23,8 @@ export function VoteButton({ suggestionId, votes, hasVoted }: { suggestionId: st
     });
   }
 
+  const upvoteLabel = optimistic.hasVoted ? t("removeUpvote") : t("upvote");
+
   return (
     <div className="flex flex-col items-center">
       <button
@@ -28,8 +32,8 @@ export function VoteButton({ suggestionId, votes, hasVoted }: { suggestionId: st
         onClick={toggle}
         disabled={pending}
         aria-pressed={optimistic.hasVoted}
-        aria-label={optimistic.hasVoted ? "Upvote entfernen" : "Upvoten"}
-        title={error ?? (optimistic.hasVoted ? "Upvote entfernen" : "Upvoten")}
+        aria-label={upvoteLabel}
+        title={error ?? upvoteLabel}
         className={cn(
           "flex w-14 flex-col items-center rounded-lg border py-2 font-display transition-all",
           optimistic.hasVoted

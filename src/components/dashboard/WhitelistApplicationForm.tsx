@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Loader2, ShieldCheck } from "lucide-react";
 import { submitApplicationAction, type ApplicationFormState } from "@/lib/actions/whitelist";
 
@@ -19,21 +20,22 @@ type Props = {
  * Es war optional, wurde selten ausgefüllt und stand zwischen Eingabe und
  * Absenden.
  */
-export function WhitelistApplicationForm({ defaultName, submitLabel = "Whitelist beantragen" }: Props) {
+export function WhitelistApplicationForm({ defaultName, submitLabel }: Props) {
+  const t = useTranslations("WhitelistApplicationForm");
   const [state, formAction, pending] = useActionState(submitApplicationAction, initialState);
 
   return (
     <form action={formAction} className="space-y-3">
       <div>
         <label htmlFor="application-name" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-          Dein Minecraft-Username
+          {t("label")}
         </label>
         <input
           id="application-name"
           name="minecraftName"
           type="text"
           defaultValue={defaultName ?? ""}
-          placeholder="z. B. Steve_42"
+          placeholder={t("placeholder")}
           pattern="[A-Za-z0-9_]{3,16}"
           minLength={3}
           maxLength={16}
@@ -52,7 +54,7 @@ export function WhitelistApplicationForm({ defaultName, submitLabel = "Whitelist
 
       <button type="submit" disabled={pending} className="btn btn-brass btn-md w-full sm:w-auto">
         {pending ? <Loader2 className="size-4 animate-spin" /> : <ShieldCheck className="size-4" />}
-        {submitLabel}
+        {submitLabel ?? t("applyWhitelist")}
       </button>
     </form>
   );

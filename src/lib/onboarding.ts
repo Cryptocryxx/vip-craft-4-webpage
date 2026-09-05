@@ -39,7 +39,7 @@ export async function offenerSchritt(): Promise<SchrittBeschreibung | null> {
   // „tritt dem Discord bei", wenn das laengst passiert ist.
   const discord = await ensureMembershipFresh(user);
 
-  return naechsterSchritt({
+  return await naechsterSchritt({
     gamertagDa: Boolean(user.applications[0]?.minecraftName ?? user.minecraftName),
     nameUngueltig: name.gueltig === false,
     discordJoined: discord.joined,

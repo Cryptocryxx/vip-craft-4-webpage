@@ -1,4 +1,5 @@
 import "server-only";
+import { getTranslations } from "next-intl/server";
 
 /**
  * Prüft Minecraft-Namen gegen Mojang.
@@ -79,7 +80,8 @@ export async function pruefeGamertag(name: string): Promise<{ ok: true; name: st
   const treffer = await lookupMinecraftName(name);
 
   if (treffer.status === "unbekannt") {
-    return { ok: false, error: `Den Minecraft-Namen „${name}“ gibt es nicht. Bitte prüf die Schreibweise.` };
+    const t = await getTranslations("MojangCheck");
+    return { ok: false, error: t("notFound", { name }) };
   }
 
   return { ok: true, name: treffer.status === "gefunden" ? treffer.name : name };

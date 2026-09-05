@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { createSuggestion, listSuggestions, validateSuggestionInput } from "@/lib/suggestions";
 
@@ -9,7 +10,7 @@ import { createSuggestion, listSuggestions, validateSuggestionInput } from "@/li
 export async function GET() {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
   const items = await listSuggestions(session.user.id);
@@ -20,17 +21,18 @@ export async function GET() {
 export async function POST(request: Request) {
   const session = await auth();
   if (!session?.user?.id) {
-    return NextResponse.json({ error: "Nicht eingeloggt." }, { status: 401 });
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
   let payload: unknown;
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Ungültiger JSON-Body." }, { status: 400 });
+    return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
   }
 
-  const parsed = validateSuggestionInput((payload ?? {}) as Record<string, unknown>);
+  const tValidation = await getTranslations("Validation");
+  const parsed = validateSuggestionInput((payload ?? {}) as Record<string, unknown>, tValidation);
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }

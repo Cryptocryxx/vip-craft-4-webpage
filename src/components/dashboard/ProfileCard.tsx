@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { Crown, Shield, User } from "lucide-react";
 import { LinkMinecraftForm } from "@/components/dashboard/LinkMinecraftForm";
 import { LinkTwitchForm } from "@/components/dashboard/LinkTwitchForm";
@@ -25,10 +26,12 @@ type ProfileCardProps = {
   allowLinking?: boolean;
 };
 
-export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
+export async function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
+  const [t, tRoles] = await Promise.all([getTranslations("ProfileCard"), getTranslations("Roles")]);
+
   return (
     <Panel rivets className="p-6">
-      <p className="eyebrow">Profil</p>
+      <p className="eyebrow">{t("eyebrow")}</p>
       <div className="mt-4 flex items-center gap-4">
         <div className="relative">
           {user.image ? (
@@ -45,21 +48,21 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
           )}
         </div>
         <div className="min-w-0">
-          <p className="truncate font-display text-xl font-bold text-cream">{user.name ?? "Unbekannter Spieler"}</p>
+          <p className="truncate font-display text-xl font-bold text-cream">{user.name ?? t("unknownPlayer")}</p>
           <p className="mt-0.5 flex items-center gap-1.5 text-xs text-cream/60">
-            <DiscordIcon className="size-3.5" /> Discord verknüpft
+            <DiscordIcon className="size-3.5" /> {t("discordLinked")}
           </p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {istAdmin(user.role) ? (
               <Badge tone="brass">
-                <Crown className="size-3" /> Admin
+                <Crown className="size-3" /> {tRoles("admin")}
               </Badge>
             ) : imTeam(user.role) ? (
               <Badge tone="brass">
-                <Shield className="size-3" /> Moderator
+                <Shield className="size-3" /> {tRoles("moderator")}
               </Badge>
             ) : (
-              <Badge tone="wood">Spieler</Badge>
+              <Badge tone="wood">{tRoles("player")}</Badge>
             )}
           </div>
         </div>
@@ -67,13 +70,13 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
 
       <dl className="mt-6 space-y-3 border-t border-white/5 pt-4 text-sm">
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-cream/50">Minecraft-Username</dt>
+          <dt className="text-cream/50">{t("minecraftUsername")}</dt>
           <dd className="font-mono font-semibold text-cream">
-            {user.minecraftName ?? <span className="font-sans font-normal text-cream/40">nicht verknüpft</span>}
+            {user.minecraftName ?? <span className="font-sans font-normal text-cream/40">{t("notLinked")}</span>}
           </dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-cream/50">Twitch-Kanal</dt>
+          <dt className="text-cream/50">{t("twitchChannel")}</dt>
           <dd className="font-mono font-semibold text-cream">
             {user.twitchName ? (
               <a
@@ -85,12 +88,12 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
                 {user.twitchName}
               </a>
             ) : (
-              <span className="font-sans font-normal text-cream/40">nicht verknüpft</span>
+              <span className="font-sans font-normal text-cream/40">{t("notLinked")}</span>
             )}
           </dd>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-cream/50">Dabei seit</dt>
+          <dt className="text-cream/50">{t("memberSince")}</dt>
           <dd className="text-cream">{formatDate(user.createdAt)}</dd>
         </div>
       </dl>
@@ -99,9 +102,7 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
         {allowLinking ? (
           <LinkMinecraftForm currentName={user.minecraftName} />
         ) : (
-          <p className="text-xs text-cream/50">
-            Trag deinen Minecraft-Username im Whitelist-Antrag nebenan ein – er landet automatisch auch hier im Profil.
-          </p>
+          <p className="text-xs text-cream/50">{t("linkViaApplication")}</p>
         )}
         <div className="border-t border-white/5 pt-4">
           <LinkTwitchForm currentName={user.twitchName} />

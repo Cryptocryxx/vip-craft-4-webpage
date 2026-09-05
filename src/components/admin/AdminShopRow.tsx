@@ -1,12 +1,16 @@
 import Image from "next/image";
+import { getTranslations } from "next-intl/server";
 import { MapPin, User } from "lucide-react";
 import { ConfirmSubmit } from "@/components/admin/ConfirmSubmit";
 import { Badge } from "@/components/ui/Badge";
 import { deleteShopAdminAction } from "@/lib/actions/admin";
-import { dimensionLabels, type ShopDTO } from "@/lib/shop-types";
+import type { ShopDTO } from "@/lib/shop-types";
 import { formatShortDate } from "@/lib/format";
 
-export function AdminShopRow({ shop }: { shop: ShopDTO }) {
+export async function AdminShopRow({ shop }: { shop: ShopDTO }) {
+  // Nur die Dimension kommt aus den Uebersetzungen - der Rest dieser Zeile
+  // gehoert zum Kontrollraum, der in diesem Durchgang noch deutsch bleibt.
+  const tDimension = await getTranslations("ShopTypes");
   const { owner } = shop;
   const ownerName = owner.name ?? owner.minecraftName ?? "Unbekannt";
 
@@ -30,7 +34,7 @@ export function AdminShopRow({ shop }: { shop: ShopDTO }) {
         </p>
         <p className="mt-1.5 flex items-center gap-1.5 font-mono text-xs text-cream/60">
           <MapPin className="size-3 text-brass-300" />
-          {shop.locationX} / {shop.locationZ} · {dimensionLabels[shop.dimension]}
+          {shop.locationX} / {shop.locationZ} · {tDimension(shop.dimension)}
         </p>
         <p className="mt-1 text-sm text-cream/75">{shop.sells.join(", ")}</p>
         {shop.description && <p className="mt-1 text-xs text-cream/55">{shop.description}</p>}

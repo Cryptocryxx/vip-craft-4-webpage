@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Link2, Loader2, Unlink } from "lucide-react";
 import { linkMinecraftNameAction, unlinkMinecraftNameAction, type ProfileFormState } from "@/lib/actions/profile";
 
 const initialState: ProfileFormState = {};
 
 export function LinkMinecraftForm({ currentName }: { currentName: string | null }) {
+  const t = useTranslations("LinkMinecraftForm");
   const [state, formAction, pending] = useActionState(linkMinecraftNameAction, initialState);
   const [editing, setEditing] = useState(currentName === null);
 
@@ -28,11 +30,11 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
     return (
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => setEditing(true)} className="btn btn-outline btn-sm">
-          <Link2 className="size-3.5" /> Username ändern
+          <Link2 className="size-3.5" /> {t("changeUsername")}
         </button>
         <form action={unlinkMinecraftNameAction}>
           <button type="submit" className="btn btn-ghost btn-sm text-rose-200 hover:text-rose-100">
-            <Unlink className="size-3.5" /> Verknüpfung lösen
+            <Unlink className="size-3.5" /> {t("unlink")}
           </button>
         </form>
         {state.success && (
@@ -47,7 +49,7 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
   return (
     <form action={formAction} className="space-y-2">
       <label htmlFor="minecraftName" className="block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-        Dein Minecraft-Username
+        {t("label")}
       </label>
       <div className="flex gap-2">
         <input
@@ -55,7 +57,7 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
           name="minecraftName"
           type="text"
           defaultValue={currentName ?? ""}
-          placeholder="z. B. Steve_42"
+          placeholder={t("placeholder")}
           pattern="[A-Za-z0-9_]{3,16}"
           minLength={3}
           maxLength={16}
@@ -65,11 +67,11 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
         />
         <button type="submit" disabled={pending} className="btn btn-brass btn-md shrink-0">
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Link2 className="size-4" />}
-          Verknüpfen
+          {t("link")}
         </button>
         {currentName && (
           <button type="button" onClick={() => setEditing(false)} className="btn btn-ghost btn-md shrink-0">
-            Abbrechen
+            {t("cancel")}
           </button>
         )}
       </div>
@@ -79,9 +81,7 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
           <Check className="size-3.5" /> {state.success}
         </p>
       )}
-      <p className="text-xs text-cream/45">
-        Der Username wird für Whitelist und Statistiken genutzt. Groß-/Kleinschreibung wie im Spiel.
-      </p>
+      <p className="text-xs text-cream/45">{t("hint")}</p>
     </form>
   );
 }

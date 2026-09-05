@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, Loader2, Store } from "lucide-react";
 import { createShopAction, updateShopAction, type ShopFormState } from "@/lib/actions/shops";
-import { DIMENSIONS, dimensionLabels, type ShopDTO } from "@/lib/shop-types";
+import { DIMENSIONS, type ShopDTO } from "@/lib/shop-types";
 
 const initialState: ShopFormState = {};
 
@@ -15,6 +16,8 @@ type Props = {
 
 /** Formular zum Eintragen bzw. Bearbeiten eines eigenen Shops. */
 export function ShopForm({ shop, onCancel }: Props) {
+  const t = useTranslations("ShopForm");
+  const tDimension = useTranslations("ShopTypes");
   const [state, formAction, pending] = useActionState(shop ? updateShopAction : createShopAction, initialState);
 
   return (
@@ -24,14 +27,14 @@ export function ShopForm({ shop, onCancel }: Props) {
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
           <label htmlFor="shop-name" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-            Name
+            {t("name")}
           </label>
           <input
             id="shop-name"
             name="name"
             type="text"
             defaultValue={shop?.name}
-            placeholder="z. B. Bahnhofskiosk"
+            placeholder={t("namePlaceholder")}
             minLength={2}
             maxLength={40}
             required
@@ -40,14 +43,14 @@ export function ShopForm({ shop, onCancel }: Props) {
         </div>
         <div>
           <label htmlFor="shop-sells" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-            Artikel <span className="normal-case opacity-70">(mit Komma getrennt)</span>
+            {t("items")} <span className="normal-case opacity-70">{t("itemsHint")}</span>
           </label>
           <input
             id="shop-sells"
             name="sells"
             type="text"
             defaultValue={shop?.sells.join(", ")}
-            placeholder="z. B. Kohle, Eisen, Zahnräder"
+            placeholder={t("itemsPlaceholder")}
             required
             className="input"
           />
@@ -74,7 +77,7 @@ export function ShopForm({ shop, onCancel }: Props) {
           <select id="shop-dimension" name="dimension" defaultValue={shop?.dimension ?? "overworld"} className="input">
             {DIMENSIONS.map((dimension) => (
               <option key={dimension} value={dimension}>
-                {dimensionLabels[dimension]}
+                {tDimension(dimension)}
               </option>
             ))}
           </select>
@@ -83,7 +86,7 @@ export function ShopForm({ shop, onCancel }: Props) {
 
       <div>
         <label htmlFor="shop-description" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-          Beschreibung <span className="normal-case opacity-70">(optional)</span>
+          {t("description")} <span className="normal-case opacity-70">{t("optional")}</span>
         </label>
         <textarea
           id="shop-description"
@@ -91,7 +94,7 @@ export function ShopForm({ shop, onCancel }: Props) {
           rows={2}
           maxLength={300}
           defaultValue={shop?.description ?? ""}
-          placeholder="Öffnungszeiten, Besonderheiten, was auch immer Käufer wissen sollten."
+          placeholder={t("descriptionPlaceholder")}
           className="input resize-y"
         />
       </div>
@@ -103,7 +106,7 @@ export function ShopForm({ shop, onCancel }: Props) {
           defaultChecked={shop?.open ?? true}
           className="size-4 rounded border-white/20 bg-black/30 accent-brass-500"
         />
-        Aktuell geöffnet
+        {t("currentlyOpen")}
       </label>
 
       {state.error && <p className="text-sm text-rose-300">{state.error}</p>}
@@ -116,11 +119,11 @@ export function ShopForm({ shop, onCancel }: Props) {
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" disabled={pending} className="btn btn-brass btn-md">
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Store className="size-4" />}
-          {shop ? "Speichern" : "Shop eintragen"}
+          {shop ? t("save") : t("addShop")}
         </button>
         {onCancel && (
           <button type="button" onClick={onCancel} className="btn btn-ghost btn-md">
-            Abbrechen
+            {t("cancel")}
           </button>
         )}
       </div>

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { auth } from "@/auth";
 import { createShop, deleteOwnShop, updateShop, validateShopInput } from "@/lib/shops";
 
@@ -26,36 +27,40 @@ function fromFormData(formData: FormData) {
 
 /** Neuen Shop eintragen (geht als Antrag in die Prüfung). */
 export async function createShopAction(_prev: ShopFormState, formData: FormData): Promise<ShopFormState> {
-  const session = await auth();
-  if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
+  const [t, tValidation] = await Promise.all([getTranslations("ShopForm"), getTranslations("Validation")]);
 
-  const parsed = validateShopInput(fromFormData(formData));
+  const session = await auth();
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
+
+  const parsed = validateShopInput(fromFormData(formData), tValidation);
   if (!parsed.ok) return { error: parsed.error };
 
   await createShop(session.user.id, parsed.data);
   revalidateShops();
-  return { success: "Shop eingetragen. Das Team schaut ihn sich an." };
+  return { success: t("created") };
 }
 
 /** Eigenen Shop bearbeiten – geht danach wieder in die Prüfung. */
 export async function updateShopAction(_prev: ShopFormState, formData: FormData): Promise<ShopFormState> {
+  const [t, tValidation] = await Promise.all([getTranslations("ShopForm"), getTranslations("Validation")]);
+
   const session = await auth();
-  if (!session?.user?.id) return { error: "Du musst eingeloggt sein." };
+  if (!session?.user?.id) return { error: t("notLoggedIn") };
 
   const shopId = String(formData.get("shopId") ?? "");
-  if (!shopId) return { error: "Shop fehlt." };
+  if (!shopId) return { error: t("shopMissing") };
 
-  const parsed = validateShopInput(fromFormData(formData));
+  const parsed = validateShopInput(fromFormData(formData), tValidation);
   if (!parsed.ok) return { error: parsed.error };
 
   try {
     await updateShop(shopId, session.user.id, parsed.data);
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Shop konnte nicht gespeichert werden." };
+    return { error: err instanceof Error ? err.message : t("saveFailed") };
   }
 
   revalidateShops();
-  return { success: "Gespeichert. Geht wieder in die Prüfung." };
+  return { success: t("updated") };
 }
 
 /** Eigenen Shop löschen. */

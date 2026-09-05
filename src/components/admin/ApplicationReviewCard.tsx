@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Check, Clock, Loader2, User, X } from "lucide-react";
 import { ConfirmSubmit } from "@/components/admin/ConfirmSubmit";
@@ -10,7 +11,7 @@ import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { formatDate, timeAgo } from "@/lib/format";
 import { imTeam, rolleName } from "@/lib/roles";
-import { applicationStatusLabels, type ApplicationStatus, type WhitelistApplicationDTO } from "@/lib/whitelist-types";
+import type { ApplicationStatus, WhitelistApplicationDTO } from "@/lib/whitelist-types";
 
 const initialState: AdminFormState = {};
 
@@ -29,6 +30,7 @@ export function ApplicationReviewCard({
   discordRequired?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(reviewApplicationAction, initialState);
+  const tStatus = useTranslations("ApplicationStatuses");
   const { applicant } = application;
   const isPending = application.status === "PENDING";
   const discordFehlt = discordRequired && !applicant.discordJoined;
@@ -55,7 +57,7 @@ export function ApplicationReviewCard({
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge tone={statusTone[application.status]}>
             {application.status === "PENDING" && <Clock className="size-3" />}
-            {applicationStatusLabels[application.status]}
+            {tStatus(application.status)}
           </Badge>
           {discordRequired &&
             (applicant.discordJoined ? (
@@ -95,7 +97,7 @@ export function ApplicationReviewCard({
 
       {!isPending && (
         <p className="mt-3 text-xs text-cream/55">
-          {applicationStatusLabels[application.status]}
+          {tStatus(application.status)}
           {application.reviewer?.name ? ` von ${application.reviewer.name}` : ""}
           {application.reviewedAt ? ` · ${formatDate(application.reviewedAt)}` : ""}
           {application.reviewNote ? ` · „${application.reviewNote}“` : ""}

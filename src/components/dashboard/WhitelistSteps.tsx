@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { getTranslations } from "next-intl/server";
 import { AlertTriangle, Check, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,8 @@ export type Schritt = {
   aktion?: ReactNode;
 };
 
-export function WhitelistSteps({ schritte }: { schritte: Schritt[] }) {
+export async function WhitelistSteps({ schritte }: { schritte: Schritt[] }) {
+  const t = await getTranslations("WhitelistSteps");
   // Optionale Schritte sind nie „als Naechstes dran".
   const offen = schritte.findIndex((schritt) => !schritt.erledigt && !schritt.optional);
 
@@ -77,7 +79,7 @@ export function WhitelistSteps({ schritte }: { schritte: Schritt[] }) {
                 >
                   {schritt.titel}
                 </span>
-                {schritt.optional && <Badge tone="diamond">Optional</Badge>}
+                {schritt.optional && <Badge tone="diamond">{t("optional")}</Badge>}
               </p>
               {!schritt.erledigt && <p className="mt-0.5 text-sm text-cream/65">{schritt.text}</p>}
               {schritt.aktion && <div className="mt-3">{schritt.aktion}</div>}

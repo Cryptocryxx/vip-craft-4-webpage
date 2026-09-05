@@ -8,18 +8,10 @@ export type SuggestionType = (typeof SUGGESTION_TYPES)[number];
 export const SUGGESTION_STATUSES = ["OPEN", "PLANNED", "DONE", "REJECTED"] as const;
 export type SuggestionStatus = (typeof SUGGESTION_STATUSES)[number];
 
-export const suggestionTypeLabels: Record<SuggestionType, string> = {
-  MOD: "Mod-Vorschlag",
-  BUG: "Bug",
-  FEATURE: "Feature",
-};
-
-export const suggestionStatusLabels: Record<SuggestionStatus, string> = {
-  OPEN: "Offen",
-  PLANNED: "Geplant",
-  DONE: "Umgesetzt",
-  REJECTED: "Abgelehnt",
-};
+/**
+ * Beschriftungen kommen aus den Übersetzungen, Namespaces "SuggestionTypes"
+ * und "SuggestionStatuses" – die Schlüssel entsprechen genau den Werten oben.
+ */
 
 export type SuggestionDTO = {
   id: string;
@@ -47,19 +39,25 @@ export function toSuggestionType(value: string): SuggestionType {
 
 export type CreateSuggestionInput = { title: string; body: string; type: SuggestionType };
 
-export function validateSuggestionInput(raw: {
-  title?: unknown;
-  body?: unknown;
-  type?: unknown;
-}): { ok: true; data: CreateSuggestionInput } | { ok: false; error: string } {
+/** `t` ist der Übersetzer für den Namespace "Validation". */
+export type ValidationTranslator = (key: string) => string;
+
+export function validateSuggestionInput(
+  raw: {
+    title?: unknown;
+    body?: unknown;
+    type?: unknown;
+  },
+  t: ValidationTranslator,
+): { ok: true; data: CreateSuggestionInput } | { ok: false; error: string } {
   const title = typeof raw.title === "string" ? raw.title.trim() : "";
   const body = typeof raw.body === "string" ? raw.body.trim() : "";
 
-  if (title.length < 5) return { ok: false, error: "Der Titel muss mindestens 5 Zeichen haben." };
-  if (title.length > 120) return { ok: false, error: "Der Titel darf höchstens 120 Zeichen haben." };
-  if (body.length < 20) return { ok: false, error: "Bitte beschreibe deinen Vorschlag etwas genauer (mind. 20 Zeichen)." };
-  if (body.length > 2000) return { ok: false, error: "Die Beschreibung darf höchstens 2000 Zeichen haben." };
-  if (!isSuggestionType(raw.type)) return { ok: false, error: "Ungültiger Typ." };
+  if (title.length < 5) return { ok: false, error: t("suggestionTitleTooShort") };
+  if (title.length > 120) return { ok: false, error: t("suggestionTitleTooLong") };
+  if (body.length < 20) return { ok: false, error: t("suggestionBodyTooShort") };
+  if (body.length > 2000) return { ok: false, error: t("suggestionBodyTooLong") };
+  if (!isSuggestionType(raw.type)) return { ok: false, error: t("invalidType") };
 
   return { ok: true, data: { title, body, type: raw.type } };
 }

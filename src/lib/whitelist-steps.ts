@@ -1,3 +1,5 @@
+import { getTranslations } from "next-intl/server";
+
 /**
  * Die Schritte bis zum Mitspielen – an einer Stelle beschrieben.
  *
@@ -8,6 +10,10 @@
  *
  * Bewusst ohne JSX und ohne Datenbankzugriff, damit die Datei überall
  * verwendbar bleibt – die Knöpfe hängt das Dashboard über `schluessel` an.
+ *
+ * `async`, weil die Texte übersetzt werden – beide Aufrufer (onboarding.ts für
+ * die Startseite, WhitelistStatus.tsx für die Checkliste) sind ohnehin
+ * Server-Komponenten bzw. laufen in einem async-Kontext.
  */
 
 export type SchrittSchluessel = "login" | "gamertag" | "discord" | "modpack";
@@ -31,12 +37,14 @@ export type SchrittLage = {
   modpackGeladen: boolean;
 };
 
-export function whitelistSchritte(lage: SchrittLage): SchrittBeschreibung[] {
+export async function whitelistSchritte(lage: SchrittLage): Promise<SchrittBeschreibung[]> {
+  const t = await getTranslations("WhitelistStepsContent");
+
   return [
     {
       schluessel: "login",
-      titel: "Mit Discord angemeldet",
-      text: "Erledigt – sonst wärst du nicht hier.",
+      titel: t("loginTitle"),
+      text: t("loginText"),
       erledigt: true,
     },
     /*
@@ -47,36 +55,34 @@ export function whitelistSchritte(lage: SchrittLage): SchrittBeschreibung[] {
     lage.nameUngueltig
       ? {
           schluessel: "gamertag" as const,
-          titel: "Minecraft-Username stimmt nicht",
-          text: "Den Namen, der bei uns steht, kennt Mojang nicht – wahrscheinlich ein Tippfehler. Trag im Dashboard deinen richtigen Namen ein, sonst kommst du nicht auf den Server.",
+          titel: t("gamertagInvalidTitle"),
+          text: t("gamertagInvalidText"),
           erledigt: false,
           ton: "warnung" as const,
         }
       : {
           schluessel: "gamertag" as const,
-          titel: "Minecraft-Username eintragen",
-          text: "Ohne deinen Username kann das Team dich nicht freischalten. Trag ihn unten ein.",
+          titel: t("gamertagTitle"),
+          text: t("gamertagText"),
           erledigt: lage.gamertagDa,
         },
     {
       schluessel: "discord",
-      titel: "Unserem Discord beitreten",
-      text: lage.discordCheckable
-        ? "Pflicht: Ohne Discord ist dein Antrag unvollständig. Dort läuft die Absprache, und dort bekommst du Bescheid."
-        : "Pflicht: Ohne Discord ist dein Antrag unvollständig. Das Team sieht vor der Freigabe nach, ob du drin bist.",
+      titel: t("discordTitle"),
+      text: lage.discordCheckable ? t("discordTextCheckable") : t("discordTextNotCheckable"),
       // Ohne Pruefmoeglichkeit bleibt der Schritt offen: Wir wissen es schlicht nicht.
       erledigt: lage.discordCheckable && lage.discordJoined,
     },
     {
       schluessel: "modpack",
-      titel: "Modpack herunterladen",
-      text: "Ohne das Modpack kommst du nicht auf den Server. Läuft über den CurseForge- oder Prism-Launcher.",
+      titel: t("modpackTitle"),
+      text: t("modpackText"),
       erledigt: lage.modpackGeladen,
     },
   ];
 }
 
 /** Der erste offene Schritt – oder `null`, wenn alles erledigt ist. */
-export function naechsterSchritt(lage: SchrittLage): SchrittBeschreibung | null {
-  return whitelistSchritte(lage).find((schritt) => !schritt.erledigt) ?? null;
+export async function naechsterSchritt(lage: SchrittLage): Promise<SchrittBeschreibung | null> {
+  return (await whitelistSchritte(lage)).find((schritt) => !schritt.erledigt) ?? null;
 }

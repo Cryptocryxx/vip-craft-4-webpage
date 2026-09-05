@@ -188,5 +188,265 @@
     "join": "Join Server",
     "copied": "IP copied!",
     "failed": "Copy failed"
+  },
+  "DashboardPage": {
+    "metaTitle": "Dashboard",
+    "metaDescription": "Your profile, whitelist application, stats, and the suggestion board.",
+    "authErrorConfiguration": "Discord login isn't fully set up yet.",
+    "authErrorAccessDenied": "Access denied – the login was cancelled or isn't allowed.",
+    "authErrorAccountNotLinked": "This Discord account is already linked to another login.",
+    "authErrorCallback": "Discord cancelled the login. Please try again.",
+    "authErrorSignin": "Signing in with Discord couldn't be started.",
+    "authErrorVerification": "The login link has expired or was already used.",
+    "authErrorDefault": "Login failed. Please try again.",
+    "eyebrow": "Profile & Dashboard",
+    "titleLoggedOut": "Dashboard",
+    "descriptionLoggedOut": "Apply for the whitelist, see your personal stats, and use the suggestion board – after signing in with Discord.",
+    "greeting": "Hey, {name}!",
+    "defaultPlayerName": "Player",
+    "description": "Your space on VIP Craft 4: apply for the whitelist, check your stats, and help decide where the server goes.",
+    "toControlRoom": "Go to control room"
+  },
+  "SignInPanel": {
+    "eyebrow": "Login area",
+    "title": "Sign in with Discord",
+    "description": "We use your Discord account because you're already in the community there anyway. No extra password, no email. Your whitelist application is created automatically on your first login.",
+    "notConfigured": "Note for admins: set <code1>AUTH_DISCORD_ID</code1> and <code2>AUTH_DISCORD_SECRET</code2> in <code3>.env</code3> to enable login.",
+    "perk1": "Whitelist application is created on login",
+    "perk2": "Your personal in-game stats",
+    "perk3": "Suggest mods, report bugs, vote"
+  },
+  "Roles": {
+    "player": "Player",
+    "moderator": "Moderator",
+    "admin": "Admin"
+  },
+  "ProfileCard": {
+    "eyebrow": "Profile",
+    "unknownPlayer": "Unknown player",
+    "discordLinked": "Discord linked",
+    "minecraftUsername": "Minecraft username",
+    "notLinked": "not linked",
+    "twitchChannel": "Twitch channel",
+    "memberSince": "Member since",
+    "linkViaApplication": "Enter your Minecraft username in the whitelist application next to this – it lands here in your profile automatically too."
+  },
+  "LinkMinecraftForm": {
+    "changeUsername": "Change username",
+    "unlink": "Unlink",
+    "label": "Your Minecraft username",
+    "placeholder": "e.g. Steve_42",
+    "link": "Link",
+    "cancel": "Cancel",
+    "hint": "The username is used for the whitelist and stats. Case-sensitive, same as in-game.",
+    "notLoggedIn": "You need to be signed in.",
+    "linked": "Minecraft username “{name}” linked.",
+    "alreadyLinked": "This Minecraft username is already linked to another Discord account."
+  },
+  "LinkTwitchForm": {
+    "changeChannel": "Change channel",
+    "unlink": "Unlink",
+    "label": "Twitch channel",
+    "placeholder": "yourchannel",
+    "link": "Link",
+    "cancel": "Cancel",
+    "hint": "Just the channel name, i.e. the part after <code>twitch.tv/</code>. A full URL works too. Your stream then shows up on the Streams page automatically once you go live.",
+    "notLoggedIn": "You need to be signed in.",
+    "linked": "Channel twitch.tv/{name} linked.",
+    "alreadyLinked": "This Twitch channel is already linked to another account."
+  },
+  "WhitelistStatus": {
+    "eyebrow": "Whitelist status",
+    "whitelistedLabel": "Whitelisted",
+    "yes": "Yes",
+    "no": "No",
+    "approved": "Approved",
+    "applicationRunning": "Application pending",
+    "inReview": "In review",
+    "incomplete": "Incomplete",
+    "usernameMissing": "Username missing",
+    "discordMissing": "Discord missing",
+    "waitingForTeam": "Waiting on team",
+    "applicationRejected": "Application rejected",
+    "applicationsClosed": "Applications closed",
+    "noApplicationYet": "No application yet",
+    "linkMinecraftOptional": {
+      "title": "Link Minecraft account with Discord",
+      "text": "Not needed to get whitelisted. In Discord, type /account connect and follow what the MC-Linker bot replies."
+    },
+    "pendingSecured": "You're in – your spot is secured.",
+    "pendingWithDate": "You'll be whitelisted at server start on {date}, when everyone starts together.",
+    "pendingWithoutDate": "You'll be whitelisted as soon as the server is running again.",
+    "suspended": "Access is temporarily suspended right now – the team is working on the server. Your approval stays in place; you'll get back in once it's lifted.",
+    "canConnect": "You can connect any time: <ipTag>{ip}</ipTag>",
+    "canConnectWithAccount": " with the account <nameTag>{name}</nameTag>.",
+    "applicationCreatedAt": "Application created on {date}.",
+    "rejected": "Your application was rejected.",
+    "reasonLabel": "Reason",
+    "canApplyAgain": "You can submit a new application below.",
+    "whitelistClosed": "The whitelist is currently closed. Once spots open up again, you can apply here.",
+    "updateApplication": "Update application",
+    "applyWhitelist": "Apply for whitelist"
+  },
+  "WhitelistSteps": {
+    "optional": "Optional"
+  },
+  "DiscordStep": {
+    "joinDiscord": "Join Discord",
+    "recheck": "Check again",
+    "needsRelogin": "We can't check this ourselves right now: your login predates this feature. Sign out and back in with Discord once, and we'll tick this step off on our own afterwards.",
+    "doneAlready": "You're in the Discord – this step is done.",
+    "oneMoreStep": "One more step: join the Discord",
+    "explanation": "Without Discord your application is incomplete. That's where coordination happens, and where you'll hear back once the team processes it."
+  },
+  "ModpackStep": {
+    "download": "Download modpack",
+    "alreadyOpened": "Link already opened"
+  },
+  "WhitelistApplicationForm": {
+    "label": "Your Minecraft username",
+    "placeholder": "e.g. Steve_42",
+    "applyWhitelist": "Apply for whitelist"
+  },
+  "WhitelistStepsContent": {
+    "loginTitle": "Signed in with Discord",
+    "loginText": "Done – you wouldn't be here otherwise.",
+    "gamertagInvalidTitle": "Minecraft username doesn't check out",
+    "gamertagInvalidText": "Mojang doesn't recognize the name we have on file – probably a typo. Enter your correct name in the dashboard, or you won't be able to get on the server.",
+    "gamertagTitle": "Enter your Minecraft username",
+    "gamertagText": "Without your username, the team can't whitelist you. Enter it below.",
+    "discordTitle": "Join our Discord",
+    "discordTextCheckable": "Required: without Discord your application is incomplete. That's where coordination happens, and where you'll hear back.",
+    "discordTextNotCheckable": "Required: without Discord your application is incomplete. The team checks whether you're in before approving.",
+    "modpackTitle": "Download the modpack",
+    "modpackText": "Without the modpack you can't get on the server. Use CurseForge or Prism Launcher."
+  },
+  "PersonalStats": {
+    "loadError": "Stats couldn't be loaded.",
+    "eyebrow": "Your stats",
+    "title": "Personal stats",
+    "reload": "Reload",
+    "notLinked": "Link your Minecraft username in your profile first, then your in-game stats will show up here.",
+    "noStatsYet": "There aren't any stats for you on the server yet. Once you've been online for the first time, they'll show up here – they're written when you log out or the server saves.",
+    "source": "Source: the server's stat files. They're written when you log out or the server saves.",
+    "playtime": "Playtime",
+    "blocksMined": "Blocks mined",
+    "blocksPlaced": "Blocks placed",
+    "approxValue": "Approximate",
+    "ironMined": "Iron mined",
+    "deaths": "Deaths",
+    "deathsByCreeper": "Deaths by creeper",
+    "mobKills": "Mobs killed",
+    "walkedDistance": "Distance walked",
+    "andesiteAlloy": "Andesite alloy",
+    "damageTaken": "Damage taken"
+  },
+  "ShopManagerCard": {
+    "eyebrow": "Economy",
+    "title": "My shops",
+    "close": "Close",
+    "addShop": "Add shop",
+    "noShops": "No shop registered yet. Add yours so it shows up under “Shops” for everyone.",
+    "closedTag": "closed",
+    "live": "Live",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "ShopForm": {
+    "name": "Name",
+    "namePlaceholder": "e.g. Station Kiosk",
+    "items": "Items",
+    "itemsHint": "(comma-separated)",
+    "itemsPlaceholder": "e.g. Coal, Iron, Cogwheels",
+    "description": "Description",
+    "optional": "(optional)",
+    "descriptionPlaceholder": "Opening hours, specialties, anything buyers should know.",
+    "currentlyOpen": "Currently open",
+    "save": "Save",
+    "addShop": "Add shop",
+    "cancel": "Cancel",
+    "notLoggedIn": "You need to be signed in.",
+    "shopMissing": "Shop is missing.",
+    "saveFailed": "Shop couldn't be saved.",
+    "created": "Shop added. The team will take a look.",
+    "updated": "Saved. Back in review."
+  },
+  "ShopTypes": {
+    "overworld": "Overworld",
+    "nether": "Nether",
+    "end": "End"
+  },
+  "SuggestionBoard": {
+    "eyebrow": "Suggestion board",
+    "title": "Suggest mods, report bugs, vote",
+    "close": "Close",
+    "newPost": "New post",
+    "all": "All",
+    "sortTop": "Top",
+    "sortNew": "New",
+    "empty": "No posts in this category yet – be the first!",
+    "fromYou": "From you",
+    "unknownAuthor": "Unknown"
+  },
+  "SuggestionForm": {
+    "kindLegend": "Type of post",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Add Create: Steam 'n' Rails",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What's it about, why is it worth it – or how can the bug be reproduced?",
+    "submit": "Submit",
+    "notLoggedIn": "You need to be signed in."
+  },
+  "SuggestionTypes": {
+    "MOD": "Mod suggestion",
+    "BUG": "Bug",
+    "FEATURE": "Feature"
+  },
+  "SuggestionStatuses": {
+    "OPEN": "Open",
+    "PLANNED": "Planned",
+    "DONE": "Done",
+    "REJECTED": "Rejected"
+  },
+  "ApplicationStatuses": {
+    "PENDING": "In review",
+    "APPROVED": "Approved",
+    "REJECTED": "Rejected"
+  },
+  "VoteButton": {
+    "removeUpvote": "Remove upvote",
+    "upvote": "Upvote",
+    "failed": "Vote couldn't be saved.",
+    "notLoggedIn": "You need to be signed in."
+  },
+  "Validation": {
+    "minecraftNamePattern": "A Minecraft name is 3–16 characters (letters, numbers, underscore).",
+    "twitchNamePattern": "A Twitch name is 4–25 characters (letters, numbers, underscore).",
+    "messageTooLong": "The message can be at most 1000 characters.",
+    "shopNameLength": "The shop name must be 2–40 characters long.",
+    "shopDescriptionTooLong": "The description can be at most 300 characters.",
+    "itemsRequired": "Enter at least one item (comma-separated).",
+    "itemsTooMany": "At most 10 items.",
+    "itemNameTooLong": "An item name can be at most 30 characters.",
+    "invalidDimension": "Invalid dimension.",
+    "invalidCoordinates": "X and Z coordinates must be valid numbers.",
+    "suggestionTitleTooShort": "The title must be at least 5 characters.",
+    "suggestionTitleTooLong": "The title can be at most 120 characters.",
+    "suggestionBodyTooShort": "Please describe your suggestion in a bit more detail (min. 20 characters).",
+    "suggestionBodyTooLong": "The description can be at most 2000 characters.",
+    "invalidType": "Invalid type."
+  },
+  "MojangCheck": {
+    "notFound": "The Minecraft name “{name}” doesn't exist. Please check the spelling."
+  },
+  "WhitelistActions": {
+    "notLoggedIn": "You need to be signed in.",
+    "discordOk": "Good – you're in the Discord.",
+    "discordNotMember": "We don't see you in the Discord yet. Join, then check again.",
+    "discordNeedsRelogin": "We're missing your permission for that: sign out and back in with Discord once, then we'll check it automatically.",
+    "discordUnclear": "That couldn't be resolved right now. Please try again in a few minutes.",
+    "whitelistClosed": "The whitelist is currently closed. Check back later.",
+    "alreadyLinked": "This Minecraft username is already linked to another Discord account.",
+    "submitted": "Application submitted. The team will take a look."
   }
 }

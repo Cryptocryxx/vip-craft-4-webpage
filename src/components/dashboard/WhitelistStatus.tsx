@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { Clock, ShieldAlert, ShieldCheck, ShieldQuestion, type LucideIcon } from "lucide-react";
 import { DiscordStep } from "@/components/dashboard/DiscordStep";
 import { ModpackStep } from "@/components/dashboard/ModpackStep";
@@ -75,7 +76,9 @@ const valueClasses: Record<View["tone"], string> = {
   closed: "text-cream/80",
 };
 
-function buildView(props: WhitelistStatusProps): View {
+type Translator = Awaited<ReturnType<typeof getTranslations>>;
+
+function buildView(props: WhitelistStatusProps, t: Translator): View {
   const { whitelisted, application, whitelistOpen, discordJoined, discordCheckable } = props;
   // Nur wenn wir es wirklich wissen, darf der Antrag „unvollstaendig" heissen.
   // Ohne Pruefmoeglichkeit koennte die Person laengst im Discord sein.
@@ -84,10 +87,10 @@ function buildView(props: WhitelistStatusProps): View {
   if (whitelisted) {
     return {
       tone: "approved",
-      label: "Gewhitelisted",
-      value: "Ja",
+      label: t("whitelistedLabel"),
+      value: t("yes"),
       icon: ShieldCheck,
-      badge: { tone: "emerald", text: "Freigeschaltet" },
+      badge: { tone: "emerald", text: t("approved") },
     };
   }
 
@@ -95,48 +98,48 @@ function buildView(props: WhitelistStatusProps): View {
     const vollstaendig = Boolean(application.minecraftName) && !discordFehlt;
     return {
       tone: "pending",
-      label: "Antrag läuft",
-      value: vollstaendig ? "In Prüfung" : "Unvollständig",
+      label: t("applicationRunning"),
+      value: vollstaendig ? t("inReview") : t("incomplete"),
       icon: Clock,
       badge: !application.minecraftName
-        ? { tone: "brass", text: "Username fehlt" }
+        ? { tone: "brass", text: t("usernameMissing") }
         : discordFehlt
-          ? { tone: "brass", text: "Discord fehlt" }
-          : { tone: "brass", text: "Wartet auf Team" },
+          ? { tone: "brass", text: t("discordMissing") }
+          : { tone: "brass", text: t("waitingForTeam") },
     };
   }
 
   if (application?.status === "REJECTED") {
     return {
       tone: "rejected",
-      label: "Gewhitelisted",
-      value: "Nein",
+      label: t("whitelistedLabel"),
+      value: t("no"),
       icon: ShieldAlert,
-      badge: { tone: "rose", text: "Antrag abgelehnt" },
+      badge: { tone: "rose", text: t("applicationRejected") },
     };
   }
 
   if (!whitelistOpen) {
     return {
       tone: "closed",
-      label: "Gewhitelisted",
-      value: "Nein",
+      label: t("whitelistedLabel"),
+      value: t("no"),
       icon: ShieldQuestion,
-      badge: { tone: "neutral", text: "Anträge geschlossen" },
+      badge: { tone: "neutral", text: t("applicationsClosed") },
     };
   }
 
   return {
     tone: "rejected",
-    label: "Gewhitelisted",
-    value: "Nein",
+    label: t("whitelistedLabel"),
+    value: t("no"),
     icon: ShieldAlert,
-    badge: { tone: "rose", text: "Noch kein Antrag" },
+    badge: { tone: "rose", text: t("noApplicationYet") },
   };
 }
 
 /** Whitelist-Karte im Dashboard: Status, Antragsdetails und Antragsformular. */
-export function WhitelistStatus(props: WhitelistStatusProps) {
+export async function WhitelistStatus(props: WhitelistStatusProps) {
   const {
     whitelisted,
     minecraftName,
@@ -153,7 +156,9 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
     whitelistPending,
     serverStart,
   } = props;
-  const view = buildView(props);
+
+  const t = await getTranslations("WhitelistStatus");
+  const view = buildView(props, t);
   const Icon = view.icon;
 
   const showForm = !whitelisted && whitelistOpen && (application === null || application.status !== "APPROVED");
@@ -167,8 +172,8 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
    * blockiert er nichts und behauptet auch nicht, den Stand zu kennen.
    */
   const verknuepfungsSchritt: Schritt = {
-    titel: "Minecraft-Account mit Discord verknüpfen",
-    text: "Für die Freischaltung nicht nötig. Schreib dafür im Discord /account connect und folge dem, was der MC-Linker-Bot antwortet.",
+    titel: t("linkMinecraftOptional.title"),
+    text: t("linkMinecraftOptional.text"),
     erledigt: false,
     optional: true,
   };
@@ -181,7 +186,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
    * Kein Schritt „Freigabe abwarten": Der Status steht schon gross in dieser
    * Karte, und Warten ist ohnehin nichts, was man abhaken koennte.
    */
-  const beschreibungen = whitelistSchritte({ gamertagDa, nameUngueltig, discordJoined, discordCheckable, modpackGeladen });
+  const beschreibungen = await whitelistSchritte({ gamertagDa, nameUngueltig, discordJoined, discordCheckable, modpackGeladen });
 
   const mitBedienelement = (schritt: (typeof beschreibungen)[number]): Schritt => ({
     titel: schritt.titel,
@@ -235,7 +240,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       )}
 
       <div className="relative flex items-start justify-between gap-3">
-        <p className="eyebrow">Whitelist-Status</p>
+        <p className="eyebrow">{t("eyebrow")}</p>
         {view.badge && <Badge tone={view.badge.tone}>{view.badge.text}</Badge>}
       </div>
 
@@ -256,26 +261,26 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
               // Freigegeben, aber noch nicht auf dem Server: entweder wartet
               // alles auf den Start, oder der Server war beim Freischalten aus.
               <p className="rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-brass-100">
-                Du bist dabei – dein Platz ist sicher.{" "}
-                {serverStart
-                  ? `Freigeschaltet wird zum Serverstart am ${serverStart} Uhr, dann geht es für alle gleichzeitig los.`
-                  : "Freigeschaltet wirst du, sobald der Server wieder läuft."}
+                {t("pendingSecured")}{" "}
+                {serverStart ? t("pendingWithDate", { date: serverStart }) : t("pendingWithoutDate")}
               </p>
             ) : whitelistSuspended ? (
               // Sonst steht hier „du kannst dich jederzeit verbinden", waehrend
               // der Server einen abweist – und niemand wuesste, warum.
               <p className="rounded-lg border border-brass-400/40 bg-brass-500/10 p-3 text-brass-100">
-                Der Zugang ist gerade vorübergehend ausgesetzt – das Team arbeitet am Server. Deine Freischaltung bleibt
-                bestehen, du kommst wieder rein, sobald sie aufgehoben ist.
+                {t("suspended")}
               </p>
             ) : (
               <p>
-                Du kannst dich jederzeit verbinden: <span className="font-mono text-cream">{serverIp}</span>
+                {t.rich("canConnect", {
+                  ip: serverIp,
+                  ipTag: (chunks) => <span className="font-mono text-cream">{chunks}</span>,
+                })}
                 {minecraftName ? (
-                  <>
-                    {" "}
-                    mit dem Account <span className="font-mono text-cream">{minecraftName}</span>.
-                  </>
+                  t.rich("canConnectWithAccount", {
+                    name: minecraftName,
+                    nameTag: (chunks) => <span className="font-mono text-cream">{chunks}</span>,
+                  })
                 ) : (
                   "."
                 )}
@@ -286,23 +291,23 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
         ) : application?.status === "PENDING" ? (
           <>
             <WhitelistSteps schritte={schritte} />
-            <p className="text-xs text-cream/45">Antrag angelegt am {formatDate(application.createdAt)}.</p>
+            <p className="text-xs text-cream/45">{t("applicationCreatedAt", { date: formatDate(application.createdAt) })}</p>
           </>
         ) : application?.status === "REJECTED" ? (
           <>
-            <p>Dein Antrag wurde abgelehnt.</p>
+            <p>{t("rejected")}</p>
             {application.reviewNote && (
               <p className="rounded-lg border border-rose-400/30 bg-rose-500/10 p-3 text-rose-100">
-                <span className="block text-xs tracking-wider text-rose-200/70 uppercase">Begründung</span>
+                <span className="block text-xs tracking-wider text-rose-200/70 uppercase">{t("reasonLabel")}</span>
                 {application.reviewNote}
               </p>
             )}
-            {whitelistOpen && <p>Du kannst unten einen neuen Antrag stellen.</p>}
+            {whitelistOpen && <p>{t("canApplyAgain")}</p>}
           </>
         ) : whitelistOpen ? (
           <WhitelistSteps schritte={schritte} />
         ) : (
-          <p>Die Whitelist ist gerade geschlossen. Sobald wieder Plätze frei sind, kannst du hier einen Antrag stellen.</p>
+          <p>{t("whitelistClosed")}</p>
         )}
 
 
@@ -310,7 +315,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
           <div className="rounded-lg border border-white/10 bg-black/25 p-4">
             <WhitelistApplicationForm
               defaultName={application?.minecraftName ?? minecraftName}
-              submitLabel={application?.status === "PENDING" ? "Antrag aktualisieren" : "Whitelist beantragen"}
+              submitLabel={application?.status === "PENDING" ? t("updateApplication") : t("applyWhitelist")}
             />
           </div>
         )}

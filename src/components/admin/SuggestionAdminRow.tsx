@@ -1,16 +1,17 @@
+import { getTranslations } from "next-intl/server";
 import { ChevronUp, Save } from "lucide-react";
 import { ConfirmSubmit } from "@/components/admin/ConfirmSubmit";
 import { deleteSuggestionAction, updateSuggestionStatusAction } from "@/lib/actions/admin";
 import { Badge } from "@/components/ui/Badge";
 import { formatShortDate } from "@/lib/format";
-import {
-  SUGGESTION_STATUSES,
-  suggestionStatusLabels,
-  suggestionTypeLabels,
-  type SuggestionDTO,
-} from "@/lib/suggestion-types";
+import { SUGGESTION_STATUSES, type SuggestionDTO } from "@/lib/suggestion-types";
 
-export function SuggestionAdminRow({ suggestion }: { suggestion: SuggestionDTO }) {
+export async function SuggestionAdminRow({ suggestion }: { suggestion: SuggestionDTO }) {
+  const [tType, tStatus] = await Promise.all([
+    getTranslations("SuggestionTypes"),
+    getTranslations("SuggestionStatuses"),
+  ]);
+
   return (
     <div className="flex flex-wrap gap-4 border-t border-white/5 p-4 first:border-t-0">
       <div className="flex w-12 shrink-0 flex-col items-center rounded-lg border border-white/10 bg-black/20 py-2">
@@ -20,8 +21,8 @@ export function SuggestionAdminRow({ suggestion }: { suggestion: SuggestionDTO }
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-1.5">
-          <Badge tone="brass">{suggestionTypeLabels[suggestion.type]}</Badge>
-          <Badge tone="neutral">{suggestionStatusLabels[suggestion.status]}</Badge>
+          <Badge tone="brass">{tType(suggestion.type)}</Badge>
+          <Badge tone="neutral">{tStatus(suggestion.status)}</Badge>
         </div>
         <h3 className="mt-2 font-display font-bold text-cream">{suggestion.title}</h3>
         <p className="mt-1 line-clamp-2 text-sm text-cream/65">{suggestion.body}</p>
@@ -39,7 +40,7 @@ export function SuggestionAdminRow({ suggestion }: { suggestion: SuggestionDTO }
             <select id={`status-${suggestion.id}`} name="status" defaultValue={suggestion.status} className="input h-9 w-40 py-0">
               {SUGGESTION_STATUSES.map((status) => (
                 <option key={status} value={status}>
-                  {suggestionStatusLabels[status]}
+                  {tStatus(status)}
                 </option>
               ))}
             </select>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Blocks, Cog, Footprints, Hammer, Heart, Clock, Pickaxe, RefreshCw, Skull, Swords, Bomb, type LucideIcon } from "lucide-react";
 import { Panel } from "@/components/ui/Panel";
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
@@ -31,23 +32,9 @@ type StatsResponse =
 
 type Tile = { icon: LucideIcon; label: string; value: string; hint?: string };
 
-function buildTiles(stats: ServerPlayerStats): Tile[] {
-  return [
-    { icon: Clock, label: "Spielzeit", value: formatHours(stats.playtimeHours) },
-    { icon: Pickaxe, label: "Blöcke abgebaut", value: formatNumber(stats.blocksMined) },
-    { icon: Blocks, label: "Blöcke platziert", value: formatNumber(stats.blocksPlaced), hint: "Näherungswert" },
-    { icon: Hammer, label: "Eisen abgebaut", value: formatNumber(stats.ironMined) },
-    { icon: Skull, label: "Tode", value: formatNumber(stats.deaths) },
-    { icon: Bomb, label: "Tode durch Creeper", value: formatNumber(stats.deathsByCreeper) },
-    { icon: Swords, label: "Mobs erledigt", value: formatNumber(stats.mobKills) },
-    { icon: Footprints, label: "Strecke zu Fuß", value: formatDistanceKm(stats.walkedKm) },
-    { icon: Cog, label: "Andesit-Legierung", value: formatNumber(stats.andesiteAlloyCrafted) },
-    { icon: Heart, label: "Schaden erlitten", value: `${formatNumber(stats.damageTaken)} ♥` },
-  ];
-}
-
 /** Persönliche Ingame-Statistiken aus den Vanilla-Statistikdateien des Servers. */
 export function PersonalStats() {
+  const t = useTranslations("PersonalStats");
   const [data, setData] = useState<StatsResponse | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const loading = data === null;
@@ -61,27 +48,42 @@ export function PersonalStats() {
         if (!cancelled) setData(json);
       })
       .catch(() => {
-        if (!cancelled) setData({ error: "Statistiken konnten nicht geladen werden." });
+        if (!cancelled) setData({ error: t("loadError") });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [reloadKey]);
+  }, [reloadKey, t]);
 
   function reload() {
     setData(null);
     setReloadKey((k) => k + 1);
   }
 
+  function buildTiles(stats: ServerPlayerStats): Tile[] {
+    return [
+      { icon: Clock, label: t("playtime"), value: formatHours(stats.playtimeHours) },
+      { icon: Pickaxe, label: t("blocksMined"), value: formatNumber(stats.blocksMined) },
+      { icon: Blocks, label: t("blocksPlaced"), value: formatNumber(stats.blocksPlaced), hint: t("approxValue") },
+      { icon: Hammer, label: t("ironMined"), value: formatNumber(stats.ironMined) },
+      { icon: Skull, label: t("deaths"), value: formatNumber(stats.deaths) },
+      { icon: Bomb, label: t("deathsByCreeper"), value: formatNumber(stats.deathsByCreeper) },
+      { icon: Swords, label: t("mobKills"), value: formatNumber(stats.mobKills) },
+      { icon: Footprints, label: t("walkedDistance"), value: formatDistanceKm(stats.walkedKm) },
+      { icon: Cog, label: t("andesiteAlloy"), value: formatNumber(stats.andesiteAlloyCrafted) },
+      { icon: Heart, label: t("damageTaken"), value: `${formatNumber(stats.damageTaken)} ♥` },
+    ];
+  }
+
   return (
     <Panel rivets className="flex h-full flex-col p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="eyebrow">Deine Stats</p>
-          <h2 className="mt-1 text-xl font-bold text-cream">Persönliche Statistiken</h2>
+          <p className="eyebrow">{t("eyebrow")}</p>
+          <h2 className="mt-1 text-xl font-bold text-cream">{t("title")}</h2>
         </div>
-        <button type="button" onClick={reload} className="btn btn-ghost btn-sm" title="Neu laden" disabled={loading}>
+        <button type="button" onClick={reload} className="btn btn-ghost btn-sm" title={t("reload")} disabled={loading}>
           <RefreshCw className={loading ? "size-3.5 animate-spin" : "size-3.5"} />
         </button>
       </div>
@@ -97,12 +99,11 @@ export function PersonalStats() {
           <p className="text-sm text-rose-300">{data.error}</p>
         ) : !data.linked ? (
           <div className="rounded-lg border border-dashed border-brass-500/40 bg-black/20 p-6 text-center text-sm text-cream/65">
-            Verknüpfe zuerst deinen Minecraft-Username im Profil, dann erscheinen hier deine Ingame-Statistiken.
+            {t("notLinked")}
           </div>
         ) : data.stats === null ? (
           <div className="rounded-lg border border-dashed border-brass-500/40 bg-black/20 p-6 text-center text-sm text-cream/65">
-            Für dich liegen auf dem Server noch keine Statistiken. Sobald du das erste Mal online warst, stehen sie
-            hier – geschrieben werden sie, wenn du dich ausloggst oder der Server speichert.
+            {t("noStatsYet")}
           </div>
         ) : (
           <>
@@ -121,10 +122,7 @@ export function PersonalStats() {
                 );
               })}
             </div>
-            <p className="mt-4 text-xs text-cream/45">
-              Quelle: Statistikdateien des Servers. Sie werden geschrieben, wenn du dich ausloggst oder der Server
-              speichert.
-            </p>
+            <p className="mt-4 text-xs text-cream/45">{t("source")}</p>
           </>
         )}
       </div>
