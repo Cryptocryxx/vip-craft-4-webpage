@@ -49,8 +49,10 @@ export async function MenuCards() {
 
   const cards = navItems.filter((item) => item.href !== "/" && meta[item.href]);
 
+  // Kein negatives -mt mehr: Damit lagen die Karten ueber der Unterkante des
+  // Heros und schnitten dessen Rahmen an. Sie setzen jetzt sauber darunter an.
   return (
-    <section className="relative -mt-8 pb-4">
+    <section className="relative pt-10 pb-4 sm:pt-12">
       <Container>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {cards.map((item) => {
