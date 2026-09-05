@@ -169,12 +169,9 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
    * Kein Schritt „Freigabe abwarten": Der Status steht schon gross in dieser
    * Karte, und Warten ist ohnehin nichts, was man abhaken koennte.
    */
-  const schritte: Schritt[] = whitelistSchritte({
-    gamertagDa,
-    discordJoined,
-    discordCheckable,
-    modpackGeladen,
-  }).map((schritt) => ({
+  const beschreibungen = whitelistSchritte({ gamertagDa, discordJoined, discordCheckable, modpackGeladen });
+
+  const mitBedienelement = (schritt: (typeof beschreibungen)[number]): Schritt => ({
     titel: schritt.titel,
     text: schritt.text,
     erledigt: schritt.erledigt,
@@ -190,9 +187,20 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
       ) : schritt.schluessel === "modpack" ? (
         <ModpackStep bereitsGeladen={schritt.erledigt} />
       ) : undefined,
-  }));
+  });
 
-  schritte.push(verknuepfungsSchritt);
+  const schritte: Schritt[] = [...beschreibungen.map(mitBedienelement), verknuepfungsSchritt];
+
+  /**
+   * Freigeschaltet, aber das Modpack fehlt noch? Dann bleibt dieser eine Punkt
+   * stehen. Sonst haette der Hinweis auf der Startseite einen Schritt genannt,
+   * den es hier gar nicht gibt – und ohne Modpack kommt man trotz Freigabe
+   * nicht auf den Server.
+   */
+  const restSchritte: Schritt[] = [
+    ...beschreibungen.filter((s) => s.schluessel === "modpack" && !s.erledigt).map(mitBedienelement),
+    verknuepfungsSchritt,
+  ];
 
   return (
     <div className={cn("relative flex h-full flex-col overflow-hidden rounded-xl border p-6", toneClasses[view.tone])}>
@@ -239,7 +247,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
                 "."
               )}
             </p>
-            <WhitelistSteps schritte={[verknuepfungsSchritt]} />
+            <WhitelistSteps schritte={restSchritte} />
           </>
         ) : application?.status === "PENDING" ? (
           <>

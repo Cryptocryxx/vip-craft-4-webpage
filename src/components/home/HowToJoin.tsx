@@ -1,5 +1,6 @@
 import { Download, Rocket, Route, ShieldCheck, Users } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ModpackLink } from "@/components/ui/ModpackLink";
 import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { Gear } from "@/components/ui/Gear";
@@ -74,9 +75,9 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null
             <Button href={discordInvite} variant="outline" target="_blank" rel="noopener noreferrer">
               <DiscordIcon className="size-4" /> Discord
             </Button>
-            <Button href={siteConfig.modpackUrl} variant="outline" target="_blank" rel="noopener noreferrer">
+            <ModpackLink variant="outline">
               <Download className="size-4" /> Modpack
-            </Button>
+            </ModpackLink>
           </div>
         </Panel>
       </Container>

@@ -4,6 +4,7 @@ import { ExternalLink } from "lucide-react";
 import { CookieSettingsLink } from "@/components/legal/CookieSettingsLink";
 import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
+import { ModpackLink } from "@/components/ui/ModpackLink";
 import { siteConfig } from "@/lib/config";
 import { navItems } from "@/lib/nav";
 import { getSiteSettings } from "@/lib/settings";
@@ -73,14 +74,9 @@ export async function Footer() {
               </a>
             </li>
             <li>
-              <a
-                href={siteConfig.modpackUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-cream/70 transition-colors hover:text-brass-200"
-              >
+              <ModpackLink className="inline-flex items-center gap-2 text-cream/70 transition-colors hover:text-brass-200">
                 <ExternalLink className="size-4" /> Modpack herunterladen
-              </a>
+              </ModpackLink>
             </li>
             <li>
               <a

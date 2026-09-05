@@ -1,5 +1,6 @@
 import { Boxes, Cpu, Download, Package, Puzzle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import { ModpackLink } from "@/components/ui/ModpackLink";
 import { Container } from "@/components/ui/Container";
 import { Panel } from "@/components/ui/Panel";
 import { siteConfig } from "@/lib/config";
@@ -39,9 +40,9 @@ export function ModpackCard() {
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Button href={siteConfig.modpackUrl} variant="brass" target="_blank" rel="noopener noreferrer">
+              <ModpackLink variant="brass">
                 <Download className="size-4" /> Modpack herunterladen
-              </Button>
+              </ModpackLink>
               <Button href="/dashboard" variant="outline">
                 Whitelist beantragen
               </Button>

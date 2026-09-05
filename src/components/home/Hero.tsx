@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { DiscordIcon } from "@/components/ui/DiscordIcon";
 import { Gear } from "@/components/ui/Gear";
+import { ModpackLink } from "@/components/ui/ModpackLink";
 import { siteConfig } from "@/lib/config";
 
 /** `serverIp` ist null, solange der Besucher nicht freigeschaltet ist. */
@@ -49,16 +50,10 @@ export function Hero({ serverIp, discordInvite }: { serverIp: string | null; dis
                 Whitelist beantragen
               </Button>
             )}
-            <Button
-              href={siteConfig.modpackUrl}
-              variant="diamond"
-              size="lg"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <ModpackLink variant="diamond" size="lg">
               <Download className="size-5" />
               Modpack
-            </Button>
+            </ModpackLink>
             <Button href={discordInvite} variant="outline" size="lg" target="_blank" rel="noopener noreferrer">
               <DiscordIcon className="size-5" />
               Discord beitreten
