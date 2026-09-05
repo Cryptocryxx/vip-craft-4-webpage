@@ -72,7 +72,7 @@ export async function reviewApplicationAction(
     }
   } catch (err) {
     if (isUniqueViolation(err)) {
-      return { error: "Der Gamertag aus dem Antrag gehört bereits einem anderen Account." };
+      return { error: "Der Minecraft-Username aus dem Antrag gehört bereits einem anderen Account." };
     }
     return { error: err instanceof Error ? err.message : "Antrag konnte nicht bearbeitet werden." };
   }
@@ -153,7 +153,7 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
       data: { minecraftName: minecraftName || null, twitchName: twitchName || null, role, whitelisted },
     });
   } catch (err) {
-    if (isUniqueViolation(err)) return { error: "Dieser Gamertag oder Twitch-Kanal ist bereits vergeben." };
+    if (isUniqueViolation(err)) return { error: "Dieser Minecraft-Username oder Twitch-Kanal ist bereits vergeben." };
     return { error: "Benutzer konnte nicht gespeichert werden." };
   }
 
@@ -172,8 +172,8 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
 
   // Gamertag geändert, während der Spieler gewhitelisted bleibt: Eintrag umziehen.
   if (before?.whitelisted && whitelisted && minecraftName && before.minecraftName && before.minecraftName !== minecraftName) {
-    await whitelistRemove(before.minecraftName, "Gamertag geändert (alter Eintrag)", admin);
-    await whitelistAdd(minecraftName, "Gamertag geändert (neuer Eintrag)", admin);
+    await whitelistRemove(before.minecraftName, "Minecraft-Username geändert (alter Eintrag)", admin);
+    await whitelistAdd(minecraftName, "Minecraft-Username geändert (neuer Eintrag)", admin);
     return { success: `Gespeichert. Whitelist-Eintrag von ${before.minecraftName} auf ${minecraftName} umgestellt.` };
   }
 

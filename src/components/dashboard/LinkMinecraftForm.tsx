@@ -28,7 +28,7 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
     return (
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => setEditing(true)} className="btn btn-outline btn-sm">
-          <Link2 className="size-3.5" /> Gamertag ändern
+          <Link2 className="size-3.5" /> Username ändern
         </button>
         <form action={unlinkMinecraftNameAction}>
           <button type="submit" className="btn btn-ghost btn-sm text-rose-200 hover:text-rose-100">
@@ -47,7 +47,7 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
   return (
     <form action={formAction} className="space-y-2">
       <label htmlFor="minecraftName" className="block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-        Minecraft-Gamertag
+        Dein Minecraft-Username
       </label>
       <div className="flex gap-2">
         <input
@@ -80,7 +80,7 @@ export function LinkMinecraftForm({ currentName }: { currentName: string | null 
         </p>
       )}
       <p className="text-xs text-cream/45">
-        Der Gamertag wird für Whitelist und Statistiken genutzt. Groß-/Kleinschreibung wie im Spiel.
+        Der Username wird für Whitelist und Statistiken genutzt. Groß-/Kleinschreibung wie im Spiel.
       </p>
     </form>
   );

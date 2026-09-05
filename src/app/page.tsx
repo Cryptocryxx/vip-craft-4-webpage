@@ -4,12 +4,18 @@ import { Hero } from "@/components/home/Hero";
 import { HowToJoin } from "@/components/home/HowToJoin";
 import { MenuCards } from "@/components/home/MenuCards";
 import { ModpackCard } from "@/components/home/ModpackCard";
+import { NextStepPopup } from "@/components/home/NextStepPopup";
 import { IntroVideo } from "@/components/intro/IntroVideo";
+import { offenerSchritt } from "@/lib/onboarding";
 import { getSiteSettings } from "@/lib/settings";
 import { viewerMaySeeServerIp } from "@/lib/viewer";
 
 export default async function HomePage() {
-  const [settings, darfIpSehen] = await Promise.all([getSiteSettings(), viewerMaySeeServerIp()]);
+  const [settings, darfIpSehen, schritt] = await Promise.all([
+    getSiteSettings(),
+    viewerMaySeeServerIp(),
+    offenerSchritt(),
+  ]);
 
   return (
     <>
@@ -20,6 +26,8 @@ export default async function HomePage() {
       <ModpackCard />
       <AeronauticsHighlight />
       <FeatureGrid />
+
+      {schritt && <NextStepPopup schluessel={schritt.schluessel} titel={schritt.titel} text={schritt.text} />}
     </>
   );
 }

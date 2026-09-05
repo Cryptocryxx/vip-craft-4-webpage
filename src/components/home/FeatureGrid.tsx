@@ -50,7 +50,7 @@ const features: Feature[] = [
     icon: ShieldCheck,
     title: "Whitelist direkt hier beantragen",
     description:
-      "Mit Discord einloggen, Gamertag eintragen, fertig – der Antrag entsteht automatisch und das Team schaltet dich frei.",
+      "Mit Discord einloggen, Minecraft-Username eintragen, fertig – der Antrag entsteht automatisch und das Team schaltet dich frei.",
     href: "/dashboard",
     accent: "brass",
   },

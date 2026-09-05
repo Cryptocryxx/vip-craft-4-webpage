@@ -99,6 +99,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
               discordInvite={settings.discordInvite}
               discordCheckable={discordCheckEnabled}
               discordNeuAnmelden={discord.neuAnmelden}
+              modpackGeladen={user.modpackDownloadedAt !== null}
             />
           </div>
         </div>

@@ -37,7 +37,7 @@ export async function linkMinecraftNameAction(
     await prisma.user.update({ where: { id: session.user.id }, data: { minecraftName: name } });
   } catch (err) {
     if (isUniqueViolation(err)) {
-      return { error: "Dieser Gamertag ist bereits mit einem anderen Discord-Account verknüpft." };
+      return { error: "Dieser Minecraft-Username ist bereits mit einem anderen Discord-Account verknüpft." };
     }
     throw err;
   }
@@ -50,7 +50,26 @@ export async function linkMinecraftNameAction(
 
   revalidatePath("/dashboard");
   revalidatePath("/admin", "layout");
-  return { success: `Gamertag „${name}“ verknüpft.` };
+  return { success: `Minecraft-Username „${name}“ verknüpft.` };
+}
+
+/**
+ * Merkt sich, dass jemand den Modpack-Link geöffnet hat.
+ *
+ * Mehr lässt sich von hier aus nicht wissen: Ob die Datei wirklich ankam und
+ * installiert wurde, sieht nur der Rechner davor. Für die Checkliste reicht
+ * das – sie soll den Weg zeigen, nicht überwachen.
+ */
+export async function markModpackDownloadedAction(): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) return;
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { modpackDownloadedAt: new Date() },
+  });
+  revalidatePath("/dashboard");
+  revalidatePath("/");
 }
 
 export async function unlinkMinecraftNameAction(): Promise<void> {

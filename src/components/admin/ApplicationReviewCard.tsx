@@ -68,7 +68,7 @@ export function ApplicationReviewCard({
 
       <dl className="mt-4 grid gap-3 border-t border-white/5 pt-4 text-sm sm:grid-cols-2">
         <div>
-          <dt className="text-xs tracking-wider text-cream/50 uppercase">Gamertag</dt>
+          <dt className="text-xs tracking-wider text-cream/50 uppercase">Minecraft-Username</dt>
           <dd className="mt-1 flex items-center gap-2">
             {application.minecraftName ? (
               <>
@@ -123,7 +123,7 @@ export function ApplicationReviewCard({
               name="decision"
               value="approve"
               disabled={pending || !application.minecraftName}
-              title={application.minecraftName ? undefined : "Der Spieler muss zuerst seinen Gamertag eintragen."}
+              title={application.minecraftName ? undefined : "Der Spieler muss zuerst seinen Minecraft-Username eintragen."}
               className="btn btn-diamond btn-sm"
             >
               {pending ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />}
@@ -150,7 +150,7 @@ export function ApplicationReviewCard({
 
       {isPending && !application.minecraftName && (
         <p className="mt-2 text-xs text-brass-200/80">
-          Annehmen ist erst möglich, wenn der Spieler seinen Gamertag eingetragen hat.
+          Annehmen ist erst möglich, wenn der Spieler seinen Minecraft-Username eingetragen hat.
         </p>
       )}
 

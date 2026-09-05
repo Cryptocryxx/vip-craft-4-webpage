@@ -68,7 +68,7 @@ export async function submitApplicationAction(
     await upsertApplication(session.user.id, { ...parsed.data, minecraftName: geprueft.name });
   } catch (err) {
     if (isUniqueViolation(err)) {
-      return { error: "Dieser Gamertag ist bereits mit einem anderen Discord-Account verknüpft." };
+      return { error: "Dieser Minecraft-Username ist bereits mit einem anderen Discord-Account verknüpft." };
     }
     throw err;
   }

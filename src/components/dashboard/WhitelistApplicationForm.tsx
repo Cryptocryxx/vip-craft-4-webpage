@@ -8,26 +8,25 @@ const initialState: ApplicationFormState = {};
 
 type Props = {
   defaultName?: string | null;
-  defaultMessage?: string | null;
   /** Beschriftung des Absende-Buttons. */
   submitLabel?: string;
-  compact?: boolean;
 };
 
-/** Formular für den Whitelist-Antrag (Gamertag + optionale Nachricht). */
-export function WhitelistApplicationForm({
-  defaultName,
-  defaultMessage,
-  submitLabel = "Whitelist beantragen",
-  compact = false,
-}: Props) {
+/**
+ * Formular für den Whitelist-Antrag.
+ *
+ * Nur der Minecraft-Username – das frühere Freitextfeld „Kurz zu dir" ist raus.
+ * Es war optional, wurde selten ausgefüllt und stand zwischen Eingabe und
+ * Absenden.
+ */
+export function WhitelistApplicationForm({ defaultName, submitLabel = "Whitelist beantragen" }: Props) {
   const [state, formAction, pending] = useActionState(submitApplicationAction, initialState);
 
   return (
     <form action={formAction} className="space-y-3">
       <div>
         <label htmlFor="application-name" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-          Minecraft-Gamertag
+          Dein Minecraft-Username
         </label>
         <input
           id="application-name"
@@ -43,23 +42,6 @@ export function WhitelistApplicationForm({
           className="input font-mono"
         />
       </div>
-
-      {!compact && (
-        <div>
-          <label htmlFor="application-message" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
-            Kurz zu dir <span className="normal-case opacity-70">(optional)</span>
-          </label>
-          <textarea
-            id="application-message"
-            name="message"
-            rows={3}
-            maxLength={1000}
-            defaultValue={defaultMessage ?? ""}
-            placeholder="Woher kennst du uns, worauf hast du Lust? Hilft uns bei der Einordnung."
-            className="input resize-y"
-          />
-        </div>
-      )}
 
       {state.error && <p className="text-sm text-rose-300">{state.error}</p>}
       {state.success && (

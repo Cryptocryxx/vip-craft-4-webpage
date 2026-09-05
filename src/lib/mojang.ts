@@ -24,6 +24,22 @@ export type NamensPruefung =
   | { status: "unklar" };
 
 export async function lookupMinecraftName(name: string): Promise<NamensPruefung> {
+  const treffer = await einmalFragen(name);
+
+  /*
+   * Ein „gibt es nicht" wird nur geglaubt, wenn es zweimal kommt.
+   * Mojangs Namensauflösung antwortet unter Last gelegentlich mit 404, obwohl
+   * es den Namen gibt – und ein falsches „gibt es nicht" ist hier besonders
+   * ärgerlich: Es hindert jemanden daran, den eigenen, korrekten Namen
+   * einzutragen. Der zweite Versuch kostet nur im Fehlerfall Zeit.
+   */
+  if (treffer.status !== "unbekannt") return treffer;
+
+  await new Promise((fertig) => setTimeout(fertig, 300));
+  return einmalFragen(name);
+}
+
+async function einmalFragen(name: string): Promise<NamensPruefung> {
   let response: Response;
   try {
     response = await fetch(`${API}/${encodeURIComponent(name)}`, {

@@ -18,7 +18,7 @@ type ProfileCardProps = {
     createdAt: Date;
   };
   /**
-   * false, wenn der Gamertag gerade über den Whitelist-Antrag erfasst wird –
+   * false, wenn der Username gerade über den Whitelist-Antrag erfasst wird –
    * dann zeigt die Karte nur einen Hinweis statt eines zweiten Formulars.
    */
   allowLinking?: boolean;
@@ -62,7 +62,7 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
 
       <dl className="mt-6 space-y-3 border-t border-white/5 pt-4 text-sm">
         <div className="flex items-center justify-between gap-3">
-          <dt className="text-cream/50">Minecraft-Gamertag</dt>
+          <dt className="text-cream/50">Minecraft-Username</dt>
           <dd className="font-mono font-semibold text-cream">
             {user.minecraftName ?? <span className="font-sans font-normal text-cream/40">nicht verknüpft</span>}
           </dd>
@@ -95,7 +95,7 @@ export function ProfileCard({ user, allowLinking = true }: ProfileCardProps) {
           <LinkMinecraftForm currentName={user.minecraftName} />
         ) : (
           <p className="text-xs text-cream/50">
-            Trag deinen Gamertag im Whitelist-Antrag nebenan ein – er landet automatisch auch hier im Profil.
+            Trag deinen Minecraft-Username im Whitelist-Antrag nebenan ein – er landet automatisch auch hier im Profil.
           </p>
         )}
         <div className="border-t border-white/5 pt-4">

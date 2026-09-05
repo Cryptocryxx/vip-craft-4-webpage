@@ -21,7 +21,7 @@ export type ServerPlayerStats = {
 
 /**
  * `stats` ist auch bei `linked: true` null – naemlich dann, wenn der Server noch
- * keine Statistikdatei fuer den Gamertag hat (frisch verknuepft, noch nie online).
+ * keine Statistikdatei fuer den Username hat (frisch verknuepft, noch nie online).
  * Erfundene Beispielwerte gibt es dafuer bewusst nicht mehr.
  */
 type StatsResponse =
@@ -97,7 +97,7 @@ export function PersonalStats() {
           <p className="text-sm text-rose-300">{data.error}</p>
         ) : !data.linked ? (
           <div className="rounded-lg border border-dashed border-brass-500/40 bg-black/20 p-6 text-center text-sm text-cream/65">
-            Verknüpfe zuerst deinen Minecraft-Gamertag im Profil, dann erscheinen hier deine Ingame-Statistiken.
+            Verknüpfe zuerst deinen Minecraft-Username im Profil, dann erscheinen hier deine Ingame-Statistiken.
           </div>
         ) : data.stats === null ? (
           <div className="rounded-lg border border-dashed border-brass-500/40 bg-black/20 p-6 text-center text-sm text-cream/65">

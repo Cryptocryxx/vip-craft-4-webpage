@@ -62,7 +62,7 @@ export default async function AdminUsersPage() {
         eyebrow="Datenbank"
         icon={Users}
         title="Spieler verwalten"
-        description="Gamertag, Twitch-Kanal, Rolle und Whitelist direkt bearbeiten. Änderungen wirken sofort auf der ganzen Seite."
+        description="Minecraft-Username, Twitch-Kanal, Rolle und Whitelist direkt bearbeiten. Änderungen wirken sofort auf der ganzen Seite."
         className="mb-5"
       />
       {discordBotCheckEnabled && (

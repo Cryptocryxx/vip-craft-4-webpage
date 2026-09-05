@@ -31,6 +31,10 @@ model User {
   discordJoined    Boolean   @default(false)
   discordCheckedAt DateTime?
 
+  /// Wann der Modpack-Link geklickt wurde. Mehr laesst sich von hier aus nicht
+  /// wissen - ob die Datei wirklich ankam, sieht nur der Rechner davor.
+  modpackDownloadedAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

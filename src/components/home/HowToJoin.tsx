@@ -13,7 +13,7 @@ export function HowToJoin({ serverIp, discordInvite }: { serverIp: string | null
     {
       title: "Mit Discord anmelden",
       description:
-        "Ein Klick auf „Login“ – dabei wird automatisch dein Whitelist-Antrag angelegt. Gamertag eintragen, fertig.",
+        "Ein Klick auf „Login“ – dabei wird automatisch dein Whitelist-Antrag angelegt. Minecraft-Username eintragen, fertig.",
       icon: ShieldCheck,
     },
     {

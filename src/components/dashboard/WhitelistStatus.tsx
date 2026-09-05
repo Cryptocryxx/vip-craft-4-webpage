@@ -1,11 +1,12 @@
 import { Clock, ShieldAlert, ShieldCheck, ShieldQuestion, type LucideIcon } from "lucide-react";
-import { DiscordLinkStep } from "@/components/dashboard/DiscordLinkStep";
 import { DiscordStep } from "@/components/dashboard/DiscordStep";
+import { ModpackStep } from "@/components/dashboard/ModpackStep";
 import { WhitelistApplicationForm } from "@/components/dashboard/WhitelistApplicationForm";
 import { WhitelistSteps, type Schritt } from "@/components/dashboard/WhitelistSteps";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Gear } from "@/components/ui/Gear";
 import { formatDate } from "@/lib/format";
+import { whitelistSchritte } from "@/lib/whitelist-steps";
 import type { WhitelistApplicationDTO } from "@/lib/whitelist-types";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +31,8 @@ type WhitelistStatusProps = {
    * Login – und darauf muss der Schritt hinweisen.
    */
   discordNeuAnmelden: boolean;
+  /** Wurde der Modpack-Link schon geklickt? */
+  modpackGeladen: boolean;
 };
 
 type View = {
@@ -88,7 +91,7 @@ function buildView(props: WhitelistStatusProps): View {
       value: vollstaendig ? "In Prüfung" : "Unvollständig",
       icon: Clock,
       badge: !application.minecraftName
-        ? { tone: "brass", text: "Gamertag fehlt" }
+        ? { tone: "brass", text: "Username fehlt" }
         : discordFehlt
           ? { tone: "brass", text: "Discord fehlt" }
           : { tone: "brass", text: "Wartet auf Team" },
@@ -136,6 +139,7 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
     discordInvite,
     discordCheckable,
     discordNeuAnmelden,
+    modpackGeladen,
   } = props;
   const view = buildView(props);
   const Icon = view.icon;
@@ -152,58 +156,43 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
    */
   const verknuepfungsSchritt: Schritt = {
     titel: "Minecraft-Account mit Discord verknüpfen",
-    text: "Für die Freischaltung nicht nötig – schaltet aber Zusatzfunktionen rund um den Chat zwischen Spiel und Discord frei.",
+    text: "Für die Freischaltung nicht nötig. Schreib dafür im Discord /account connect und folge dem, was der MC-Linker-Bot antwortet.",
     erledigt: false,
     optional: true,
-    aktion: <DiscordLinkStep invite={discordInvite} />,
   };
 
   /**
-   * Was bis zur Freischaltung noch fehlt. Der Discord-Beitritt steht bewusst
-   * als eigener Punkt drin – vorher ging er im Fliesstext unter, obwohl der
-   * Antrag ohne ihn unvollstaendig ist.
+   * Was bis zum Mitspielen fehlt. Die Bedingungen stehen in lib/whitelist-steps,
+   * damit der Hinweis auf der Startseite denselben „naechsten Schritt" nennt wie
+   * diese Liste. Hier kommen nur die Bedienelemente dazu.
    *
-   * Er steht auch dann in der Liste, wenn die Website die Mitgliedschaft nicht
-   * abfragen kann: Ob wir nachsehen koennen, aendert nichts daran, dass der
-   * Beitritt Pflicht ist. Frueher hing der ganze Punkt an DISCORD_GUILD_ID –
-   * fehlte die Variable auf dem Server, fiel die Anforderung stillschweigend
-   * unter den Tisch.
+   * Kein Schritt „Freigabe abwarten": Der Status steht schon gross in dieser
+   * Karte, und Warten ist ohnehin nichts, was man abhaken koennte.
    */
-  const schritte: Schritt[] = [
-    {
-      titel: "Mit Discord angemeldet",
-      text: "Erledigt – sonst wärst du nicht hier.",
-      erledigt: true,
-    },
-    {
-      titel: "Minecraft-Gamertag eintragen",
-      text: "Ohne Gamertag kann das Team dich nicht freischalten. Trag ihn unten ein.",
-      erledigt: gamertagDa,
-    },
-    {
-      titel: "Unserem Discord beitreten",
-      text: discordCheckable
-        ? "Pflicht: Ohne Discord ist dein Antrag unvollständig. Dort läuft die Absprache, und dort bekommst du Bescheid."
-        : "Pflicht: Ohne Discord ist dein Antrag unvollständig. Das Team sieht vor der Freigabe nach, ob du drin bist.",
-      erledigt: discordCheckable && discordJoined,
-      aktion:
-        discordCheckable && discordJoined ? undefined : (
-          <DiscordStep
-            joined={false}
-            invite={discordInvite}
-            kompakt
-            pruefbar={discordCheckable}
-            neuAnmelden={discordNeuAnmelden}
-          />
-        ),
-    },
-    {
-      titel: "Freigabe abwarten",
-      text: "Sobald alles darüber steht, schaut sich das Team deinen Antrag an – meist noch am selben Tag.",
-      erledigt: whitelisted,
-    },
-    verknuepfungsSchritt,
-  ];
+  const schritte: Schritt[] = whitelistSchritte({
+    gamertagDa,
+    discordJoined,
+    discordCheckable,
+    modpackGeladen,
+  }).map((schritt) => ({
+    titel: schritt.titel,
+    text: schritt.text,
+    erledigt: schritt.erledigt,
+    aktion:
+      schritt.schluessel === "discord" && !schritt.erledigt ? (
+        <DiscordStep
+          joined={false}
+          invite={discordInvite}
+          kompakt
+          pruefbar={discordCheckable}
+          neuAnmelden={discordNeuAnmelden}
+        />
+      ) : schritt.schluessel === "modpack" ? (
+        <ModpackStep bereitsGeladen={schritt.erledigt} />
+      ) : undefined,
+  }));
+
+  schritte.push(verknuepfungsSchritt);
 
   return (
     <div className={cn("relative flex h-full flex-col overflow-hidden rounded-xl border p-6", toneClasses[view.tone])}>
@@ -279,7 +268,6 @@ export function WhitelistStatus(props: WhitelistStatusProps) {
           <div className="rounded-lg border border-white/10 bg-black/25 p-4">
             <WhitelistApplicationForm
               defaultName={application?.minecraftName ?? minecraftName}
-              defaultMessage={application?.message}
               submitLabel={application?.status === "PENDING" ? "Antrag aktualisieren" : "Whitelist beantragen"}
             />
           </div>
