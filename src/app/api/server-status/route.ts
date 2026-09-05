@@ -26,13 +26,18 @@ export async function GET() {
    * Warteschlange sorgt dafuer, dass daraus hoechstens alle 30 Sekunden ein
    * Durchlauf wird, egal wie viele Tabs gerade offen sind.
    */
-  if (status.online) {
-    void verarbeiteVormerkungen();
-    // Aus demselben Grund hier: So laufen Chat und Befehle auch dann ein, wenn
-    // der Watchdog auf diesem Host nicht laeuft. Eigene Sperre, hoechstens alle
-    // 10 Sekunden ein echter Abruf.
-    void holeEreignisse();
-  }
+  if (status.online) void verarbeiteVormerkungen();
+
+  /*
+   * Chat und Befehle laufen auch dann ein, wenn der Watchdog auf diesem Host
+   * nicht laeuft. Bewusst OHNE die Bedingung oben: `status.online` kommt von
+   * mcsrvstat.us und stand nach einem Neustart des Spielservers noch minutenlang
+   * auf "offline", waehrend der Server laengst wieder lief - die Ereignisse
+   * waeren so erst beim naechsten Seitenaufruf angekommen. Die Datei liegt bei
+   * Crafty; ist der Server aus, aendert sie sich einfach nicht. Eigene Sperre,
+   * hoechstens alle 10 Sekunden ein echter Abruf.
+   */
+  void holeEreignisse();
 
   return NextResponse.json(
     { ...status, address: darfAdresseSehen ? status.address : null },
