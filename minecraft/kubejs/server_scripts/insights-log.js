@@ -91,11 +91,13 @@ function kuerze(text) {
 }
 
 function uuidVon(entity) {
+    // getUUID() ist der Vanilla-Name und trifft fast immer; erst danach die
+    // KubeJS-Schreibweise. Jeder Fehlversuch kostet in Rhino eine Ausnahme.
     try {
-        return String(entity.getUuid());
+        return String(entity.getUUID());
     } catch (e) {
         try {
-            return String(entity.getUUID());
+            return String(entity.getUuid());
         } catch (e2) {
             return null;
         }
@@ -118,15 +120,39 @@ function spielerAus(event) {
 }
 
 function nameVon(entity) {
+    // getName() gibt es an jedem Entity, getUsername() nur an manchen.
     try {
-        return String(entity.getUsername());
+        return String(entity.getName().getString());
     } catch (e) {
         try {
-            return String(entity.getName().getString());
+            return String(entity.getUsername());
         } catch (e2) {
             return null;
         }
     }
+}
+
+/**
+ * Umschlag um einen Rueckruf.
+ *
+ * Dass sich ein Ereignis anmelden liess, heisst noch nicht, dass der Rueckruf
+ * spaeter auch durchlaeuft – ein falscher Methodenname faellt erst auf, wenn
+ * zum ersten Mal jemand etwas sagt. Ohne diesen Umschlag verschwaende der
+ * Fehler im Serverlog; so steht er in der Datei und die Website zeigt ihn an.
+ */
+function sicher(name, fn) {
+    return function (event) {
+        try {
+            fn(event);
+        } catch (e) {
+            var text = name + ": " + e;
+            if (fehler.indexOf(text) === -1) {
+                fehler.push(text);
+                schmutzig = true;
+                console.error("[insights] " + text);
+            }
+        }
+    };
 }
 
 /** Ein Ereignis in den Ringpuffer legen. */
@@ -186,36 +212,36 @@ schreibeStand("script_loaded");
 // ---------------------------------------------------------------------------
 
 try {
-    PlayerEvents.chat(function (event) {
+    PlayerEvents.chat(sicher("chat", function (event) {
         merke("CHAT", event.username, uuidVon(spielerAus(event)), event.message);
-    });
+    }));
 } catch (e) {
     fehler.push("chat: " + e);
     console.error("[insights] PlayerEvents.chat nicht registrierbar: " + e);
 }
 
 try {
-    ServerEvents.command(function (event) {
+    ServerEvents.command(sicher("command", function (event) {
         var absender = absenderVon(event.getParseResults().getContext().getSource());
         if (absender === null) return;
 
         var eingabe = String(event.getInput());
         merke(absender.art, absender.name, absender.uuid, eingabe.charAt(0) === "/" ? eingabe : "/" + eingabe);
-    });
+    }));
 } catch (e) {
     fehler.push("command: " + e);
     console.error("[insights] ServerEvents.command nicht registrierbar: " + e);
 }
 
 try {
-    PlayerEvents.loggedIn(function (event) {
+    PlayerEvents.loggedIn(sicher("loggedIn", function (event) {
         var wer = spielerAus(event);
         merke("JOIN", nameVon(wer), uuidVon(wer), "hat den Server betreten");
-    });
-    PlayerEvents.loggedOut(function (event) {
+    }));
+    PlayerEvents.loggedOut(sicher("loggedOut", function (event) {
         var wer = spielerAus(event);
         merke("QUIT", nameVon(wer), uuidVon(wer), "hat den Server verlassen");
-    });
+    }));
 } catch (e) {
     fehler.push("login: " + e);
     console.error("[insights] Login-Ereignisse nicht registrierbar: " + e);
@@ -225,7 +251,7 @@ try {
     // Mit Entity-Typ als erstem Argument: KubeJS ruft uns dann nur noch bei
     // Spielern auf. Ohne diese Angabe liefe der Rueckruf bei JEDEM Todesfall
     // auf dem Server – bei einer Mob-Farm tausendfach pro Minute.
-    EntityEvents.death("minecraft:player", function (event) {
+    EntityEvents.death("minecraft:player", sicher("death", function (event) {
         var wesen = spielerAus(event);
         if (wesen === null) return;
 
@@ -236,7 +262,7 @@ try {
             // Ohne Todesmeldung bleibt der allgemeine Satz stehen.
         }
         merke("DEATH", nameVon(wesen), uuidVon(wesen), text);
-    });
+    }));
 } catch (e) {
     fehler.push("death: " + e);
     console.error("[insights] EntityEvents.death nicht registrierbar: " + e);
