@@ -16,9 +16,10 @@ type Props = {
 /**
  * Formular für den Whitelist-Antrag.
  *
- * Nur der Minecraft-Username – das frühere Freitextfeld „Kurz zu dir" ist raus.
- * Es war optional, wurde selten ausgefüllt und stand zwischen Eingabe und
- * Absenden.
+ * Minecraft-Username plus die Pflichtfrage, wen man auf dem Server kennt -
+ * hilft dem Team beim Einordnen des Antrags. Ein früheres, optionales
+ * Freitextfeld ("Kurz zu dir") wurde mal entfernt, weil es kaum ausgefüllt
+ * wurde; diese Frage ist bewusst konkreter und deshalb Pflicht.
  */
 export function WhitelistApplicationForm({ defaultName, submitLabel }: Props) {
   const t = useTranslations("WhitelistApplicationForm");
@@ -42,6 +43,22 @@ export function WhitelistApplicationForm({ defaultName, submitLabel }: Props) {
           required
           autoComplete="off"
           className="input font-mono"
+        />
+      </div>
+
+      <div>
+        <label htmlFor="application-message" className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
+          {t("messageLabel")}
+        </label>
+        <textarea
+          id="application-message"
+          name="message"
+          rows={2}
+          placeholder={t("messagePlaceholder")}
+          minLength={1}
+          maxLength={1000}
+          required
+          className="input resize-y"
         />
       </div>
 

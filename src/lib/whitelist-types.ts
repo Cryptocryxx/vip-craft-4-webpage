@@ -61,9 +61,15 @@ export function validateApplicationInput(
   if (!GAMERTAG_RE.test(minecraftName)) {
     return { ok: false, error: t("minecraftNamePattern") };
   }
+  // Pflichtfeld: Wer niemanden auf dem Server kennt, soll das trotzdem kurz
+  // dazuschreiben (z. B. "niemanden, kam über Discord") - leer soll es aber
+  // nicht bleiben, sonst laesst sich der Antrag nicht einordnen.
+  if (messageRaw.length === 0) {
+    return { ok: false, error: t("messageRequired") };
+  }
   if (messageRaw.length > 1000) {
     return { ok: false, error: t("messageTooLong") };
   }
 
-  return { ok: true, data: { minecraftName, message: messageRaw.length > 0 ? messageRaw : null } };
+  return { ok: true, data: { minecraftName, message: messageRaw } };
 }

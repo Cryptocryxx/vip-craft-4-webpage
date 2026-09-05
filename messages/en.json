@@ -306,7 +306,9 @@
   "WhitelistApplicationForm": {
     "label": "Your Minecraft username",
     "placeholder": "e.g. Steve_42",
-    "applyWhitelist": "Apply for whitelist"
+    "applyWhitelist": "Apply for whitelist",
+    "messageLabel": "Who do you know on the server?",
+    "messagePlaceholder": "e.g. your friend Max, who's already a member – or however else you heard about us"
   },
   "WhitelistStepsContent": {
     "loginTitle": "Signed in with Discord",
@@ -434,7 +436,8 @@
     "suggestionTitleTooLong": "The title can be at most 120 characters.",
     "suggestionBodyTooShort": "Please describe your suggestion in a bit more detail (min. 20 characters).",
     "suggestionBodyTooLong": "The description can be at most 2000 characters.",
-    "invalidType": "Invalid type."
+    "invalidType": "Invalid type.",
+    "messageRequired": "Please briefly say who you know on the server."
   },
   "MojangCheck": {
     "notFound": "The Minecraft name “{name}” doesn't exist. Please check the spelling."
