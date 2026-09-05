@@ -188,6 +188,11 @@ export async function recentAudits(limit = 30) {
   return prisma.playerAudit.findMany({ orderBy: { createdAt: "desc" }, take: limit });
 }
 
+/** Eingriffe an genau diesem Spieler – fuer die Spielerseite im Kontrollraum. */
+export async function auditsFuer(name: string, limit = 30) {
+  return prisma.playerAudit.findMany({ where: { target: name }, orderBy: { createdAt: "desc" }, take: limit });
+}
+
 /**
  * Letzte bekannte IP eines Spielers aus dem Server-Log.
  *

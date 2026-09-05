@@ -24,6 +24,10 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     const value = map.get(key);
     return value === undefined ? fallback : value === "true";
   };
+  const nummer = (key: keyof SiteSettings, fallback: number) => {
+    const value = Number(map.get(key));
+    return Number.isFinite(value) && value >= 0 ? value : fallback;
+  };
 
   return {
     serverIp: text("serverIp", settingsDefaults.serverIp),
@@ -32,6 +36,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     whitelistOpen: flag("whitelistOpen", settingsDefaults.whitelistOpen),
     announcement: map.get("announcement") ?? settingsDefaults.announcement,
     announcementActive: flag("announcementActive", settingsDefaults.announcementActive),
+    gameLogRetentionDays: nummer("gameLogRetentionDays", settingsDefaults.gameLogRetentionDays),
   };
 }
 

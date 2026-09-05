@@ -451,6 +451,11 @@ export async function updateSettingsAction(_prev: AdminFormState, formData: Form
   if (!isValidUrl(discordInvite)) return { error: "Der Discord-Link muss mit http:// oder https:// beginnen." };
   if (announcement.length > 300) return { error: "Die Ankündigung darf höchstens 300 Zeichen haben." };
 
+  const aufbewahrung = Number(text(formData, "gameLogRetentionDays"));
+  if (!Number.isInteger(aufbewahrung) || aufbewahrung < 0 || aufbewahrung > 3650) {
+    return { error: "Die Aufbewahrung braucht eine ganze Zahl zwischen 0 und 3650 Tagen." };
+  }
+
   const values: SiteSettings = {
     serverIp,
     mapUrl,
@@ -458,6 +463,7 @@ export async function updateSettingsAction(_prev: AdminFormState, formData: Form
     whitelistOpen: formData.get("whitelistOpen") === "on",
     announcement,
     announcementActive: formData.get("announcementActive") === "on",
+    gameLogRetentionDays: aufbewahrung,
   };
 
   await saveSiteSettings(values);

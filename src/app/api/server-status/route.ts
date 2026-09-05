@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { holeEreignisse } from "@/lib/game-log";
 import { fetchServerStatus } from "@/lib/server-status";
 import { getSiteSettings } from "@/lib/settings";
 import { viewerMaySeeServerIp } from "@/lib/viewer";
@@ -25,7 +26,13 @@ export async function GET() {
    * Warteschlange sorgt dafuer, dass daraus hoechstens alle 30 Sekunden ein
    * Durchlauf wird, egal wie viele Tabs gerade offen sind.
    */
-  if (status.online) void verarbeiteVormerkungen();
+  if (status.online) {
+    void verarbeiteVormerkungen();
+    // Aus demselben Grund hier: So laufen Chat und Befehle auch dann ein, wenn
+    // der Watchdog auf diesem Host nicht laeuft. Eigene Sperre, hoechstens alle
+    // 10 Sekunden ein echter Abruf.
+    void holeEreignisse();
+  }
 
   return NextResponse.json(
     { ...status, address: darfAdresseSehen ? status.address : null },

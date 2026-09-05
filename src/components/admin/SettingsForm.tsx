@@ -71,6 +71,23 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
         />
       </div>
 
+      <label className="block sm:max-w-xs">
+        <span className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
+          Chat-Verlauf aufbewahren
+        </span>
+        <input
+          name="gameLogRetentionDays"
+          type="number"
+          min={0}
+          max={3650}
+          defaultValue={settings.gameLogRetentionDays}
+          className="input font-mono"
+        />
+        <span className="mt-1 block text-xs text-cream/45">
+          Tage, nach denen Chat, Befehle und Tode automatisch gelöscht werden. 0 = unbegrenzt aufbewahren.
+        </span>
+      </label>
+
       <label className="block">
         <span className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">Ankündigung</span>
         <textarea

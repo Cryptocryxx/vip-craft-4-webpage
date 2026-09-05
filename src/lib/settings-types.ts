@@ -17,6 +17,11 @@ export type SiteSettings = {
   announcement: string;
   /** Banner sichtbar? */
   announcementActive: boolean;
+  /**
+   * Wie lange Chat und Befehle aus dem Spiel aufgehoben werden (Tage).
+   * 0 heißt unbegrenzt – dann wird nichts automatisch gelöscht.
+   */
+  gameLogRetentionDays: number;
 };
 
 /** Fallback, solange nichts in der Datenbank steht: die Werte aus der .env. */
@@ -27,6 +32,7 @@ export const settingsDefaults: SiteSettings = {
   whitelistOpen: true,
   announcement: "",
   announcementActive: false,
+  gameLogRetentionDays: 0,
 };
 
 export const settingKeys = Object.keys(settingsDefaults) as Array<keyof SiteSettings>;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { Ban, Eye, Loader2, LogOut, Undo2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { PlayerHead } from "@/components/ui/PlayerHead";
@@ -19,6 +20,8 @@ type Props = {
   playtimeHours: number | null;
   /** Die IP bleibt beim Admin – Moderatoren sehen den Knopf gar nicht. */
   darfIpSehen: boolean;
+  /** Auf der Spielerseite selbst führt der Name nirgendwo mehr hin. */
+  verlinken?: boolean;
 };
 
 /**
@@ -28,7 +31,7 @@ type Props = {
  * und beim Gebannten in der Meldung. Die IP steht bewusst nicht von vornherein
  * da: Sie ist ein personenbezogenes Datum, jeder Abruf wird protokolliert.
  */
-export function ServerPlayerRow({ name, online, playtimeHours, darfIpSehen }: Props) {
+export function ServerPlayerRow({ name, online, playtimeHours, darfIpSehen, verlinken = true }: Props) {
   const [grund, setGrund] = useState("");
   const [modus, setModus] = useState<"kick" | "ban" | null>(null);
   const [rueckmeldung, setRueckmeldung] = useState<PlayerActionState & { ip?: string }>({});
@@ -47,7 +50,15 @@ export function ServerPlayerRow({ name, online, playtimeHours, darfIpSehen }: Pr
       <div className="flex flex-wrap items-center gap-3">
         <PlayerHead name={name} size={32} />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-cream">{name}</p>
+          <p className="truncate font-semibold text-cream">
+            {verlinken ? (
+              <Link href={`/admin/users/${encodeURIComponent(name)}`} className="hover:text-brass-200 hover:underline">
+                {name}
+              </Link>
+            ) : (
+              name
+            )}
+          </p>
           <p className="text-xs text-cream/50">
             {playtimeHours !== null ? `${formatHours(playtimeHours)} gespielt` : "Noch keine Statistiken"}
           </p>

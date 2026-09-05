@@ -6,6 +6,7 @@ import {
   recordServerEvent,
 } from "@/lib/server-power";
 import type { WatchdogStatus } from "@/lib/server-power-types";
+import { bereinigeVerlauf, holeEreignisse } from "@/lib/game-log";
 import { classifyShutdown, describeVerdict } from "@/lib/shutdown-reason";
 import { verarbeiteVormerkungen } from "@/lib/whitelist-queue";
 
@@ -220,6 +221,9 @@ export async function runWatchdogTick(): Promise<void> {
       state.lastRunning = true;
       // Der Server nimmt wieder Befehle an: vorgemerkte Freigaben nachholen.
       void verarbeiteVormerkungen();
+      // Chat und Befehle abholen, solange der Server läuft – das Skript
+      // schreibt nur dann (siehe lib/game-log.ts).
+      void holeEreignisse().then(() => bereinigeVerlauf());
       note(`Server läuft (${stats.onlinePlayers} von ${stats.maxPlayers} Spielern online).`);
       return;
     }

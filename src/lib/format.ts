@@ -21,6 +21,13 @@ const timeFormatter = new Intl.DateTimeFormat("de-DE", {
   timeZone: TZ,
 });
 
+const clockFormatter = new Intl.DateTimeFormat("de-DE", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  timeZone: TZ,
+});
+
 const numberFormatter = new Intl.NumberFormat("de-DE");
 
 function toDate(value: Date | string): Date {
@@ -37,6 +44,11 @@ export function formatShortDate(value: Date | string): string {
 
 export function formatTime(value: Date | string): string {
   return `${timeFormatter.format(toDate(value))} Uhr`;
+}
+
+/** Nur die Uhrzeit, mit Sekunden – für Protokolle, in denen die Reihenfolge zählt. */
+export function formatClock(value: Date | string): string {
+  return clockFormatter.format(toDate(value));
 }
 
 export function formatNumber(value: number): string {

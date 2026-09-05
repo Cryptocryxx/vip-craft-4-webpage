@@ -38,7 +38,10 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         }
       />
       <Container className="grid gap-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="lg:sticky lg:top-24 lg:self-start">
+        {/* min-w-0: Ohne das waechst die Rasterspalte auf die Breite der
+            Navigation, und unterhalb von lg schiebt die waagerechte Liste die
+            ganze Seite nach rechts, statt in sich selbst zu scrollen. */}
+        <aside className="min-w-0 lg:sticky lg:top-24 lg:self-start">
           <AdminNav pendingCount={pendingCount} istAdmin={istAdmin(team.role)} />
         </aside>
         <div className="min-w-0">{children}</div>

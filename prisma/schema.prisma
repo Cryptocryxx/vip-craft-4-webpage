@@ -40,6 +40,12 @@ model User {
   minecraftNameValid     Boolean?
   minecraftNameCheckedAt DateTime?
 
+  /// UUID des Minecraft-Kontos, faellt bei der Mojang-Pruefung ohnehin ab.
+  /// Damit bleibt der Chatverlauf einem Account auch nach einer Namensaenderung
+  /// zugeordnet. Bewusst ohne @unique: Eine Kollision waere ein Datenfehler,
+  /// soll aber nicht mitten im Speichern eines Profils hochgehen.
+  minecraftUuid String?
+
   /// Freigeschaltet, aber der Serverbefehl steht noch aus - der Server war
   /// offline. Wird nachgeholt, sobald er wieder laeuft (lib/whitelist-queue.ts).
   whitelistPending Boolean @default(false)
@@ -58,6 +64,7 @@ model User {
   applications        WhitelistApplication[] @relation("Applicant")
   reviewedApplications WhitelistApplication[] @relation("Reviewer")
   shops               Shop[]
+  gameLogs            GameLog[]
 }
 
 model Account {
@@ -246,4 +253,47 @@ model Setting {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Chat, Befehle und Kommen/Gehen vom Spielserver.
+//
+// Geliefert vom KubeJS-Skript insights-log.js (siehe minecraft/kubejs/), das
+// die Ereignisse als JSON ablegt; die Website holt sie regelmaessig ab
+// (lib/game-log.ts). Alles in EINER Tabelle, weil der Kontext einer Nachricht
+// spieleruebergreifend ist: „fuenf davor, fuenf danach" ist dann eine Abfrage
+// ueber `seq` statt ein Zusammenfuegen mehrerer Tabellen.
+// ---------------------------------------------------------------------------
+
+model GameLog {
+  /// Fortlaufend in der Reihenfolge des Eintreffens – daran haengt der Kontext.
+  seq Int @id @default(autoincrement())
+
+  /// Serverlauf und laufende Nummer darin, beides aus dem Skript. Zusammen
+  /// eindeutig: So kann dasselbe Ereignis nicht zweimal in der Tabelle landen,
+  /// egal wie oft abgeholt wird.
+  runId     String
+  sourceSeq Int
+
+  /// CHAT | COMMAND | COMMAND_CONSOLE | JOIN | QUIT | DEATH, siehe game-log-types.ts
+  kind       String
+  playerName String
+  playerUuid String?
+
+  /// Verknuepfter Website-Account, falls es einen gibt. Wird beim Abholen
+  /// aufgeloest; ohne Treffer bleibt der Name als einzige Zuordnung.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  text String
+  /// Zeitpunkt auf dem Spielserver.
+  at DateTime
+
+  createdAt DateTime @default(now())
+
+  @@unique([runId, sourceSeq])
+  @@index([playerName, seq])
+  @@index([kind, seq])
+  @@index([userId, seq])
+  @@index([at])
 }

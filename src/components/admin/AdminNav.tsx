@@ -2,7 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, MessageSquare, Plug, Settings, ShieldCheck, Store, Users, type LucideIcon } from "lucide-react";
+import {
+  LayoutDashboard,
+  MessageSquare,
+  MessagesSquare,
+  Plug,
+  Settings,
+  ShieldCheck,
+  Store,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type AdminRoute =
@@ -10,6 +20,7 @@ type AdminRoute =
   | "/admin/whitelist"
   | "/admin/shops"
   | "/admin/users"
+  | "/admin/chat"
   | "/admin/suggestions"
   | "/admin/server"
   | "/admin/settings";
@@ -19,6 +30,7 @@ const items: Array<{ href: AdminRoute; label: string; icon: LucideIcon; nurAdmin
   { href: "/admin/whitelist", label: "Whitelist-Anträge", icon: ShieldCheck },
   { href: "/admin/shops", label: "Shops", icon: Store },
   { href: "/admin/users", label: "Spieler", icon: Users },
+  { href: "/admin/chat", label: "Chat & Befehle", icon: MessagesSquare },
   { href: "/admin/suggestions", label: "Vorschläge", icon: MessageSquare },
   { href: "/admin/server", label: "Server-Steuerung", icon: Plug, nurAdmin: true },
   { href: "/admin/settings", label: "Einstellungen", icon: Settings, nurAdmin: true },
