@@ -37,34 +37,43 @@
 //
 // INSTALLATION
 //   1. Datei nach kubejs/server_scripts/salary.js (npm run kubejs:deploy)
-//   2. Server neu starten — "kubejs reload server_scripts" schlägt auf diesem
-//      Server fehl, server_scripts werden nur beim Start geladen.
+//   2. Konsolenbefehl "reload" absetzen — der normale Datapack-Reload laedt die
+//      server_scripts mit neu, ohne dass jemand vom Server fliegt. NICHT
+//      "kubejs reload server_scripts": diesen Befehl kennt der Server nicht, er
+//      quittiert ihn mit einem Parse-Fehler (am 06.09.2026 im Log geprueft).
+//      Ein Serverneustart tut es natuerlich auch.
 //   3. kubejs/data/salary.json prüfen: Dort muss "ready": true stehen. Steht
 //      dort ein Fehler, zahlt die Website nichts aus und sagt auch warum.
 
-var OUTPUT_FILE_NAME = "salary.json";
-var MAX_EINTRAEGE = 200; // Ringpuffer – die Website braucht nur die letzten Belege.
+// ALLE Namen hier tragen bewusst das Praefix GEHALT_/gehalt: KubeJS laedt alle
+// server_scripts in EIN gemeinsames globales Rhino-Scope. Ein zweites "var
+// OUTPUT_FILE_NAME" haette also die gleichnamige Variable in
+// numismatics-export.js ueberschrieben - beim ersten Anlauf genau passiert:
+// Der Kontenexport schrieb daraufhin in salary.json statt in numismatics.json.
+// Dasselbe galt fuer MAX_EINTRAEGE und fehler aus insights-log.js.
+var GEHALT_DATEI = "salary.json";
+var GEHALT_MAX_BELEGE = 200; // Ringpuffer – die Website braucht nur die letzten Belege.
 
-var KubeJSPathsClass = null;
-var JsonIOClass = null;
-var NumismaticsClass = null;
-var BankAccountTypeClass = null;
-var UUIDClass = null;
+var GehaltPathsClass = null;
+var GehaltJsonIO = null;
+var GehaltNumismatics = null;
+var GehaltBankTyp = null;
+var GehaltUUID = null;
 
 try {
-    KubeJSPathsClass = Java.loadClass("dev.latvian.mods.kubejs.KubeJSPaths");
-    JsonIOClass = Java.loadClass("dev.latvian.mods.kubejs.util.JsonIO");
+    GehaltPathsClass = Java.loadClass("dev.latvian.mods.kubejs.KubeJSPaths");
+    GehaltJsonIO = Java.loadClass("dev.latvian.mods.kubejs.util.JsonIO");
 } catch (e) {
     console.error("[salary] KubeJS-Klassen konnten nicht geladen werden: " + e);
 }
 try {
-    NumismaticsClass = Java.loadClass("dev.ithundxr.createnumismatics.Numismatics");
-    BankAccountTypeClass = Java.loadClass("dev.ithundxr.createnumismatics.content.backend.BankAccount$Type");
+    GehaltNumismatics = Java.loadClass("dev.ithundxr.createnumismatics.Numismatics");
+    GehaltBankTyp = Java.loadClass("dev.ithundxr.createnumismatics.content.backend.BankAccount$Type");
 } catch (e) {
     console.error("[salary] Numismatics-Klassen konnten nicht geladen werden: " + e);
 }
 try {
-    UUIDClass = Java.loadClass("java.util.UUID");
+    GehaltUUID = Java.loadClass("java.util.UUID");
 } catch (e) {
     console.error("[salary] java.util.UUID konnte nicht geladen werden: " + e);
 }
@@ -72,61 +81,61 @@ try {
 // Belege dieses Serverlaufs. Bewusst nur im Arbeitsspeicher: Die Website
 // bestätigt jede Auszahlung binnen Sekunden, und ihre eigene Datenbank ist die
 // dauerhafte Buchführung.
-var belege = [];
-var fehler = [];
-var bereit = false;
+var gehaltBelege = [];
+var gehaltFehler = [];
+var gehaltBereit = false;
 
-function schreibeDatei() {
+function gehaltSchreibeDatei() {
     try {
-        if (KubeJSPathsClass === null || JsonIOClass === null) return;
-        var ziel = KubeJSPathsClass.GAMEDIR.resolve("kubejs/data/" + OUTPUT_FILE_NAME);
+        if (GehaltPathsClass === null || GehaltJsonIO === null) return;
+        var ziel = GehaltPathsClass.GAMEDIR.resolve("kubejs/data/" + GEHALT_DATEI);
         var inhalt = {
             generatedAt: new Date().toISOString(),
-            ready: bereit,
-            errors: fehler,
-            payouts: belege,
+            ready: gehaltBereit,
+            errors: gehaltFehler,
+            payouts: gehaltBelege,
         };
-        JsonIOClass.write(ziel, JsonIOClass.parseRaw(JSON.stringify(inhalt, null, 2)));
+        GehaltJsonIO.write(ziel, GehaltJsonIO.parseRaw(JSON.stringify(inhalt, null, 2)));
     } catch (e) {
         console.error("[salary] Datei-Schreibfehler: " + e);
     }
 }
 
-function merkeFehler(text) {
-    fehler.push({ at: new Date().toISOString(), error: String(text) });
-    if (fehler.length > 20) fehler.shift();
+function gehaltMerkeFehler(text) {
+    gehaltFehler.push({ at: new Date().toISOString(), error: String(text) });
+    if (gehaltFehler.length > 20) gehaltFehler.shift();
     console.error("[salary] " + text);
-    schreibeDatei();
+    gehaltSchreibeDatei();
 }
 
 /**
  * Bucht den Betrag und hinterlegt den Beleg.
  * Gibt eine kurze Klartextmeldung für die Konsole zurück.
  */
-function zahleAus(uuidText, spurs, belegId) {
-    if (NumismaticsClass === null || BankAccountTypeClass === null || UUIDClass === null) {
+function gehaltZahleAus(uuidText, spurs, belegId) {
+    if (GehaltNumismatics === null || GehaltBankTyp === null || GehaltUUID === null) {
         return "FEHLER: Numismatics-Klassen fehlen";
     }
 
     // Schon gebucht? Dann nicht doppelt zahlen. Schützt davor, dass ein
     // wiederholter Befehl (Netzproblem, zweiter Klick) zweimal Geld schöpft.
-    for (var i = 0; i < belege.length; i++) {
-        if (belege[i].claimId === belegId) return "OK (bereits gebucht): " + belegId;
+    for (var i = 0; i < gehaltBelege.length; i++) {
+        if (gehaltBelege[i].claimId === belegId) return "OK (bereits gebucht): " + belegId;
     }
 
-    var uuid = UUIDClass.fromString(uuidText);
-    var konto = NumismaticsClass.BANK.getOrCreateAccount(uuid, BankAccountTypeClass.PLAYER);
+    var uuid = GehaltUUID.fromString(uuidText);
+    var konto = GehaltNumismatics.BANK.getOrCreateAccount(uuid, GehaltBankTyp.PLAYER);
     konto.deposit(spurs);
 
-    belege.push({
+    gehaltBelege.push({
         claimId: belegId,
         uuid: uuidText,
         spurs: spurs,
         balanceAfter: konto.getBalance(),
         at: new Date().toISOString(),
     });
-    if (belege.length > MAX_EINTRAEGE) belege.shift();
-    schreibeDatei();
+    if (gehaltBelege.length > GEHALT_MAX_BELEGE) gehaltBelege.shift();
+    gehaltSchreibeDatei();
 
     return "OK: " + spurs + " Spur auf " + uuidText + " (neuer Stand " + konto.getBalance() + ")";
 }
@@ -151,25 +160,25 @@ try {
                 return;
             }
 
-            console.log("[salary] " + zahleAus(teile[0], spurs, teile[2]));
+            console.log("[salary] " + gehaltZahleAus(teile[0], spurs, teile[2]));
         } catch (e) {
-            merkeFehler("Auszahlung fehlgeschlagen: " + e);
+            gehaltMerkeFehler("Auszahlung fehlgeschlagen: " + e);
         }
     });
 
-    bereit = true;
+    gehaltBereit = true;
 } catch (e) {
-    merkeFehler("Befehl konnte nicht registriert werden: " + e);
+    gehaltMerkeFehler("Befehl konnte nicht registriert werden: " + e);
 }
 
 // Sofort beim Laden schreiben: Daran erkennt die Website, dass dieses Skript
 // überhaupt läuft — und erst dann bietet sie die Auszahlung an.
-schreibeDatei();
+gehaltSchreibeDatei();
 
 try {
     ServerEvents.loaded(function (event) {
-        schreibeDatei();
+        gehaltSchreibeDatei();
     });
 } catch (e) {
-    merkeFehler("ServerEvents.loaded fehlgeschlagen: " + e);
+    gehaltMerkeFehler("ServerEvents.loaded fehlgeschlagen: " + e);
 }
