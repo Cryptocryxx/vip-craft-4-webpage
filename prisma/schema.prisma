@@ -65,6 +65,45 @@ model User {
   reviewedApplications WhitelistApplication[] @relation("Reviewer")
   shops               Shop[]
   gameLogs            GameLog[]
+  salaryClaims        SalaryClaim[]
+}
+
+// ---------------------------------------------------------------------------
+// Taegliches Gehalt
+//
+// Einmal pro KALENDERTAG, nicht alle 24 Stunden: Wer um 23:59 abholt, ist um
+// 0:00 wieder dran. Deshalb steht der Tag als "YYYY-MM-DD" (Europe/Berlin) in
+// der Zeile statt eines Zeitstempels, gegen den gerechnet wird.
+//
+// Der Unique-Index ist die eigentliche Sperre, nicht die Pruefung davor: Zwei
+// gleichzeitige Klicks laufen so in einen Datenbankfehler statt in zwei
+// Auszahlungen.
+//
+// Jede Zeile ist ausserdem ein Beleg - hier entsteht Geld aus dem Nichts, das
+// soll nachvollziehbar bleiben.
+// ---------------------------------------------------------------------------
+
+model SalaryClaim {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Kalendertag in Europe/Berlin, "YYYY-MM-DD".
+  day String
+
+  /// Ausgezahlt in Spurs, der kleinsten Einheit (siehe lib/currency.ts).
+  spurs Int
+
+  /// Auf welches Minecraft-Konto gezahlt wurde. Festgehalten, weil sich die
+  /// Verknuepfung am Account spaeter aendern kann - der Beleg soll trotzdem
+  /// zeigen, wohin das Geld damals ging.
+  minecraftName String
+  minecraftUuid String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day])
+  @@index([createdAt])
 }
 
 model Account {

@@ -37,6 +37,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
     announcement: map.get("announcement") ?? settingsDefaults.announcement,
     announcementActive: flag("announcementActive", settingsDefaults.announcementActive),
     gameLogRetentionDays: nummer("gameLogRetentionDays", settingsDefaults.gameLogRetentionDays),
+    dailySalaryCogs: nummer("dailySalaryCogs", settingsDefaults.dailySalaryCogs),
   };
 }
 

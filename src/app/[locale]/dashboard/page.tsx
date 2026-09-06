@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { Cog, LayoutDashboard } from "lucide-react";
 import { auth, authConfigured } from "@/auth";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { DailySalaryCard } from "@/components/dashboard/DailySalaryCard";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
 import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { ShopManagerCard } from "@/components/dashboard/ShopManagerCard";
@@ -17,6 +18,7 @@ import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
 import { ensureNameChecked } from "@/lib/name-check";
 import { prisma } from "@/lib/prisma";
 import { imTeam } from "@/lib/roles";
+import { gehaltsStand } from "@/lib/salary";
 import { getSiteSettings } from "@/lib/settings";
 import { listShopsForUser } from "@/lib/shops";
 import { listSuggestions } from "@/lib/suggestions";
@@ -68,7 +70,7 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
   // Discord-Mitgliedschaft nebenbei nachziehen: Wer nach dem Login beitritt,
   // sieht den Schritt beim naechsten Aufruf des Dashboards von selbst abgehakt,
   // ohne auf „Erneut pruefen" zu druecken.
-  const [application, settings, suggestions, shops, discord, name, locale] = await Promise.all([
+  const [application, settings, suggestions, shops, discord, name, locale, gehalt] = await Promise.all([
     getApplicationForUser(user.id),
     getSiteSettings(),
     listSuggestions(user.id),
@@ -76,6 +78,7 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
     ensureMembershipFresh(user),
     ensureNameChecked(user),
     getLocale(),
+    gehaltsStand(user.id),
   ]);
 
   const start = serverStartZeit();
@@ -129,6 +132,16 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
             />
           </div>
         </div>
+
+        {/* Nur für Freigeschaltete: Ohne Whitelist gibt es kein Konto im Spiel,
+            auf das sich etwas auszahlen ließe. */}
+        {gehalt.aktiv && user.whitelisted && (
+          <DailySalaryCard
+            cogs={gehalt.cogs}
+            heuteAbgeholt={gehalt.heuteAbgeholt}
+            wartenBisMs={gehalt.wartenBisMs}
+          />
+        )}
 
         <PersonalStats />
 

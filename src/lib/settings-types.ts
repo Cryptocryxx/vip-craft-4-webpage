@@ -22,6 +22,11 @@ export type SiteSettings = {
    * 0 heißt unbegrenzt – dann wird nichts automatisch gelöscht.
    */
   gameLogRetentionDays: number;
+  /**
+   * Tägliches Gehalt in Cog, das sich jeder einmal pro Kalendertag abholen kann.
+   * 0 schaltet die Auszahlung ganz ab.
+   */
+  dailySalaryCogs: number;
 };
 
 /** Fallback, solange nichts in der Datenbank steht: die Werte aus der .env. */
@@ -33,6 +38,7 @@ export const settingsDefaults: SiteSettings = {
   announcement: "",
   announcementActive: false,
   gameLogRetentionDays: 0,
+  dailySalaryCogs: 10,
 };
 
 export const settingKeys = Object.keys(settingsDefaults) as Array<keyof SiteSettings>;

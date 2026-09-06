@@ -520,6 +520,11 @@ export async function updateSettingsAction(_prev: AdminFormState, formData: Form
     return { error: "Die Aufbewahrung braucht eine ganze Zahl zwischen 0 und 3650 Tagen." };
   }
 
+  const gehalt = Number(text(formData, "dailySalaryCogs"));
+  if (!Number.isInteger(gehalt) || gehalt < 0 || gehalt > 1000) {
+    return { error: "Das tägliche Gehalt braucht eine ganze Zahl zwischen 0 und 1000 Cog." };
+  }
+
   const values: SiteSettings = {
     serverIp,
     mapUrl,
@@ -528,6 +533,7 @@ export async function updateSettingsAction(_prev: AdminFormState, formData: Form
     announcement,
     announcementActive: formData.get("announcementActive") === "on",
     gameLogRetentionDays: aufbewahrung,
+    dailySalaryCogs: gehalt,
   };
 
   await saveSiteSettings(values);

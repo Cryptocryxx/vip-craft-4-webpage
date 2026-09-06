@@ -73,6 +73,23 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
 
       <label className="block sm:max-w-xs">
         <span className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
+          Tägliches Gehalt (Cog)
+        </span>
+        <input
+          name="dailySalaryCogs"
+          type="number"
+          min={0}
+          max={1000}
+          defaultValue={settings.dailySalaryCogs}
+          className="input font-mono"
+        />
+        <span className="mt-1 block text-xs text-cream/45">
+          Was sich jeder einmal pro Kalendertag im Dashboard abholen kann. 0 schaltet die Auszahlung ab.
+        </span>
+      </label>
+
+      <label className="block sm:max-w-xs">
+        <span className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase">
           Chat-Verlauf aufbewahren
         </span>
         <input

@@ -798,5 +798,22 @@
     "loadProvider": "{provider} laden",
     "settings": "Einstellungen",
     "privacyPolicyOf": "Datenschutzerklärung von {provider}"
+  },
+  "DailySalary": {
+    "title": "Tägliches Gehalt",
+    "subtitle": "Hol dir {cogs} Cog auf dein Bankkonto im Spiel – einmal pro Tag.",
+    "claim": "{cogs} Cog abholen",
+    "claimed": "Heute abgeholt",
+    "readyAgain": "Steht wieder bereit.",
+    "comeBackAt": "Schon abgeholt. Ab Mitternacht wieder – noch {rest}.",
+    "hoursShort": "Std",
+    "minutesShort": "Min",
+    "paidOut": "{cogs} Cog sind auf deinem Konto.",
+    "notLoggedIn": "Du musst eingeloggt sein.",
+    "disabled": "Das tägliche Gehalt ist gerade abgeschaltet.",
+    "noAccount": "Dafür fehlt dein geprüfter Minecraft-Account.",
+    "alreadyClaimed": "Für heute hast du schon abgeholt.",
+    "serverNotReady": "Der Server kann gerade nicht auszahlen. Probier es später noch einmal.",
+    "notDelivered": "Die Auszahlung ist nicht angekommen – dein heutiger Anspruch bleibt bestehen. Probier es später noch einmal."
   }
 }

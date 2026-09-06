@@ -798,5 +798,22 @@
     "loadProvider": "Load {provider}",
     "settings": "Settings",
     "privacyPolicyOf": "{provider}'s privacy policy"
+  },
+  "DailySalary": {
+    "title": "Daily salary",
+    "subtitle": "Collect {cogs} cog into your in-game bank account – once a day.",
+    "claim": "Collect {cogs} cog",
+    "claimed": "Collected today",
+    "readyAgain": "Ready again.",
+    "comeBackAt": "Already collected. Back from midnight – {rest} to go.",
+    "hoursShort": "hrs",
+    "minutesShort": "min",
+    "paidOut": "{cogs} cog are in your account.",
+    "notLoggedIn": "You need to be logged in.",
+    "disabled": "The daily salary is switched off right now.",
+    "noAccount": "That needs your verified Minecraft account.",
+    "alreadyClaimed": "You've already collected today.",
+    "serverNotReady": "The server can't pay out right now. Try again later.",
+    "notDelivered": "The payout didn't arrive – today's claim is still yours. Try again later."
   }
 }
