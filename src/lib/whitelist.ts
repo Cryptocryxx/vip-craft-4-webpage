@@ -151,8 +151,19 @@ export async function onUserSignIn(userId: string): Promise<void> {
   await ensureWhitelistApplication(user);
 }
 
-/** Antrag des Users anlegen bzw. aktualisieren (Gamertag + Nachricht). */
-export async function upsertApplication(userId: string, input: ApplicationInput): Promise<void> {
+/**
+ * Antrag des Users anlegen bzw. aktualisieren (Gamertag + Nachricht).
+ *
+ * `minecraftUuid` kommt aus der Mojang-Pruefung des Aufrufers und wird am
+ * Profil mitgepflegt - ohne sie laesst sich der Account spaeter nichts im
+ * Spiel zuordnen (Gehalt, Chatprotokoll). Bei einer Stoerung bei Mojang ist
+ * sie null und bleibt einfach, wie sie war.
+ */
+export async function upsertApplication(
+  userId: string,
+  input: ApplicationInput,
+  minecraftUuid: string | null = null,
+): Promise<void> {
   const current = await prisma.whitelistApplication.findFirst({
     where: { userId },
     orderBy: { createdAt: "desc" },
@@ -160,7 +171,10 @@ export async function upsertApplication(userId: string, input: ApplicationInput)
 
   await prisma.$transaction(async (tx) => {
     // Gamertag am Profil mitpflegen, damit Stats und Skin-Kopf passen.
-    await tx.user.update({ where: { id: userId }, data: { minecraftName: input.minecraftName } });
+    await tx.user.update({
+      where: { id: userId },
+      data: { minecraftName: input.minecraftName, ...(minecraftUuid ? { minecraftUuid } : {}) },
+    });
 
     if (current && current.status === "PENDING") {
       await tx.whitelistApplication.update({

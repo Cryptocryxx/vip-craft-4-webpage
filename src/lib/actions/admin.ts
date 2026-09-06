@@ -180,10 +180,12 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
 
   // Auch hier gegen Mojang pruefen: Ein Gamertag, den es nicht gibt, geht
   // spaeter als Whitelist-Befehl an den Server und laeuft dort ins Leere.
+  let minecraftUuid: string | null = null;
   if (minecraftName) {
     const geprueft = await pruefeGamertag(minecraftName);
     if (!geprueft.ok) return { error: geprueft.error };
     minecraftName = geprueft.name;
+    minecraftUuid = geprueft.uuid;
   }
 
   try {
@@ -191,6 +193,9 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
       where: { id: userId },
       data: {
         minecraftName: minecraftName || null,
+        // Nur setzen, wenn Mojang geantwortet hat - sonst bliebe eine UUID
+        // stehen, die zum neuen Namen gar nicht gehoert.
+        ...(minecraftUuid ? { minecraftUuid } : {}),
         twitchName: twitchName || null,
         role,
         whitelisted,

@@ -70,7 +70,7 @@ export async function submitApplicationAction(
   if (!geprueft.ok) return { error: geprueft.error };
 
   try {
-    await upsertApplication(session.user.id, { ...parsed.data, minecraftName: geprueft.name });
+    await upsertApplication(session.user.id, { ...parsed.data, minecraftName: geprueft.name }, geprueft.uuid);
   } catch (err) {
     if (isUniqueViolation(err)) {
       return { error: t("alreadyLinked") };

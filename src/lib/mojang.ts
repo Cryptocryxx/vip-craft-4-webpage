@@ -76,7 +76,9 @@ async function einmalFragen(name: string): Promise<NamensPruefung> {
  * Bei „unklar" geht der Name unverändert durch. Ein Ausfall bei Mojang soll
  * niemanden daran hindern, seinen Antrag abzuschicken.
  */
-export async function pruefeGamertag(name: string): Promise<{ ok: true; name: string } | { ok: false; error: string }> {
+export async function pruefeGamertag(
+  name: string,
+): Promise<{ ok: true; name: string; uuid: string | null } | { ok: false; error: string }> {
   const treffer = await lookupMinecraftName(name);
 
   if (treffer.status === "unbekannt") {
@@ -84,5 +86,27 @@ export async function pruefeGamertag(name: string): Promise<{ ok: true; name: st
     return { ok: false, error: t("notFound", { name }) };
   }
 
-  return { ok: true, name: treffer.status === "gefunden" ? treffer.name : name };
+  if (treffer.status === "gefunden") {
+    return { ok: true, name: treffer.name, uuid: mitBindestrichen(treffer.uuid) };
+  }
+
+  // „unklar": Der Name geht unveraendert durch, eine UUID haben wir dann nicht.
+  return { ok: true, name, uuid: null };
+}
+
+/**
+ * Mojang liefert die UUID OHNE Bindestriche
+ * ("2bb0b0533c2b40a6996463d1b7e2629c"), im Spiel und damit auch im
+ * Spielprotokoll und bei Numismatics steht sie MIT
+ * ("2bb0b053-3c2b-40a6-9964-63d1b7e2629c").
+ *
+ * Beide Formen nebeneinander in der Datenbank wären ein stiller Fehler: Der
+ * Abgleich mit dem Protokoll ginge daneben, und `UUID.fromString` im
+ * KubeJS-Skript nimmt ausschließlich die Form mit Bindestrichen an. Deshalb
+ * wird hier auf die lange Form vereinheitlicht.
+ */
+export function mitBindestrichen(uuid: string): string {
+  const roh = uuid.replace(/-/g, "").toLowerCase();
+  if (roh.length !== 32) return uuid;
+  return `${roh.slice(0, 8)}-${roh.slice(8, 12)}-${roh.slice(12, 16)}-${roh.slice(16, 20)}-${roh.slice(20)}`;
 }

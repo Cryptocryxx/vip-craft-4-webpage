@@ -2,6 +2,7 @@ import "server-only";
 import { unstable_rethrow } from "next/navigation";
 import { craftyConfigured, craftyReadJson } from "@/lib/crafty";
 import { SPURS_PER_COG } from "@/lib/currency";
+import { lookupMinecraftName, mitBindestrichen } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
 import { runPlayerCommand } from "@/lib/server-commands";
 import { getSiteSettings } from "@/lib/settings";
@@ -132,9 +133,32 @@ export async function holeGehalt(user: {
   const cogs = settings.dailySalaryCogs;
   if (cogs <= 0) return { ok: false, grund: "aus" };
 
-  const { minecraftName, minecraftUuid } = user;
-  if (!minecraftName || !minecraftUuid || !GAMERTAG_RE.test(minecraftName)) {
+  const { minecraftName } = user;
+  if (!minecraftName || !GAMERTAG_RE.test(minecraftName)) {
     return { ok: false, grund: "kein-konto" };
+  }
+
+  /*
+   * Fehlt die UUID, wird sie hier nachgeholt statt abzulehnen.
+   *
+   * Sie wurde lange nur als Nebenprodukt der Protokollauswertung eingetragen
+   * (uuidNachtragen in lib/game-log.ts). Wer seinen Namen davor verknüpft und
+   * seitdem nichts getan hat, was im Protokoll landet, hatte deshalb keine –
+   * und bekam hier die irreführende Meldung, sein Account sei nicht verknüpft,
+   * obwohl er es war. Mojang beantwortet die Frage in einem Aufruf.
+   */
+  // Vereinheitlichen, was schon da ist: `UUID.fromString` im KubeJS-Skript
+  // nimmt nur die Form mit Bindestrichen an, und eine abgelehnte Buchung
+  // faende hier niemand wieder.
+  let minecraftUuid = user.minecraftUuid ? mitBindestrichen(user.minecraftUuid) : null;
+  if (!minecraftUuid) {
+    const treffer = await lookupMinecraftName(minecraftName);
+    if (treffer.status !== "gefunden") return { ok: false, grund: "kein-konto" };
+
+    minecraftUuid = mitBindestrichen(treffer.uuid);
+    await prisma.user
+      .update({ where: { id: user.id }, data: { minecraftUuid } })
+      .catch((error) => console.error("[gehalt] UUID konnte nicht gespeichert werden:", error));
   }
 
   // Läuft das Skript auf dem Server überhaupt? Ohne Quittungsweg wird gar

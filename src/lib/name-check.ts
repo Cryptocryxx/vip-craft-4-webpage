@@ -1,5 +1,5 @@
 import "server-only";
-import { lookupMinecraftName } from "@/lib/mojang";
+import { lookupMinecraftName, mitBindestrichen } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -42,7 +42,16 @@ export async function ensureNameChecked(user: {
   try {
     await prisma.user.update({
       where: { id: user.id },
-      data: { minecraftNameValid: gueltig, minecraftNameCheckedAt: new Date() },
+      data: {
+        minecraftNameValid: gueltig,
+        minecraftNameCheckedAt: new Date(),
+        // Die UUID faellt bei dieser Abfrage ohnehin ab. Sie hier mitzunehmen
+        // schliesst die Luecke fuer alle Accounts, die ihren Namen vor dem
+        // UUID-Feld eingetragen haben - sonst hinge das Nachtragen allein am
+        // Spielprotokoll (siehe uuidNachtragen in lib/game-log.ts), und wer
+        // seit dem Protokollstart nicht gespielt hat, haette nie eine.
+        ...(treffer.status === "gefunden" ? { minecraftUuid: mitBindestrichen(treffer.uuid) } : {}),
+      },
     });
   } catch (error) {
     console.error("[namen] Prüfergebnis konnte nicht gespeichert werden:", error);

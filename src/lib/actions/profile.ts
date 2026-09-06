@@ -38,7 +38,14 @@ export async function linkMinecraftNameAction(
   const name = geprueft.name;
 
   try {
-    await prisma.user.update({ where: { id: session.user.id }, data: { minecraftName: name } });
+    await prisma.user.update({
+      where: { id: session.user.id },
+      // UUID gleich mitschreiben: Mojang liefert sie ohnehin bei der Namens-
+      // pruefung mit, und ohne sie laesst sich spaeter nichts im Spiel
+      // zuordnen (Gehalt, Chatprotokoll). Bei einer Stoerung bei Mojang
+      // ("unklar") bleibt sie null und wird spaeter nachgetragen.
+      data: { minecraftName: name, ...(geprueft.uuid ? { minecraftUuid: geprueft.uuid } : {}) },
+    });
   } catch (err) {
     if (isUniqueViolation(err)) {
       return { error: t("alreadyLinked") };
