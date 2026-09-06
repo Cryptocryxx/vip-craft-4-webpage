@@ -26,6 +26,7 @@ import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { formatCogsLong } from "@/lib/currency";
+import { todeVonSpieler } from "@/lib/death-log";
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
 import { findPlayer } from "@/lib/players";
 
@@ -65,6 +66,114 @@ function Gruppe({ titel, kacheln }: { titel: string; kacheln: Kachel[] }) {
         })}
       </div>
     </section>
+  );
+}
+
+/** Woran jemand gestorben ist und wie die Duelle ausgingen. */
+async function TodesBilanz({ name }: { name: string }) {
+  const [bilanz, t, tUrsache] = await Promise.all([
+    todeVonSpieler(name),
+    getTranslations("PlayerDetailPage"),
+    getTranslations("DeathCauses"),
+  ]);
+
+  // Kreaturen und Spieler heißen wie sie heißen; nur die Umweltursachen
+  // stecken als Schlüssel in den Übersetzungen.
+  const beschriftung = (art: string, schluessel: string) =>
+    art === "umwelt" ? tUrsache(schluessel) : schluessel;
+
+  const hatDuelle = bilanz.getoetet.length > 0 || bilanz.gefallenDurch.length > 0;
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <section>
+        <h2 className="mb-3 font-display text-sm font-bold tracking-wide text-brass-200 uppercase">
+          {t("deathCausesTitle")}
+        </h2>
+        <Panel className="p-5">
+          {bilanz.ursachen.length === 0 ? (
+            <p className="text-sm text-cream/55">{t("deathCausesEmpty")}</p>
+          ) : (
+            <ul className="space-y-2">
+              {bilanz.ursachen.map((ursache) => (
+                <li key={`${ursache.art}:${ursache.schluessel}`} className="flex items-center gap-3 text-sm">
+                  <Skull
+                    className={
+                      ursache.art === "spieler"
+                        ? "size-4 shrink-0 text-rose-300"
+                        : ursache.art === "kreatur"
+                          ? "size-4 shrink-0 text-brass-300"
+                          : "size-4 shrink-0 text-cream/35"
+                    }
+                  />
+                  <span className="min-w-0 flex-1 truncate text-cream/85">
+                    {beschriftung(ursache.art, ursache.schluessel)}
+                  </span>
+                  <span className="font-mono text-cream/60">
+                    {ursache.anzahl}
+                    {t("timesShort")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="mt-4 border-t border-white/5 pt-3 text-[11px] leading-relaxed text-cream/40">
+            {t("deathCausesNote")}
+          </p>
+        </Panel>
+      </section>
+
+      <section>
+        <h2 className="mb-3 font-display text-sm font-bold tracking-wide text-brass-200 uppercase">{t("pvpTitle")}</h2>
+        <Panel className="p-5">
+          {!hatDuelle ? (
+            <p className="text-sm text-cream/55">{t("pvpNone")}</p>
+          ) : (
+            <div className="space-y-4">
+              {bilanz.getoetet.length > 0 && (
+                <div>
+                  <p className="mb-1.5 flex items-center gap-1.5 text-xs tracking-wider text-emerald-300/80 uppercase">
+                    <Swords className="size-3.5" /> {t("pvpKilled")}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {bilanz.getoetet.map((eintrag) => (
+                      <li key={eintrag.name} className="flex items-center gap-2 text-sm">
+                        <PlayerHead name={eintrag.name} size={20} />
+                        <span className="min-w-0 flex-1 truncate text-cream/85">{eintrag.name}</span>
+                        <span className="font-mono text-cream/60">
+                          {eintrag.anzahl}
+                          {t("timesShort")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {bilanz.gefallenDurch.length > 0 && (
+                <div>
+                  <p className="mb-1.5 flex items-center gap-1.5 text-xs tracking-wider text-rose-300/80 uppercase">
+                    <Skull className="size-3.5" /> {t("pvpKilledBy")}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {bilanz.gefallenDurch.map((eintrag) => (
+                      <li key={eintrag.name} className="flex items-center gap-2 text-sm">
+                        <PlayerHead name={eintrag.name} size={20} />
+                        <span className="min-w-0 flex-1 truncate text-cream/85">{eintrag.name}</span>
+                        <span className="font-mono text-cream/60">
+                          {eintrag.anzahl}
+                          {t("timesShort")}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </Panel>
+      </section>
+    </div>
   );
 }
 
@@ -150,6 +259,13 @@ export default async function SpielerDetailPage({ params }: Props) {
           />
         </Panel>
       )}
+
+      {/* Ausserhalb des Stats-Blocks: Tode stehen im Spielprotokoll, nicht in
+          den Statistikdateien - die eine Quelle kann fehlen, die andere trotzdem
+          etwas zu erzaehlen haben. */}
+      <div className="mt-8">
+        <TodesBilanz name={spieler.name} />
+      </div>
     </Container>
   );
 }

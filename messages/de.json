@@ -592,7 +592,14 @@
     "allEyebrow": "Alle",
     "allTitle": "Schon mal da gewesen",
     "allDescription": "Nach Spielzeit sortiert. Die Zahlen schreibt Minecraft beim Ausloggen – wer gerade spielt, ist hier also noch nicht auf dem neuesten Stand.",
-    "noneOffline": "Außer den gerade Anwesenden war noch niemand hier."
+    "noneOffline": "Außer den gerade Anwesenden war noch niemand hier.",
+    "pvpEyebrow": "Bestenliste der Duelle",
+    "pvpTitle": "Wer wen erwischt hat",
+    "pvpDescription": "Aus den Todesmeldungen des Servers – nur Kämpfe zwischen Spielern.",
+    "pvpEmpty": "Noch hat niemand jemanden erwischt.",
+    "pvpKills": "Erledigt",
+    "pvpDeaths": "Gefallen",
+    "pvpPairs": "Einzelne Begegnungen"
   },
   "PlayerDetailPage": {
     "metaTitle": "{name} – Spieler",
@@ -632,7 +639,15 @@
     "statsNoteEnd": " Auf der Übersicht lässt sich ein Speichern anstoßen.",
     "noStatsEyebrow": "Noch nichts da",
     "noStatsTitle": "Keine Statistiken",
-    "noStatsDescription": "Der Server hat für {name} noch keine Statistikdatei geschrieben. Sie entsteht beim ersten Ausloggen."
+    "noStatsDescription": "Der Server hat für {name} noch keine Statistikdatei geschrieben. Sie entsteht beim ersten Ausloggen.",
+    "deathCausesTitle": "Woran gestorben",
+    "deathCausesEmpty": "Noch kein Tod aufgezeichnet.",
+    "deathCausesNote": "Aus den Todesmeldungen des Servers – aufgezeichnet seit dem 3. September 2026.",
+    "timesShort": "×",
+    "pvpTitle": "Duelle",
+    "pvpKilled": "Erledigt",
+    "pvpKilledBy": "Gefallen durch",
+    "pvpNone": "Noch kein Kampf gegen andere Spieler."
   },
   "LeaderboardCategories": {
     "playtime": {
@@ -815,5 +830,24 @@
     "alreadyClaimed": "Für heute hast du schon abgeholt.",
     "serverNotReady": "Der Server kann gerade nicht auszahlen. Probier es später noch einmal.",
     "notDelivered": "Die Auszahlung ist nicht angekommen – dein heutiger Anspruch bleibt bestehen. Probier es später noch einmal."
+  },
+  "DeathCauses": {
+    "lava": "Lava",
+    "void": "Ins Nichts gefallen",
+    "amboss": "Amboss",
+    "sturz": "Sturz",
+    "feuer": "Feuer",
+    "explosion": "Explosion",
+    "ertrunken": "Ertrunken",
+    "ersticken": "Erstickt",
+    "verhungert": "Verhungert",
+    "kaktus": "Kaktus & Dornen",
+    "blitz": "Blitzschlag",
+    "verdorrt": "Verdorrt",
+    "kaelte": "Erfroren",
+    "schrei": "Warden-Schrei",
+    "kinetisch": "Aufprall im Flug",
+    "magie": "Magie",
+    "sonstiges": "Sonstiges"
   }
 }

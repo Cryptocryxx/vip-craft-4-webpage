@@ -592,7 +592,14 @@
     "allEyebrow": "All",
     "allTitle": "Been here before",
     "allDescription": "Sorted by playtime. Minecraft writes these numbers on logout – whoever's playing right now isn't reflected here yet.",
-    "noneOffline": "Aside from who's here right now, nobody's been here yet."
+    "noneOffline": "Aside from who's here right now, nobody's been here yet.",
+    "pvpEyebrow": "Duel standings",
+    "pvpTitle": "Who got whom",
+    "pvpDescription": "From the server's death messages – player versus player only.",
+    "pvpEmpty": "Nobody has got anyone yet.",
+    "pvpKills": "Defeated",
+    "pvpDeaths": "Fell",
+    "pvpPairs": "Individual encounters"
   },
   "PlayerDetailPage": {
     "metaTitle": "{name} – Player",
@@ -632,7 +639,15 @@
     "statsNoteEnd": " You can trigger a save from the overview page.",
     "noStatsEyebrow": "Nothing here yet",
     "noStatsTitle": "No stats",
-    "noStatsDescription": "The server hasn't written a stat file for {name} yet. It's created the first time they log out."
+    "noStatsDescription": "The server hasn't written a stat file for {name} yet. It's created the first time they log out.",
+    "deathCausesTitle": "Cause of death",
+    "deathCausesEmpty": "No death recorded yet.",
+    "deathCausesNote": "From the server's death messages – recorded since 3 September 2026.",
+    "timesShort": "×",
+    "pvpTitle": "Duels",
+    "pvpKilled": "Defeated",
+    "pvpKilledBy": "Fell to",
+    "pvpNone": "No fights against other players yet."
   },
   "LeaderboardCategories": {
     "playtime": {
@@ -815,5 +830,24 @@
     "alreadyClaimed": "You've already collected today.",
     "serverNotReady": "The server can't pay out right now. Try again later.",
     "notDelivered": "The payout didn't arrive – today's claim is still yours. Try again later."
+  },
+  "DeathCauses": {
+    "lava": "Lava",
+    "void": "Fell into the void",
+    "amboss": "Anvil",
+    "sturz": "Fall",
+    "feuer": "Fire",
+    "explosion": "Explosion",
+    "ertrunken": "Drowned",
+    "ersticken": "Suffocated",
+    "verhungert": "Starved",
+    "kaktus": "Cactus & thorns",
+    "blitz": "Lightning",
+    "verdorrt": "Withered",
+    "kaelte": "Froze",
+    "schrei": "Warden shriek",
+    "kinetisch": "Flight impact",
+    "magie": "Magic",
+    "sonstiges": "Other"
   }
 }
