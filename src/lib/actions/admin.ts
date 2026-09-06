@@ -12,6 +12,7 @@ import { SUGGESTION_STATUSES, type SuggestionStatus } from "@/lib/suggestion-typ
 import { approveApplication, deleteApplication, rejectApplication } from "@/lib/whitelist";
 import { adminDeleteShop } from "@/lib/shops";
 import { whitelistAdd, whitelistRemove } from "@/lib/server-commands";
+import { findeEintrag, leseServerWhitelist } from "@/lib/server-whitelist";
 import { merkeVor, nurVormerken } from "@/lib/whitelist-queue";
 import { invalidateStatsCache } from "@/lib/stats-source";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
@@ -19,7 +20,12 @@ import { GAMERTAG_RE } from "@/lib/whitelist-types";
 /** Twitch-Benutzernamen: 4–25 Zeichen, Buchstaben, Zahlen, Unterstrich. */
 const TWITCH_RE = /^[A-Za-z0-9_]{4,25}$/;
 
-export type AdminFormState = { error?: string; success?: string };
+/**
+ * `warning` steht zwischen den beiden anderen: Der Vorgang lief durch, das
+ * Ergebnis ist aber keins zum Abhaken – etwa wenn Website und Server bei der
+ * Whitelist auseinanderlaufen.
+ */
+export type AdminFormState = { error?: string; success?: string; warning?: string };
 
 function isUniqueViolation(err: unknown): boolean {
   return typeof err === "object" && err !== null && (err as { code?: string }).code === "P2002";
@@ -243,6 +249,64 @@ export async function updateUserAction(_prev: AdminFormState, formData: FormData
   }
 
   return { success: "Gespeichert." };
+}
+
+/**
+ * Sieht nach, ob jemand wirklich auf der Whitelist des Servers steht.
+ *
+ * Der Schalter in dieser Zeile ist nur der Stand der Website; auf den Server
+ * kommt er über `whitelist add`/`remove`. Bleibt so ein Befehl aus (Server war
+ * aus, Crafty klemmte, Freigabe noch vorgemerkt), stimmen beide Seiten nicht
+ * mehr überein – und genau das lässt sich hier nachsehen, statt es zu raten.
+ *
+ * Gelesen wird die `whitelist.json` des Servers, nicht der eigene Datenbestand.
+ */
+export async function checkServerWhitelistAction(userId: string): Promise<AdminFormState> {
+  try {
+    await requireTeam();
+  } catch {
+    return { error: "Dafür fehlen dir die Rechte." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { minecraftName: true, whitelisted: true, whitelistPending: true, whitelistSuspended: true },
+  });
+  if (!user) return { error: "Diesen Account gibt es nicht (mehr)." };
+  if (!user.minecraftName) return { error: "Ohne Minecraft-Username lässt sich nichts nachsehen." };
+
+  const liste = await leseServerWhitelist();
+  if (!liste.ok) return { error: liste.error };
+
+  const eintrag = findeEintrag(liste.eintraege, user.minecraftName);
+
+  if (eintrag) {
+    // Andere Schreibweise ist harmlos (Minecraft vergleicht die UUID), aber
+    // wissen sollte man es – sonst sucht man den Namen hier vergeblich.
+    const schreibweise =
+      eintrag.name && eintrag.name !== user.minecraftName ? ` Auf dem Server steht er als „${eintrag.name}".` : "";
+
+    return user.whitelisted
+      ? { success: `Steht auf der Server-Whitelist.${schreibweise}` }
+      : {
+          warning: `Steht auf der Server-Whitelist, hier ist der Haken aber nicht gesetzt.${schreibweise} Einmal speichern gleicht das ab.`,
+        };
+  }
+
+  if (!user.whitelisted) {
+    return { success: "Steht nicht auf der Server-Whitelist – passt zum Stand hier." };
+  }
+  if (user.whitelistSuspended) {
+    return { success: "Steht nicht auf der Server-Whitelist – die Freigabe ist gerade ausgesetzt." };
+  }
+  if (user.whitelistPending) {
+    return { success: "Steht noch nicht auf der Server-Whitelist – vorgemerkt, wird zum Serverstart nachgeholt." };
+  }
+
+  return {
+    warning:
+      "Hier gewhitelisted, auf dem Server aber nicht. Der Befehl ist wohl nicht angekommen – Haken aus- und wieder einschalten schickt ihn erneut.",
+  };
 }
 
 /**
