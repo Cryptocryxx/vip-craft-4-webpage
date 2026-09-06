@@ -1,7 +1,8 @@
 import { Gamepad2, ScrollText, Users } from "lucide-react";
 import { CheckDiscordButton } from "@/components/admin/CheckDiscordButton";
-import { ServerPlayerRow } from "@/components/admin/ServerPlayerRow";
-import { UserRow, type AdminUserRow } from "@/components/admin/UserRow";
+import { ServerPlayerSearch } from "@/components/admin/ServerPlayerSearch";
+import { type AdminUserRow } from "@/components/admin/UserRow";
+import { UserSearch } from "@/components/admin/UserSearch";
 import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
@@ -72,22 +73,13 @@ export default async function AdminUsersPage() {
           <CheckDiscordButton />
         </div>
       )}
-      <Panel className="overflow-hidden">
-        {rows.length === 0 ? (
-          <p className="p-10 text-center text-sm text-cream/60">Noch niemand registriert.</p>
-        ) : (
-          rows.map((user) => (
-            <UserRow
-              key={user.id}
-              user={user}
-              isSelf={user.id === team.id}
-              discordCheckable={discordCheckEnabled}
-              darfRollenAendern={darfAlles}
-              darfLoeschen={darfAlles}
-            />
-          ))
-        )}
-      </Panel>
+      <UserSearch
+        users={rows}
+        selfId={team.id}
+        discordCheckable={discordCheckEnabled}
+        darfRollenAendern={darfAlles}
+        darfLoeschen={darfAlles}
+      />
       <p className="mt-3 text-xs leading-relaxed text-cream/45">
         Deine eigene Rolle lässt sich nicht ändern und dein Account nicht löschen, damit der Kontrollraum erreichbar
         bleibt. Der Discord-Stand wird aktualisiert, wenn jemand sein Dashboard öffnet
@@ -103,25 +95,14 @@ export default async function AdminUsersPage() {
           description="Alle, die schon einmal auf dem Server waren – unabhängig davon, ob sie hier einen Account haben."
           className="mb-5"
         />
-        <Panel className="overflow-hidden">
-          {spieler.length === 0 ? (
-            <p className="p-10 text-center text-sm text-cream/60">
-              Noch war niemand auf dem Server – oder die Verbindung zu Crafty steht nicht.
-            </p>
-          ) : (
-            <ul className="divide-y divide-white/5">
-              {spieler.map((p) => (
-                <ServerPlayerRow
-                  key={p.name}
-                  name={p.name}
-                  online={p.online}
-                  playtimeHours={p.stats?.playtimeHours ?? null}
-                  darfIpSehen={darfAlles}
-                />
-              ))}
-            </ul>
-          )}
-        </Panel>
+        <ServerPlayerSearch
+          spieler={spieler.map((p) => ({
+            name: p.name,
+            online: p.online,
+            playtimeHours: p.stats?.playtimeHours ?? null,
+          }))}
+          darfIpSehen={darfAlles}
+        />
         <p className="mt-3 text-xs leading-relaxed text-cream/45">
           Kicken geht nur, solange jemand online ist. Bannen und Entbannen wirken sofort auf dem Server.{" "}
           {darfAlles
