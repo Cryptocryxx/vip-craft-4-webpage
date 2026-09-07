@@ -69,6 +69,48 @@ model User {
 }
 
 // ---------------------------------------------------------------------------
+// Termine
+//
+// Bis hierher standen die Termine fest im Code (lib/event-types.ts). Die
+// Eintraege von dort bleiben bestehen - sie haben uebersetzte Texte in den
+// Sprachdateien -, neue kommen aus dieser Tabelle und werden dazugemischt.
+//
+// Zeiten stehen als echter Zeitpunkt drin (UTC). Eingegeben wird im
+// Kontrollraum nach der Uhr in Europe/Berlin, umgerechnet wird beim Speichern,
+// siehe lib/zeit.ts.
+// ---------------------------------------------------------------------------
+
+model Event {
+  id String @id @default(cuid())
+
+  title       String
+  description String
+
+  /// Englische Fassung, freiwillig. Leer heisst: Auf der englischen Seite
+  /// steht derselbe Text wie auf der deutschen - besser als eine Luecke.
+  titleEn       String?
+  descriptionEn String?
+
+  start DateTime
+  end   DateTime?
+
+  location String
+  host     String
+
+  /// race | contest | boss | workshop | meeting | party, siehe event-types.ts
+  type String
+
+  /// Treibt den Countdown auf der Startseite. Sind mehrere angehakt, gewinnt
+  /// der naechste - so laesst sich der uebernaechste Termin schon vorbereiten.
+  countdown Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([start])
+}
+
+// ---------------------------------------------------------------------------
 // Taegliches Gehalt
 //
 // Einmal pro KALENDERTAG, nicht alle 24 Stunden: Wer um 23:59 abholt, ist um

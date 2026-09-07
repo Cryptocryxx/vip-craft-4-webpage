@@ -75,7 +75,14 @@ export async function Hero({
           {/* Hier standen Modpack, Slots und Zugang – die Angaben stehen ohnehin
               weiter unten im Modpack-Abschnitt. Der Countdown ist an dieser
               Stelle das Interessantere. */}
-          {countdown && <ServerCountdown zielIso={countdown.zielIso} serverJetzt={countdown.jetzt} />}
+          {countdown && (
+            <ServerCountdown
+              zielIso={countdown.zielIso}
+              serverJetzt={countdown.jetzt}
+              titel={countdown.titel}
+              ort={countdown.ort}
+            />
+          )}
         </div>
 
         {/* Nur in der zweispaltigen Anordnung, also ab lg – dieselbe Grenze wie

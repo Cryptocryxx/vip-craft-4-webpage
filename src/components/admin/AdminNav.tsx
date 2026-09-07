@@ -2,6 +2,7 @@
 
 import { Link, usePathname } from "@/i18n/navigation";
 import {
+  CalendarDays,
   LayoutDashboard,
   MessageSquare,
   MessagesSquare,
@@ -17,6 +18,7 @@ import { cn } from "@/lib/utils";
 type AdminRoute =
   | "/admin"
   | "/admin/whitelist"
+  | "/admin/events"
   | "/admin/shops"
   | "/admin/users"
   | "/admin/chat"
@@ -27,6 +29,7 @@ type AdminRoute =
 const items: Array<{ href: AdminRoute; label: string; icon: LucideIcon; nurAdmin?: boolean }> = [
   { href: "/admin", label: "Übersicht", icon: LayoutDashboard },
   { href: "/admin/whitelist", label: "Whitelist-Anträge", icon: ShieldCheck },
+  { href: "/admin/events", label: "Termine", icon: CalendarDays },
   { href: "/admin/shops", label: "Shops", icon: Store },
   { href: "/admin/users", label: "Spieler", icon: Users },
   { href: "/admin/chat", label: "Chat & Befehle", icon: MessagesSquare },

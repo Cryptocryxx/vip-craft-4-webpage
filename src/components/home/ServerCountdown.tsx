@@ -5,11 +5,12 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarClock, PartyPopper } from "lucide-react";
 
 /**
- * Countdown bis zum Server-Start – sitzt im Hero unter den Knöpfen.
+ * Countdown bis zum nächsten Termin – sitzt im Hero unter den Knöpfen.
  *
- * Ziel und Beschriftung kommen aus dem Event-Kalender (lib/event-types), damit
- * hier kein zweites Datum gepflegt werden muss, das dann irgendwann vom
- * Kalender abweicht.
+ * Welcher Termin das ist, entscheidet der Haken „Countdown auf der Startseite"
+ * im Kontrollraum (siehe lib/events.ts). Titel und Ort kommen aus dem Termin
+ * selbst, damit hier kein zweites Datum gepflegt werden muss, das dann
+ * irgendwann vom Kalender abweicht.
  *
  * `serverJetzt` ist die Uhrzeit, mit der die Seite auf dem Server gebaut wurde.
  * Der erste Aufbau im Browser rechnet mit genau demselben Wert – sonst stünden
@@ -48,10 +49,15 @@ function Feld({ wert, einheit }: { wert: number; einheit: string }) {
 export function ServerCountdown({
   zielIso,
   serverJetzt,
+  titel,
+  ort,
 }: {
   zielIso: string;
   /** Zeitstempel vom Server-Rendern, in Millisekunden. */
   serverJetzt: number;
+  /** Worauf gewartet wird – kommt aus dem Termin selbst. */
+  titel: string;
+  ort: string;
 }) {
   const t = useTranslations("ServerCountdown");
   const locale = useLocale();
@@ -87,7 +93,7 @@ export function ServerCountdown({
           <PartyPopper className="size-3.5" /> {t("goingLive")}
         </p>
         <p className="font-pixel mt-3 text-sm leading-relaxed text-brass-100 sm:text-base" style={pixelSchatten}>
-          {t("serverRunning")}
+          {t("nowRunning", { title: titel })}
         </p>
         <p className="mt-2 text-sm text-cream/65">{t("comeJoinUs")}</p>
       </div>
@@ -97,7 +103,7 @@ export function ServerCountdown({
   return (
     <div className="mt-10 max-w-lg border-t border-brass-500/20 pt-6">
       <p className="eyebrow text-[10px]">
-        <CalendarClock className="size-3.5" /> {t("startingIn")}
+        <CalendarClock className="size-3.5" /> {t("startingIn", { title: titel })}
       </p>
 
       {/* Vier gleich breite Spalten statt fester Breiten: So bleibt die Reihe
@@ -109,7 +115,7 @@ export function ServerCountdown({
         <Feld wert={sekunden} einheit={t("seconds")} />
       </div>
 
-      <p className="mt-3 text-sm text-cream/65">{termin} {t("meetingPoint")}</p>
+      <p className="mt-3 text-sm text-cream/65">{t("meetingPoint", { date: termin, location: ort })}</p>
     </div>
   );
 }

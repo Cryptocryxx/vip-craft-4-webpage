@@ -12,12 +12,12 @@ import { getSiteSettings } from "@/lib/settings";
 import { viewerMaySeeServerIp } from "@/lib/viewer";
 
 export default async function HomePage() {
-  const [settings, darfIpSehen, schritt] = await Promise.all([
+  const [settings, darfIpSehen, schritt, countdown] = await Promise.all([
     getSiteSettings(),
     viewerMaySeeServerIp(),
     offenerSchritt(),
+    getServerStartCountdown(),
   ]);
-  const countdown = getServerStartCountdown();
 
   return (
     <>

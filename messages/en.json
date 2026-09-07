@@ -174,15 +174,15 @@
   },
   "ServerCountdown": {
     "goingLive": "It's starting",
-    "serverRunning": "The server is live!",
     "comeJoinUs": "Grab the modpack and come join us – we'll meet at spawn.",
-    "startingIn": "Server starts in",
+    "startingIn": "{title} in",
     "day": "day",
     "days": "days",
     "hours": "hrs",
     "minutes": "min",
     "seconds": "sec",
-    "meetingPoint": "· Meeting point: spawn"
+    "meetingPoint": "{date} · Meeting point: {location}",
+    "nowRunning": "{title} – it is on!"
   },
   "JoinServerButton": {
     "join": "Join Server",

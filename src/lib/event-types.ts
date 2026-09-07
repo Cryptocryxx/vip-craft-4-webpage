@@ -1,30 +1,27 @@
 import { getTranslations } from "next-intl/server";
+import type { CommunityEvent } from "@/lib/event-kinds";
+import { countdownEvent, eigeneEvents } from "@/lib/events";
 
 /**
  * Der Event-Kalender.
  *
- * Die Termine werden hier von Hand gepflegt – eine Datenbank oder ein Sync mit
- * den Discord-Events gibt es noch nicht. Ausgedachte Einträge stehen hier keine:
- * Was drinsteht, findet wirklich statt.
+ * Zwei Quellen, die beim Abruf zusammenlaufen:
  *
- * Titel und Beschreibung stehen in den Übersetzungen (Namespace "Events",
- * verschachtelt unter der jeweiligen `id`) statt fest im Array unten – nur so
- * bekommt ein echtes, im Code gepflegtes Ereignis auch eine englische Fassung.
+ * ▸ Die Liste unten, fest im Code. Ihre Texte stehen übersetzt in den
+ *   Sprachdateien (Namespace "Events", verschachtelt unter der jeweiligen
+ *   `id`), und der Serverstart hängt an einem dieser Einträge – deshalb
+ *   bleibt sie, statt in die Datenbank zu wandern.
+ * ▸ Die selbst angelegten Termine aus dem Kontrollraum (lib/events.ts).
+ *
+ * Ausgedachte Einträge stehen hier keine: Was drinsteht, findet wirklich statt.
  */
 
-export type EventType = "race" | "contest" | "boss" | "workshop" | "meeting" | "party";
-
-export type CommunityEvent = {
-  id: string;
-  title: string;
-  description: string;
-  /** ISO-Zeitstempel mit Zeitzone, z. B. "2026-09-06T15:00:00+02:00". */
-  start: string;
-  end?: string;
-  location: string;
-  host: string;
-  type: EventType;
-};
+/*
+ * Arten und Form eines Termins stehen in event-kinds.ts – ohne Imports, damit
+ * auch das Formular im Kontrollraum (Client) sie benutzen kann. Hier nur
+ * weitergereicht, damit die bisherigen Importe weiter stimmen.
+ */
+export { EVENT_TYPES, istEventType, type CommunityEvent, type EventType } from "@/lib/event-kinds";
 
 /** Wie die rohen Daten unten, nur ohne Titel/Beschreibung – die kommen erst beim Abruf dazu. */
 type EventSeed = Omit<CommunityEvent, "title" | "description">;
@@ -50,10 +47,11 @@ async function mitText(seed: EventSeed): Promise<CommunityEvent> {
 
 /** Alle Termine, die noch bevorstehen – nächster zuerst. */
 export async function getUpcomingEvents(now: Date = new Date()): Promise<CommunityEvent[]> {
-  const kommend = events
+  const [ausCode, ausDatenbank] = await Promise.all([Promise.all(events.map(mitText)), eigeneEvents()]);
+
+  return [...ausCode, ...ausDatenbank]
     .filter((event) => new Date(event.end ?? event.start).getTime() >= now.getTime())
     .sort((a, b) => a.start.localeCompare(b.start));
-  return Promise.all(kommend.map(mitText));
 }
 
 /**
@@ -70,36 +68,34 @@ export type StartCountdown = {
   zielIso: string;
   /** Die Uhrzeit, mit der die Seite gebaut wurde – siehe ServerCountdown. */
   jetzt: number;
+  /** Worauf gewartet wird, für die Beschriftung. */
+  titel: string;
+  ort: string;
 };
 
 /**
- * Alles, was der Countdown auf der Startseite braucht – oder `null`, wenn der
- * Start lange genug her ist.
+ * Alles, was der Countdown auf der Startseite braucht – oder `null`, wenn
+ * gerade kein Termin dafür vorgemerkt ist.
  *
- * Einen Tag lang bleibt er nach dem Start stehen, damit Nachzügler noch sehen,
- * dass es losgegangen ist. Danach verschwindet der Abschnitt von selbst; ein
- * Countdown auf ein vergangenes Datum ist nur noch Ballast.
+ * Welcher Termin es ist, entscheidet der Haken „Countdown auf der Startseite"
+ * im Kontrollraum; bei mehreren gewinnt der nächste. Einen Tag lang bleibt er
+ * danach stehen, damit Nachzügler noch sehen, dass es losgegangen ist – danach
+ * verschwindet der Abschnitt von selbst.
  *
  * Die aktuelle Uhrzeit wird bewusst hier geholt und nicht in der Seite: Ein
  * `Date.now()` mitten im Rendern ist unrein, und React beanstandet das zu
  * Recht – das Ergebnis würde sich bei jedem erneuten Rendern ändern.
- *
- * Keinen Titel mehr im Rückgabewert: ServerCountdown texted sich selbst, den
- * Titel des Kalendereintrags hat ohnehin nie jemand angezeigt.
  */
-export function getServerStartCountdown(): StartCountdown | null {
+export async function getServerStartCountdown(): Promise<StartCountdown | null> {
   const jetzt = Date.now();
-  const start = events.find((event) => event.id === "season4-start");
-  if (!start) return null;
+  const termin = await countdownEvent(new Date(jetzt));
+  if (!termin) return null;
 
-  const einTag = 24 * 60 * 60 * 1000;
-  if (jetzt - new Date(start.start).getTime() > einTag) return null;
-
-  return { zielIso: start.start, jetzt };
+  return { zielIso: termin.start, jetzt, titel: termin.title, ort: termin.location };
 }
 
 /** Alle Termine, auch vergangene. */
 export async function getAllEvents(): Promise<CommunityEvent[]> {
-  const sortiert = [...events].sort((a, b) => a.start.localeCompare(b.start));
-  return Promise.all(sortiert.map(mitText));
+  const [ausCode, ausDatenbank] = await Promise.all([Promise.all(events.map(mitText)), eigeneEvents()]);
+  return [...ausCode, ...ausDatenbank].sort((a, b) => a.start.localeCompare(b.start));
 }
