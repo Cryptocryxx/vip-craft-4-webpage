@@ -648,7 +648,10 @@
     "pvpKilledBy": "Fell to",
     "pvpNone": "No fights against other players yet.",
     "airborneDistance": "Airborne",
-    "airborneDistanceHint": "jumps and falls"
+    "airborneDistanceHint": "jumps and falls",
+    "flightTime": "Flight time",
+    "flightDistance": "Distance flown",
+    "flightHint": "on airships"
   },
   "LeaderboardCategories": {
     "playtime": {

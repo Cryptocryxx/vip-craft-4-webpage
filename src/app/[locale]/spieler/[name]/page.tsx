@@ -28,6 +28,7 @@ import { PlayerHead } from "@/components/ui/PlayerHead";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { formatCogsLong } from "@/lib/currency";
 import { todeVonSpieler } from "@/lib/death-log";
+import { flugBilanz } from "@/lib/flight";
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
 import { findPlayer } from "@/lib/players";
 
@@ -183,6 +184,8 @@ export default async function SpielerDetailPage({ params }: Props) {
   const [spieler, t] = await Promise.all([findPlayer(decodeURIComponent(name)), getTranslations("PlayerDetailPage")]);
   if (!spieler) notFound();
 
+  const flug = await flugBilanz(spieler.uuid, spieler.name);
+
   const s = spieler.stats;
 
   const aktivitaet: Kachel[] = s
@@ -199,8 +202,21 @@ export default async function SpielerDetailPage({ params }: Props) {
       ]
     : [];
 
+  /*
+   * Fliegen steht bewusst NICHT unter "Aktivitaet" bei den Vanilla-Zahlen:
+   * Diese beiden kommen aus unserer eigenen Messung im Spiel und gibt es erst
+   * seit dem 07.09.2026 - sie stehen deshalb bei Create & Aeronautics, wo sie
+   * hingehoeren, und zaehlen bei null los.
+   */
   const create: Kachel[] = s
     ? [
+        { icon: Plane, label: t("flightTime"), wert: formatHours(flug.sekunden / 3600), hinweis: t("flightHint") },
+        {
+          icon: Plane,
+          label: t("flightDistance"),
+          wert: formatDistanceKm(flug.meter / 1000),
+          hinweis: t("flightHint"),
+        },
         { icon: Cog, label: t("andesiteAlloy"), wert: formatNumber(s.andesiteAlloyCrafted), hinweis: t("andesiteAlloyHint") },
         { icon: Cog, label: t("cogwheels"), wert: formatNumber(s.cogwheelsPlaced), hinweis: t("cogwheelsHint") },
         { icon: Cog, label: t("largeCogwheels"), wert: formatNumber(s.largeCogwheelsPlaced), hinweis: t("largeCogwheelsHint") },

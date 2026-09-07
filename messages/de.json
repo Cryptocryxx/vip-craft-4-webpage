@@ -648,7 +648,10 @@
     "pvpKilledBy": "Gefallen durch",
     "pvpNone": "Noch kein Kampf gegen andere Spieler.",
     "airborneDistance": "In der Luft",
-    "airborneDistanceHint": "Sprünge und Stürze"
+    "airborneDistanceHint": "Sprünge und Stürze",
+    "flightTime": "Flugzeit",
+    "flightDistance": "Flugstrecke",
+    "flightHint": "auf Luftschiffen"
   },
   "LeaderboardCategories": {
     "playtime": {

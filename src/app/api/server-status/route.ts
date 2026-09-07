@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { holeDiscordNachrichten } from "@/lib/discord-chat";
+import { holeFlugdaten } from "@/lib/flight";
 import { holeEreignisse } from "@/lib/game-log";
 import { fetchServerStatus } from "@/lib/server-status";
 import { getSiteSettings } from "@/lib/settings";
@@ -39,6 +40,8 @@ export async function GET() {
    * hoechstens alle 10 Sekunden ein echter Abruf.
    */
   void holeEreignisse();
+  // Flugzeit/-strecke von den Luftschiffen, gezaehlt vom KubeJS-Skript.
+  void holeFlugdaten();
   // Unabhaengig vom Minecraft-Server: Im Discord-Kanal wird auch geschrieben,
   // waehrend der Server aus ist.
   void holeDiscordNachrichten();

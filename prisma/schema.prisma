@@ -69,6 +69,39 @@ model User {
 }
 
 // ---------------------------------------------------------------------------
+// Flugzeit und Flugstrecke
+//
+// Das KubeJS-Skript (flight-log.js) zaehlt je Serverlauf mit und schreibt den
+// Stand in eine Datei. Gespeichert wird hier PRO LAUF, nicht als eine grosse
+// Summe: Die Datei kennt immer nur den laufenden Serverlauf, ein Neustart
+// setzt sie auf null. Waere hier eine Gesamtsumme, muesste jemand Deltas
+// ausrechnen - und jeder verpasste oder doppelte Abruf verfaelschte sie.
+//
+// So ist das Abholen stattdessen wiederholbar: Dieselbe Zeile wird einfach
+// ueberschrieben, und die Gesamtsumme ist die Summe ueber alle Laeufe.
+// ---------------------------------------------------------------------------
+
+model FlightStat {
+  id String @id @default(cuid())
+
+  /// Serverlauf, aus dem die Zahlen stammen.
+  runId String
+  /// Minecraft-UUID mit Bindestrichen, wie im Spiel.
+  uuid String
+  /// Name zum Zeitpunkt des Laufs - fuer die Anzeige, wenn kein Account verknuepft ist.
+  name String
+
+  seconds Int
+  /// Waagerecht zurueckgelegte Strecke in Metern (Bloecken).
+  meters Int
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([runId, uuid])
+  @@index([uuid])
+}
+
+// ---------------------------------------------------------------------------
 // Termine
 //
 // Bis hierher standen die Termine fest im Code (lib/event-types.ts). Die
