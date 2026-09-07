@@ -613,7 +613,6 @@
     "playtime": "Spielzeit",
     "blocksMined": "Blöcke abgebaut",
     "walkedDistance": "Strecke zu Fuß",
-    "flownDistance": "Strecke geflogen",
     "andesiteAlloy": "Andesit-Legierung",
     "andesiteAlloyHint": "hergestellt",
     "cogwheels": "Zahnräder",
@@ -647,7 +646,9 @@
     "pvpTitle": "Duelle",
     "pvpKilled": "Erledigt",
     "pvpKilledBy": "Gefallen durch",
-    "pvpNone": "Noch kein Kampf gegen andere Spieler."
+    "pvpNone": "Noch kein Kampf gegen andere Spieler.",
+    "airborneDistance": "In der Luft",
+    "airborneDistanceHint": "Sprünge und Stürze"
   },
   "LeaderboardCategories": {
     "playtime": {

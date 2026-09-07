@@ -613,7 +613,6 @@
     "playtime": "Playtime",
     "blocksMined": "Blocks mined",
     "walkedDistance": "Distance walked",
-    "flownDistance": "Distance flown",
     "andesiteAlloy": "Andesite alloy",
     "andesiteAlloyHint": "crafted",
     "cogwheels": "Cogwheels",
@@ -647,7 +646,9 @@
     "pvpTitle": "Duels",
     "pvpKilled": "Defeated",
     "pvpKilledBy": "Fell to",
-    "pvpNone": "No fights against other players yet."
+    "pvpNone": "No fights against other players yet.",
+    "airborneDistance": "Airborne",
+    "airborneDistanceHint": "jumps and falls"
   },
   "LeaderboardCategories": {
     "playtime": {

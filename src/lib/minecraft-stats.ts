@@ -37,8 +37,20 @@ export type ParsedStats = {
   damageTaken: number;
 
   // --- Create und die Add-ons dieses Modpacks ---
-  /** Zurückgelegte Flugstrecke. Bei einem Aeronautics-Server die Kennzahl. */
-  flownKm: number;
+  /**
+   * Strecke, die in der Luft zurückgelegt wurde – NICHT die Flugstrecke.
+   *
+   * `minecraft:fly_one_cm` klingt danach, ist es aber nicht: Vanilla zählt dort
+   * alles, was waagerecht in der Luft passiert und in keine genauere Schublade
+   * passt – jeder Sprunglauf, jeder Sturz, dazu Kreativflug. Elytren hätten
+   * einen eigenen Zähler (`aviate_one_cm`), und Create-Luftschiffe tauchen in
+   * den Vanilla-Statistiken überhaupt nicht auf.
+   *
+   * Am Server nachgerechnet (07.09.2026): Alle 25 Spieler hatten hier Werte,
+   * keiner davon auch nur einen Zentimeter mit Elytra – die Zahl lief exakt
+   * mit der Zahl der Sprünge mit.
+   */
+  airborneKm: number;
   cogwheelsPlaced: number;
   largeCogwheelsPlaced: number;
   /** Verlegte Create-Zugschienen. */
@@ -112,7 +124,7 @@ export function parseStats(raw: RawStatsFile): ParsedStats {
     jumps: pick(custom, "minecraft:jump"),
     damageTaken: Math.round(pick(custom, "minecraft:damage_taken") / 10), // Zehntel-Herzen → Herzen
 
-    flownKm: round(pick(custom, "minecraft:fly_one_cm") / CM_PER_KM),
+    airborneKm: round(pick(custom, "minecraft:fly_one_cm") / CM_PER_KM),
     cogwheelsPlaced: pick(used, "create:cogwheel"),
     largeCogwheelsPlaced: pick(used, "create:large_cogwheel"),
     trackPlaced: pick(used, "create:track"),

@@ -4,6 +4,7 @@ import { Link } from "@/i18n/navigation";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowUp,
   Bomb,
   Cake,
   Clock,
@@ -189,7 +190,12 @@ export default async function SpielerDetailPage({ params }: Props) {
         { icon: Clock, label: t("playtime"), wert: formatHours(s.playtimeHours) },
         { icon: Pickaxe, label: t("blocksMined"), wert: formatNumber(s.blocksMined) },
         { icon: Footprints, label: t("walkedDistance"), wert: formatDistanceKm(s.walkedKm) },
-        { icon: Plane, label: t("flownDistance"), wert: formatDistanceKm(s.flownKm) },
+        {
+          icon: ArrowUp,
+          label: t("airborneDistance"),
+          wert: formatDistanceKm(s.airborneKm),
+          hinweis: t("airborneDistanceHint"),
+        },
       ]
     : [];
 
