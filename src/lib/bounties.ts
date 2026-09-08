@@ -172,6 +172,7 @@ export async function setzeKopfgeldAus(
   if (quittung?.ok === true) {
     await prisma.bounty.update({ where: { id: zeile.id }, data: { status: "OPEN" } });
     await schreibeServerListe();
+    await sageKopfgeldAn(targetName, eingabe.cogs, expiresAt, { id: user.id, name: user.name });
     return { ok: true, cogs: eingabe.cogs, ziel: targetName };
   }
 
@@ -179,6 +180,39 @@ export async function setzeKopfgeldAus(
 
   if (quittung?.grund === "zu-wenig") return { ok: false, grund: "zu-wenig" };
   return { ok: false, grund: "nicht-angekommen", detail: gesendet.ok ? undefined : gesendet.error };
+}
+
+/**
+ * Sagt ein frisch ausgesetztes Kopfgeld allen an, die gerade online sind.
+ *
+ * Bewusst erst NACH der bestätigten Abbuchung aufgerufen: Eine Ansage für ein
+ * Kopfgeld, das an der Bezahlung scheitert, wäre schlimmer als gar keine.
+ *
+ * Wer offline ist, erfährt es beim nächsten Betreten – dafür liest bounty.js
+ * die Liste, die schreibeServerListe() hinterlegt.
+ *
+ * Das Datum geht fertig formatiert mit ("12.09.", oder "-" für unbefristet):
+ * Im Skript soll nicht mit Zeitzonen gerechnet werden. Alle drei Angaben sind
+ * Einzelwörter ohne Leerzeichen – der Name kommt kanonisch von Mojang und
+ * erfüllt GAMERTAG_RE, der Betrag ist eine geprüfte Zahl. Der Befehl kann
+ * dadurch nicht aufgespalten werden.
+ *
+ * Scheitert die Ansage, bleibt das Kopfgeld trotzdem stehen. Es steht auf der
+ * Website und wird beim Betreten angesagt; eine verpasste Zeile im Chat ist
+ * kein Grund, das Geld zurückzubuchen.
+ */
+async function sageKopfgeldAn(
+  ziel: string,
+  cogs: number,
+  expiresAt: Date | null,
+  actor: { id: string; name: string | null },
+): Promise<void> {
+  const frist = expiresAt ? kurzesDatum(expiresAt) : "-";
+  await runPlayerCommand(
+    `vipkopfgeld melden ${ziel} ${cogs} ${frist}`,
+    `Kopfgeld auf ${ziel} im Spiel angekuendigt`,
+    actor,
+  );
 }
 
 // ---------------------------------------------------------------------------

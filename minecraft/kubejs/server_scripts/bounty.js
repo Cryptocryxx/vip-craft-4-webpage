@@ -4,6 +4,7 @@
 //
 //     vipkopfgeld abbuchen  <spieler-uuid> <spurs> <beleg-id>
 //     vipkopfgeld auszahlen <spieler-uuid> <spurs> <beleg-id>
+//     vipkopfgeld melden    <ziel-name> <cogs> <frist|->
 //
 // und schreibt jede Buchung nach kubejs/data/bounty.json. Die Website liest
 // diese Quittung und glaubt erst dann, dass etwas passiert ist — genau wie beim
@@ -17,11 +18,21 @@
 // "ok": false in der Quittung, und die Website legt das Kopfgeld dann gar nicht
 // erst an. Ein Kopfgeld ohne Deckung wäre Falschgeld.
 //
-// ANKÜNDIGUNG BEIM BETRETEN: Die Website legt die offenen Kopfgelder unter
-// kubejs/data/bounty-list.json ab, hier wird die Datei bei jedem Login frisch
-// gelesen. Bewusst so herum: Die Website weiß erst mit bis zu einer Minute
-// Verzögerung, dass jemand da ist (sie liest das Protokoll), für eine
-// Begrüßung ist das zu spät.
+// ZWEI ARTEN VON ANKÜNDIGUNG, und sie brauchen verschiedene Wege:
+//
+//   Beim BETRETEN liest dieses Skript kubejs/data/bounty-list.json, das die
+//   Website pflegt. Bewusst so herum: Die Website erfährt erst mit bis zu einer
+//   Minute Verzögerung, dass jemand da ist (sie liest das Protokoll) — für eine
+//   Begrüßung viel zu spät.
+//
+//   Beim AUSSETZEN schickt die Website "vipkopfgeld melden" und alle, die
+//   gerade online sind, erfahren es sofort. Andersherum ginge es nicht: Das
+//   Skript müsste die Liste dauernd nach neuen Zeilen absuchen, um zu merken,
+//   dass etwas dazugekommen ist.
+//
+//   Die Ansage geht erst raus, wenn das Geld abgebucht IST — siehe
+//   setzeKopfgeldAus in lib/bounties.ts. Ein angekündigtes Kopfgeld, das an der
+//   Bezahlung scheitert, wäre schlimmer als gar keine Ansage.
 //
 // ALLE Namen tragen das Präfix KOPF_/kopf: KubeJS lädt alle server_scripts in
 // EIN gemeinsames globales Scope. Ein zweites "var DATEI" würde die
@@ -38,8 +49,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 2
 
+var KOPF_FASSUNG = 2; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
@@ -75,6 +87,13 @@ var kopfBelege = [];
 var kopfFehler = [];
 var kopfBereit = false;
 var kopfWartende = []; // { uuid, faelligTick } - Begruessungen, die noch anstehen
+/*
+ * Ansagen, die beim naechsten Tick rausgehen. Der Umweg ueber die
+ * Warteschlange, weil im Befehl-Ereignis nicht sicher ein Server-Objekt
+ * bereitsteht - der Tick liefert eins nachweislich (siehe flight-log.js), und
+ * eine Verzoegerung von einem Tick merkt niemand.
+ */
+var kopfAnsagen = []; // { ziel, cogs, frist }
 
 function kopfSchreibeDatei() {
     try {
@@ -83,6 +102,7 @@ function kopfSchreibeDatei() {
         var inhalt = {
             generatedAt: new Date().toISOString(),
             ready: kopfBereit,
+            script: KOPF_FASSUNG,
             errors: kopfFehler,
             receipts: kopfBelege,
         };
@@ -227,6 +247,28 @@ function kopfSage(spieler, text) {
     }
 }
 
+/**
+ * Sagt ein frisch ausgesetztes Kopfgeld allen an, die gerade da sind.
+ *
+ * Wer selbst gemeint ist, bekommt es deutlicher gesagt - das ist die
+ * Nachricht, auf die es fuer ihn ankommt.
+ */
+function kopfSageAnsageAn(server, ansage) {
+    var frist = ansage.frist && ansage.frist !== "-" ? " bis zum " + ansage.frist : "";
+    var fuerAlle = "Neu ausgesetzt: Auf " + ansage.ziel + " steht" + frist + " ein Kopfgeld von " + ansage.cogs + " Cog.";
+    var fuersZiel = "Achtung: Auf DICH steht ab jetzt" + frist + " ein Kopfgeld von " + ansage.cogs + " Cog.";
+    var zielKlein = String(ansage.ziel).toLowerCase();
+
+    server.getPlayers().forEach(function (spieler) {
+        try {
+            var name = String(spieler.getUsername()).toLowerCase();
+            kopfSage(spieler, name === zielKlein ? fuersZiel : fuerAlle);
+        } catch (e) {
+            /* Einer, der die Nachricht nicht bekommt, darf die anderen nicht kosten. */
+        }
+    });
+}
+
 function kopfBegruesse(spieler) {
     var liste = kopfLiesListe();
     if (liste === null || !liste.entries || liste.entries.length === 0) return;
@@ -284,10 +326,23 @@ try {
             var teile = eingabe.split(/\s+/);
             if (teile.length < 4) {
                 console.log("[bounty] Aufruf: vipkopfgeld <abbuchen|auszahlen> <uuid> <spurs> <belegId>");
+                console.log("[bounty]     oder: vipkopfgeld melden <ziel> <cogs> <frist|->");
                 return;
             }
 
             var art = teile[0];
+
+            // Reine Ansage, keine Buchung: braucht weder Numismatics noch einen Beleg.
+            if (art === "melden") {
+                var cogs = parseInt(teile[2], 10);
+                if (!isFinite(cogs) || cogs <= 0) {
+                    console.log("[bounty] Betrag unplausibel: " + teile[2]);
+                    return;
+                }
+                kopfAnsagen.push({ ziel: teile[1], cogs: cogs, frist: teile[3] });
+                return;
+            }
+
             var spurs = parseInt(teile[2], 10);
             if (!isFinite(spurs) || spurs <= 0 || spurs > 10000000) {
                 console.log("[bounty] Betrag unplausibel: " + teile[2]);
@@ -336,6 +391,19 @@ try {
 
 try {
     ServerEvents.tick(function (event) {
+        if (kopfWartende.length === 0 && kopfAnsagen.length === 0) return;
+
+        // Ansagen zuerst und getrennt abgesichert: Sie sollen nicht ausfallen,
+        // nur weil bei einer Begruessung etwas schiefgeht.
+        while (kopfAnsagen.length > 0) {
+            var ansage = kopfAnsagen.shift();
+            try {
+                kopfSageAnsageAn(event.server, ansage);
+            } catch (e) {
+                kopfMerkeFehler("Ansage fehlgeschlagen: " + e);
+            }
+        }
+
         if (kopfWartende.length === 0) return;
         try {
             var tick = event.server.getTickCount();
