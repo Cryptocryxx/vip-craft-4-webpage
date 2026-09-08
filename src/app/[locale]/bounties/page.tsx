@@ -49,6 +49,9 @@ function OffeneZeile({ eintrag, locale, t }: ZeilenProps) {
           {t("placedBy", { name: eintrag.placerName })}
           {eintrag.expiresAt && ` · ${t("until", { date: datum(eintrag.expiresAt, locale) })}`}
         </p>
+        {/* Die Begruendung steht in Anfuehrungszeichen: Es ist die Sicht des
+            Ausschreibers, nicht die des Servers. */}
+        {eintrag.reason && <p className="mt-0.5 text-xs text-cream/70 italic">&bdquo;{eintrag.reason}&ldquo;</p>}
       </div>
       <Badge tone="brass">
         <Coins className="size-3" /> {formatNumber(eintrag.cogs)} Cog

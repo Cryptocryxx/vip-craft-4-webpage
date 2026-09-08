@@ -6,6 +6,7 @@
  * bei whitelist-types.ts und event-kinds.ts.
  */
 import { SPURS_PER_COG } from "@/lib/currency";
+import { enthaeltBeleidigung, fuerKonsole } from "@/lib/schimpfwoerter";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
 
 /**
@@ -30,11 +31,16 @@ export const MAX_COGS = 10_000;
 /** So weit darf ein Enddatum höchstens in der Zukunft liegen. */
 export const MAX_TAGE_VORAUS = 365;
 
+/** So lang darf eine Begründung sein – sie muss in eine Chatzeile passen. */
+export const MAX_GRUND_LAENGE = 90;
+
 export type BountyInput = {
   targetName: string;
   cogs: number;
   /** "YYYY-MM-DD" oder null für unbefristet. */
   expiresOn: string | null;
+  /** Freiwillige Begründung, schon konsolentauglich gemacht. null = keine. */
+  reason: string | null;
 };
 
 type Uebersetzer = (schluessel: string, werte?: Record<string, string | number>) => string;
@@ -49,7 +55,7 @@ const DATUM_RE = /^\d{4}-\d{2}-\d{2}$/;
  * eingezahlt hat – und es ergibt auch als Spiel keinen Sinn.
  */
 export function validateBountyInput(
-  raw: { targetName?: unknown; cogs?: unknown; expiresOn?: unknown },
+  raw: { targetName?: unknown; cogs?: unknown; expiresOn?: unknown; reason?: unknown },
   eigenerName: string | null,
   t: Uebersetzer,
 ): { ok: true; data: BountyInput } | { ok: false; error: string } {
@@ -66,15 +72,26 @@ export function validateBountyInput(
     return { ok: false, error: t("bountyAmount", { min: MIN_COGS, max: MAX_COGS }) };
   }
 
+  /*
+   * Die Begründung wird ZUERST entschärft und dann geprüft, nicht umgekehrt:
+   * Sonst käme "Idi§ot" durch die Wortliste und stünde hinterher als "Idiot"
+   * im Chat.
+   */
+  const grundRoh = typeof raw.reason === "string" ? fuerKonsole(raw.reason, MAX_GRUND_LAENGE) : "";
+  if (grundRoh.length > 0 && enthaeltBeleidigung(grundRoh)) {
+    return { ok: false, error: t("bountyReasonRude") };
+  }
+  const reason = grundRoh.length > 0 ? grundRoh : null;
+
   const roh = typeof raw.expiresOn === "string" ? raw.expiresOn.trim() : "";
   if (roh.length === 0) {
-    return { ok: true, data: { targetName, cogs, expiresOn: null } };
+    return { ok: true, data: { targetName, cogs, expiresOn: null, reason } };
   }
   if (!DATUM_RE.test(roh)) {
     return { ok: false, error: t("bountyDateInvalid") };
   }
 
-  return { ok: true, data: { targetName, cogs, expiresOn: roh } };
+  return { ok: true, data: { targetName, cogs, expiresOn: roh, reason } };
 }
 
 /**
@@ -91,7 +108,16 @@ export function kurzesDatum(zeitpunkt: Date): string {
   }).format(zeitpunkt);
 }
 
-export type ListenEintrag = { target: string; targetUuid: string | null; cogs: number; until: string | null };
+export type ListenEintrag = {
+  target: string;
+  targetUuid: string | null;
+  cogs: number;
+  until: string | null;
+  /** Name des Ausschreibers – nur, wenn es genau einer ist. */
+  by: string | null;
+  /** Wie viele verschiedene Leute Geld daraufgelegt haben. */
+  byCount: number;
+};
 
 /**
  * Fasst die offenen Kopfgelder je Ziel zu einer Zeile zusammen.
@@ -109,11 +135,17 @@ export type ListenEintrag = { target: string; targetUuid: string | null; cogs: n
  * Spielserver zu überschreiben.
  */
 export function buendleKopfgelder(
-  offen: Array<{ targetName: string; targetUuid: string | null; spurs: number; expiresAt: Date | null }>,
+  offen: Array<{
+    targetName: string;
+    targetUuid: string | null;
+    placerName: string;
+    spurs: number;
+    expiresAt: Date | null;
+  }>,
 ): ListenEintrag[] {
   const gebuendelt = new Map<
     string,
-    { target: string; targetUuid: string | null; cogs: number; fristen: Set<string> }
+    { target: string; targetUuid: string | null; cogs: number; fristen: Set<string>; leute: Set<string> }
   >();
 
   for (const eintrag of offen) {
@@ -125,12 +157,14 @@ export function buendleKopfgelder(
     if (vorhanden) {
       vorhanden.cogs += cogs;
       vorhanden.fristen.add(frist);
+      vorhanden.leute.add(eintrag.placerName);
     } else {
       gebuendelt.set(schluessel, {
         target: eintrag.targetName,
         targetUuid: eintrag.targetUuid,
         cogs,
         fristen: new Set([frist]),
+        leute: new Set([eintrag.placerName]),
       });
     }
   }
@@ -144,6 +178,10 @@ export function buendleKopfgelder(
         targetUuid: eintrag.targetUuid,
         cogs: eintrag.cogs,
         until: einheitlich === "" ? null : einheitlich,
+        // Genau wie bei der Frist: Ein Name steht nur dann da, wenn er stimmt.
+        // Bei mehreren nennt die Ansage die Anzahl statt einen davon.
+        by: eintrag.leute.size === 1 ? [...eintrag.leute][0] : null,
+        byCount: eintrag.leute.size,
       };
     });
 }

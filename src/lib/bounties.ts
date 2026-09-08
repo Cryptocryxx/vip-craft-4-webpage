@@ -157,6 +157,7 @@ export async function setzeKopfgeldAus(
       spurs,
       status: "PENDING",
       expiresAt,
+      reason: eingabe.reason,
     },
     select: { id: true },
   });
@@ -172,7 +173,10 @@ export async function setzeKopfgeldAus(
   if (quittung?.ok === true) {
     await prisma.bounty.update({ where: { id: zeile.id }, data: { status: "OPEN" } });
     await schreibeServerListe();
-    await sageKopfgeldAn(targetName, eingabe.cogs, expiresAt, { id: user.id, name: user.name });
+    await sageKopfgeldAn(targetName, eingabe.cogs, expiresAt, user.minecraftName, eingabe.reason, {
+      id: user.id,
+      name: user.name,
+    });
     return { ok: true, cogs: eingabe.cogs, ziel: targetName };
   }
 
@@ -205,11 +209,21 @@ async function sageKopfgeldAn(
   ziel: string,
   cogs: number,
   expiresAt: Date | null,
+  ausschreiber: string,
+  grund: string | null,
   actor: { id: string; name: string | null },
 ): Promise<void> {
   const frist = expiresAt ? kurzesDatum(expiresAt) : "-";
+  /*
+   * Die Begründung steht am Ende, weil sie als Einzige Leerzeichen enthält –
+   * das Skript hängt schlicht alles ab dem sechsten Wort wieder zusammen. Sie
+   * ist zu diesem Zeitpunkt bereits durch fuerKonsole gelaufen (siehe
+   * validateBountyInput), enthält also keine Zeilenumbrüche und kein
+   * Paragraphenzeichen, mit dem sich Chatfarben fälschen ließen.
+   */
+  const anhang = grund ? ` ${grund}` : "";
   await runPlayerCommand(
-    `vipkopfgeld melden ${ziel} ${cogs} ${frist}`,
+    `vipkopfgeld melden ${ziel} ${cogs} ${frist} ${ausschreiber}${anhang}`,
     `Kopfgeld auf ${ziel} im Spiel angekuendigt`,
     actor,
   );
@@ -471,7 +485,7 @@ export async function schreibeServerListe(): Promise<void> {
   try {
     const offen = await prisma.bounty.findMany({
       where: { status: { in: ["OPEN", "PAYING"] } },
-      select: { targetName: true, targetUuid: true, spurs: true, expiresAt: true },
+      select: { targetName: true, targetUuid: true, placerName: true, spurs: true, expiresAt: true },
       orderBy: { spurs: "desc" },
       take: 50,
     });
@@ -529,6 +543,8 @@ export type KopfgeldZeile = {
   targetName: string;
   cogs: number;
   placerName: string;
+  /** Begruendung des Ausschreibers, falls angegeben. */
+  reason: string | null;
   expiresAt: string | null;
   createdAt: string;
   status: string;
@@ -543,6 +559,7 @@ function zuZeile(eintrag: {
   targetName: string;
   spurs: number;
   placerName: string;
+  reason: string | null;
   expiresAt: Date | null;
   createdAt: Date;
   status: string;
@@ -555,6 +572,7 @@ function zuZeile(eintrag: {
     targetName: eintrag.targetName,
     cogs: Math.round(eintrag.spurs / SPURS_PER_COG),
     placerName: eintrag.placerName,
+    reason: eintrag.reason,
     expiresAt: eintrag.expiresAt?.toISOString() ?? null,
     createdAt: eintrag.createdAt.toISOString(),
     status: eintrag.status,
@@ -569,6 +587,7 @@ const anzeigeFelder = {
   targetName: true,
   spurs: true,
   placerName: true,
+  reason: true,
   expiresAt: true,
   createdAt: true,
   status: true,

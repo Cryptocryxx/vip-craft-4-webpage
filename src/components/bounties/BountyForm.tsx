@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Check, Coins, Crosshair, Loader2 } from "lucide-react";
 import { createBountyAction, type BountyFormState } from "@/lib/actions/bounties";
-import { MAX_COGS, MIN_COGS } from "@/lib/bounty-types";
+import { MAX_COGS, MAX_GRUND_LAENGE, MIN_COGS } from "@/lib/bounty-types";
 
 const initialState: BountyFormState = {};
 
@@ -119,6 +119,24 @@ export function BountyForm({ guthaben, spieler }: { guthaben: number | null; spi
           <input id="bounty-until" name="expiresOn" type="date" min={morgen()} className="input" />
           <p className="mt-1 text-[11px] text-cream/45">{t("untilHint")}</p>
         </div>
+      </div>
+
+      <div>
+        <label
+          htmlFor="bounty-reason"
+          className="mb-1.5 block text-xs font-semibold tracking-wider text-cream/60 uppercase"
+        >
+          {t("reasonLabel")}
+        </label>
+        <textarea
+          id="bounty-reason"
+          name="reason"
+          rows={2}
+          maxLength={MAX_GRUND_LAENGE}
+          placeholder={t("reasonPlaceholder")}
+          className="input resize-none"
+        />
+        <p className="mt-1 text-[11px] text-cream/45">{t("reasonHint")}</p>
       </div>
 
       <p className="rounded-lg border border-brass-500/25 bg-brass-500/5 px-3 py-2 text-xs leading-relaxed text-cream/65">

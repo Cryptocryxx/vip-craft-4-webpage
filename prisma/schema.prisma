@@ -112,6 +112,11 @@ model Bounty {
   /// Optionales Ende. null = laeuft, bis es jemand holt.
   expiresAt DateTime?
 
+  /// Freiwillige Begruendung des Ausschreibers. Steht oeffentlich auf der
+  /// Website und geht als Chatzeile an alle - deshalb laeuft sie vorher durch
+  /// die Pruefung in lib/schimpfwoerter.ts.
+  reason String?
+
   /// Wer kassiert hat.
   claimedByName String?
   claimedByUuid String?

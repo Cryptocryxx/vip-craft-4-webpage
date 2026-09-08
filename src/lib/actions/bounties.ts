@@ -27,6 +27,7 @@ export async function createBountyAction(_prev: BountyFormState, formData: FormD
       targetName: formData.get("targetName"),
       cogs: formData.get("cogs"),
       expiresOn: formData.get("expiresOn"),
+      reason: formData.get("reason"),
     },
     user.minecraftName,
     tValidation,

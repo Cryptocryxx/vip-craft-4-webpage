@@ -443,7 +443,8 @@
     "messageRequired": "Please briefly say who you know on the server.",
     "bountyOnSelf": "You cannot put a bounty on yourself.",
     "bountyAmount": "The stake has to be between {min} and {max} Cog.",
-    "bountyDateInvalid": "That end date is not valid."
+    "bountyDateInvalid": "That end date is not valid.",
+    "bountyReasonRude": "That reason contains an insult. Please keep it civil."
   },
   "MojangCheck": {
     "notFound": "The Minecraft name “{name}” doesn't exist. Please check the spelling."
@@ -903,6 +904,9 @@
     "notDelivered": "The charge did not go through. Nothing was deducted – please try again.",
     "targetChoose": "Choose a player …",
     "groupOnline": "Online now",
-    "groupOthers": "Everyone else"
+    "groupOthers": "Everyone else",
+    "reasonLabel": "Reason (optional)",
+    "reasonPlaceholder": "e.g. raided my base",
+    "reasonHint": "Shown publicly and announced in chat. Insults are rejected."
   }
 }

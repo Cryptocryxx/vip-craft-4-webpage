@@ -4,7 +4,7 @@
 //
 //     vipkopfgeld abbuchen  <spieler-uuid> <spurs> <beleg-id>
 //     vipkopfgeld auszahlen <spieler-uuid> <spurs> <beleg-id>
-//     vipkopfgeld melden    <ziel-name> <cogs> <frist|->
+//     vipkopfgeld melden    <ziel-name> <cogs> <frist|-> <ausschreiber> [grund ...]
 //
 // und schreibt jede Buchung nach kubejs/data/bounty.json. Die Website liest
 // diese Quittung und glaubt erst dann, dass etwas passiert ist — genau wie beim
@@ -34,6 +34,12 @@
 //   setzeKopfgeldAus in lib/bounties.ts. Ein angekündigtes Kopfgeld, das an der
 //   Bezahlung scheitert, wäre schlimmer als gar keine Ansage.
 //
+//   Die Begründung steht im Befehl GANZ HINTEN, weil sie als Einzige
+//   Leerzeichen enthält: Alles ab dem sechsten Wort wird wieder zusammengefügt.
+//   Sie ist auf der Website schon entschärft worden (lib/schimpfwoerter.ts) —
+//   ohne Zeilenumbruch, ohne Paragraphenzeichen, mit dem sich Chatfarben oder
+//   eine falsche Servermeldung basteln ließen — und auf Beschimpfungen geprüft.
+//
 //   STÜNDLICH geht die Liste zusätzlich an alle raus, die gerade spielen. Das
 //   macht dieses Skript von sich aus und nicht die Website: Der Server tickt
 //   immer, die Website dagegen rechnet nur, wenn jemand eine Seite öffnet — ein
@@ -54,9 +60,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 3
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 4
 
-var KOPF_FASSUNG = 3; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
+var KOPF_FASSUNG = 4; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
@@ -266,19 +272,45 @@ function kopfSage(spieler, text) {
  * Nachricht, auf die es fuer ihn ankommt.
  */
 function kopfSageAnsageAn(server, ansage) {
-    var frist = ansage.frist && ansage.frist !== "-" ? " bis zum " + ansage.frist : "";
-    var fuerAlle = "Neu ausgesetzt: Auf " + ansage.ziel + " steht" + frist + " ein Kopfgeld von " + ansage.cogs + " Cog.";
-    var fuersZiel = "Achtung: Auf DICH steht ab jetzt" + frist + " ein Kopfgeld von " + ansage.cogs + " Cog.";
+    var frist = ansage.frist && ansage.frist !== "-" ? ", bis zum " + ansage.frist : "";
+    var wer = ansage.von ? ansage.von : "Jemand";
+    var fuerAlle = kopfSatz("Neu ausgesetzt: " + wer + " setzt " + ansage.cogs + " Cog auf " + ansage.ziel + " aus" + frist);
+    var fuersZiel = kopfSatz("Achtung: " + wer + " setzt " + ansage.cogs + " Cog auf DICH aus" + frist);
+    var grundZeile = ansage.grund ? "Grund: " + ansage.grund : null;
     var zielKlein = String(ansage.ziel).toLowerCase();
 
     server.getPlayers().forEach(function (spieler) {
         try {
             var name = String(spieler.getUsername()).toLowerCase();
             kopfSage(spieler, name === zielKlein ? fuersZiel : fuerAlle);
+            if (grundZeile !== null) kopfSage(spieler, grundZeile);
         } catch (e) {
             /* Einer, der die Nachricht nicht bekommt, darf die anderen nicht kosten. */
         }
     });
+}
+
+/**
+ * Setzt den Schlusspunkt - aber nur, wenn nicht schon einer da ist.
+ *
+ * Das deutsche Kurzdatum bringt seinen Punkt selbst mit ("12.09."), sonst
+ * endete jeder Satz mit einer Frist auf zwei Punkten.
+ */
+function kopfSatz(text) {
+    return text.charAt(text.length - 1) === "." ? text : text + ".";
+}
+
+/**
+ * Wer hat das ausgesetzt?
+ *
+ * Ein Name steht nur da, wenn es genau einer ist - stehen mehrere Kopfgelder
+ * auf derselben Person, waere jeder einzelne Name irrefuehrend. Dann zaehlt die
+ * Ansage nur, wie viele es sind; die Namen stehen auf der Website.
+ */
+function kopfWerText(eintrag) {
+    if (eintrag.by) return " (von " + eintrag.by + ")";
+    if (eintrag.byCount && eintrag.byCount > 1) return " (von " + eintrag.byCount + " Spielern)";
+    return "";
 }
 
 /**
@@ -311,7 +343,9 @@ function kopfBegruesse(spieler, liste) {
                 (m.until ? " bis zum " + m.until : "") +
                 " ein Kopfgeld von " +
                 m.cogs +
-                " Cog.",
+                " Cog" +
+                kopfWerText(m) +
+                ".",
         );
     }
 
@@ -323,7 +357,15 @@ function kopfBegruesse(spieler, liste) {
         var f = fremde[k];
         kopfSage(
             spieler,
-            "Auf " + f.target + " steht" + (f.until ? " bis zum " + f.until : "") + " ein Kopfgeld von " + f.cogs + " Cog.",
+            "Auf " +
+                f.target +
+                " steht" +
+                (f.until ? " bis zum " + f.until : "") +
+                " ein Kopfgeld von " +
+                f.cogs +
+                " Cog" +
+                kopfWerText(f) +
+                ".",
         );
     }
     if (fremde.length > bis) {
@@ -371,12 +413,24 @@ try {
 
             // Reine Ansage, keine Buchung: braucht weder Numismatics noch einen Beleg.
             if (art === "melden") {
+                if (teile.length < 5) {
+                    console.log("[bounty] Aufruf: vipkopfgeld melden <ziel> <cogs> <frist|-> <ausschreiber> [grund]");
+                    return;
+                }
                 var cogs = parseInt(teile[2], 10);
                 if (!isFinite(cogs) || cogs <= 0) {
                     console.log("[bounty] Betrag unplausibel: " + teile[2]);
                     return;
                 }
-                kopfAnsagen.push({ ziel: teile[1], cogs: cogs, frist: teile[3] });
+                kopfAnsagen.push({
+                    ziel: teile[1],
+                    cogs: cogs,
+                    frist: teile[3],
+                    von: teile[4],
+                    // Alles ab hier gehoert zur Begruendung - sie ist das
+                    // einzige Feld, in dem Leerzeichen vorkommen duerfen.
+                    grund: teile.length > 5 ? teile.slice(5).join(" ") : "",
+                });
                 return;
             }
 

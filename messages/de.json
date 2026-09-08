@@ -443,7 +443,8 @@
     "messageRequired": "Schreib kurz, wen du auf dem Server kennst.",
     "bountyOnSelf": "Auf dich selbst kannst du kein Kopfgeld aussetzen.",
     "bountyAmount": "Der Einsatz muss zwischen {min} und {max} Cog liegen.",
-    "bountyDateInvalid": "Das Enddatum ist ungültig."
+    "bountyDateInvalid": "Das Enddatum ist ungültig.",
+    "bountyReasonRude": "Die Begründung enthält eine Beschimpfung. Schreib es bitte sachlich."
   },
   "MojangCheck": {
     "notFound": "Den Minecraft-Namen „{name}“ gibt es nicht. Bitte prüf die Schreibweise."
@@ -903,6 +904,9 @@
     "notDelivered": "Die Abbuchung ist nicht durchgegangen. Es wurde nichts abgebucht – versuch es noch einmal.",
     "targetChoose": "Spieler wählen …",
     "groupOnline": "Gerade online",
-    "groupOthers": "Alle anderen"
+    "groupOthers": "Alle anderen",
+    "reasonLabel": "Begründung (freiwillig)",
+    "reasonPlaceholder": "z. B. hat mein Lager geplündert",
+    "reasonHint": "Steht öffentlich auf der Seite und geht in den Chat. Beleidigungen werden abgewiesen."
   }
 }
