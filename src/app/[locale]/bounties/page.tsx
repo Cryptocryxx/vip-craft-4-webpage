@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Coins, Crosshair, Hourglass, Skull, Swords } from "lucide-react";
 import { auth } from "@/auth";
-import { BountyForm } from "@/components/bounties/BountyForm";
+import { BountyForm, type Zielspieler } from "@/components/bounties/BountyForm";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
@@ -18,6 +18,7 @@ import {
   type KopfgeldZeile,
 } from "@/lib/bounties";
 import { formatNumber } from "@/lib/format";
+import { listPlayers } from "@/lib/players";
 import { prisma } from "@/lib/prisma";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -104,6 +105,24 @@ export default async function BountiesPage({ params }: { params: Promise<{ local
     nutzer ? meineKopfgelder(nutzer.id) : Promise.resolve([]),
   ]);
 
+  /*
+   * Zielauswahl: alle, die auf dem Server bekannt sind - nur wer wirklich
+   * gespielt hat, kann gejagt werden. Nebenbei erspart das die Tippfehler, an
+   * denen sonst das Geld haengenbliebe.
+   *
+   * Nur geladen, wenn das Formular ueberhaupt erscheint: listPlayers() liest
+   * saemtliche Statistikdateien vom Server (mit Zwischenspeicher, aber
+   * umsonst waere es trotzdem).
+   */
+  const zeigeFormular = Boolean(session?.user?.id && nutzer?.minecraftName && bereit);
+  const eigenerName = nutzer?.minecraftName?.toLowerCase() ?? null;
+  const zielspieler: Zielspieler[] = zeigeFormular
+    ? (await listPlayers())
+        .filter((p) => p.name.toLowerCase() !== eigenerName)
+        .map((p) => ({ name: p.name, online: p.online }))
+        .sort((a, b) => a.name.localeCompare(b.name, "de"))
+    : [];
+
   const gesamt = offen.reduce((summe, eintrag) => summe + eintrag.cogs, 0);
 
   return (
@@ -176,7 +195,7 @@ export default async function BountiesPage({ params }: { params: Promise<{ local
                 ) : !bereit ? (
                   <p className="text-sm text-cream/60">{t("serverNotReady")}</p>
                 ) : (
-                  <BountyForm guthaben={guthaben} />
+                  <BountyForm guthaben={guthaben} spieler={zielspieler} />
                 )}
               </Panel>
             </section>

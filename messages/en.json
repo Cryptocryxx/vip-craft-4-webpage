@@ -900,6 +900,9 @@
     "targetUnknown": "That Minecraft name does not exist.",
     "serverNotReady": "The server is not taking bounties right now.",
     "notEnoughMoney": "Your balance is not enough for that.",
-    "notDelivered": "The charge did not go through. Nothing was deducted – please try again."
+    "notDelivered": "The charge did not go through. Nothing was deducted – please try again.",
+    "targetChoose": "Choose a player …",
+    "groupOnline": "Online now",
+    "groupOthers": "Everyone else"
   }
 }

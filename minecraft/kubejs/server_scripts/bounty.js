@@ -34,6 +34,11 @@
 //   setzeKopfgeldAus in lib/bounties.ts. Ein angekündigtes Kopfgeld, das an der
 //   Bezahlung scheitert, wäre schlimmer als gar keine Ansage.
 //
+//   STÜNDLICH geht die Liste zusätzlich an alle raus, die gerade spielen. Das
+//   macht dieses Skript von sich aus und nicht die Website: Der Server tickt
+//   immer, die Website dagegen rechnet nur, wenn jemand eine Seite öffnet — ein
+//   Zeitplan von dort wäre kein Zeitplan, sondern Zufall.
+//
 // ALLE Namen tragen das Präfix KOPF_/kopf: KubeJS lädt alle server_scripts in
 // EIN gemeinsames globales Scope. Ein zweites "var DATEI" würde die
 // gleichnamige Variable eines anderen Skripts überschreiben — beim
@@ -49,15 +54,22 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 2
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 3
 
-var KOPF_FASSUNG = 2; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
+var KOPF_FASSUNG = 3; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
 var KOPF_MAX_MELDUNGEN = 5; // so viele Kopfgelder nennt die Begruessung namentlich
 var KOPF_VERZOEGERUNG = 60; // Ticks bis zur Begruessung (3 s) - direkt beim Login
                             // geht die Nachricht im Ladegetuemmel unter.
+/*
+ * Abstand des Rundrufs in Ticks (20 pro Sekunde), also eine Stunde. Gezaehlt
+ * wird ab Serverstart, nicht nach der Uhr - eine Stunde nach dem Hochfahren,
+ * dann jede weitere. Nach einem Neustart faengt die Zaehlung neu an; das ist
+ * kein Schaden, weil beim Betreten ohnehin jeder die Liste bekommt.
+ */
+var KOPF_RUNDRUF_TAKT = 20 * 60 * 60;
 
 var KopfPathsClass = null;
 var KopfJsonIO = null;
@@ -269,8 +281,14 @@ function kopfSageAnsageAn(server, ansage) {
     });
 }
 
-function kopfBegruesse(spieler) {
-    var liste = kopfLiesListe();
+/**
+ * Sagt einem Spieler die offenen Kopfgelder an.
+ *
+ * Die Liste kommt von aussen und wird nicht hier gelesen: Beim Rundruf haette
+ * das sonst pro Spieler einen Dateizugriff bedeutet, fuer immer denselben
+ * Inhalt.
+ */
+function kopfBegruesse(spieler, liste) {
     if (liste === null || !liste.entries || liste.entries.length === 0) return;
 
     var name = String(spieler.getUsername());
@@ -311,6 +329,25 @@ function kopfBegruesse(spieler) {
     if (fremde.length > bis) {
         kopfSage(spieler, "... und " + (fremde.length - bis) + " weitere. Alle auf der Website.");
     }
+}
+
+/**
+ * Die Liste an alle, die gerade spielen.
+ *
+ * Erst die Datei, dann die Spieler: Gibt es nichts anzusagen, wird auch nicht
+ * ueber die Spielerliste gelaufen.
+ */
+function kopfRundruf(server) {
+    var liste = kopfLiesListe();
+    if (liste === null || !liste.entries || liste.entries.length === 0) return;
+
+    server.getPlayers().forEach(function (spieler) {
+        try {
+            kopfBegruesse(spieler, liste);
+        } catch (e) {
+            /* Einer, der die Nachricht nicht bekommt, darf die anderen nicht kosten. */
+        }
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -391,6 +428,17 @@ try {
 
 try {
     ServerEvents.tick(function (event) {
+        /*
+         * Der Rundruf haengt an der Tickzahl, nicht an einer Warteschlange, und
+         * muss deshalb VOR den fruehen Ausstiegen unten stehen - sonst liefe er
+         * nur in den seltenen Momenten, in denen zufaellig etwas anderes ansteht.
+         */
+        try {
+            if (event.server.getTickCount() % KOPF_RUNDRUF_TAKT === 0) kopfRundruf(event.server);
+        } catch (e) {
+            kopfMerkeFehler("Rundruf fehlgeschlagen: " + e);
+        }
+
         if (kopfWartende.length === 0 && kopfAnsagen.length === 0) return;
 
         // Ansagen zuerst und getrennt abgesichert: Sie sollen nicht ausfallen,
@@ -408,17 +456,24 @@ try {
         try {
             var tick = event.server.getTickCount();
             var offen = [];
+            var liste = null;
+            var gelesen = false;
             for (var i = 0; i < kopfWartende.length; i++) {
                 var eintrag = kopfWartende[i];
                 if (tick < eintrag.faelligTick) {
                     offen.push(eintrag);
                     continue;
                 }
+                // Erst lesen, wenn wirklich jemand zu begruessen ist.
+                if (!gelesen) {
+                    liste = kopfLiesListe();
+                    gelesen = true;
+                }
                 var spieler = null;
                 event.server.getPlayers().forEach(function (p) {
                     if (String(p.getUuid()) === eintrag.uuid) spieler = p;
                 });
-                if (spieler !== null) kopfBegruesse(spieler);
+                if (spieler !== null) kopfBegruesse(spieler, liste);
             }
             kopfWartende = offen;
         } catch (e) {

@@ -8,6 +8,8 @@ import { MAX_COGS, MIN_COGS } from "@/lib/bounty-types";
 
 const initialState: BountyFormState = {};
 
+export type Zielspieler = { name: string; online: boolean };
+
 /** Das Datum von morgen als "YYYY-MM-DD" – frühestes sinnvolles Ende. */
 function morgen(): string {
   const datum = new Date(new Date().getTime() + 24 * 60 * 60 * 1000);
@@ -20,7 +22,7 @@ function morgen(): string {
  * Der Hinweis auf die sofortige Abbuchung steht bewusst direkt über dem Knopf
  * und nicht im Kleingedruckten: Das Geld ist weg, sobald hier geklickt wird.
  */
-export function BountyForm({ guthaben }: { guthaben: number | null }) {
+export function BountyForm({ guthaben, spieler }: { guthaben: number | null; spieler: Zielspieler[] }) {
   const t = useTranslations("BountyForm");
   const [state, formAction, pending] = useActionState(createBountyAction, initialState);
   const formRef = useRef<HTMLFormElement>(null);
@@ -28,6 +30,9 @@ export function BountyForm({ guthaben }: { guthaben: number | null }) {
   useEffect(() => {
     if (state.success) formRef.current?.reset();
   }, [state]);
+
+  const online = spieler.filter((s) => s.online);
+  const sonstige = spieler.filter((s) => !s.online);
 
   return (
     <form ref={formRef} action={formAction} className="space-y-4">
@@ -38,17 +43,48 @@ export function BountyForm({ guthaben }: { guthaben: number | null }) {
         >
           {t("targetLabel")}
         </label>
-        <input
-          id="bounty-target"
-          name="targetName"
-          type="text"
-          required
-          minLength={3}
-          maxLength={16}
-          pattern="[A-Za-z0-9_]{3,16}"
-          placeholder={t("targetPlaceholder")}
-          className="input"
-        />
+        {/*
+          Ohne Liste bleibt das Textfeld: Die Namen kommen vom Spielserver, und
+          ist der gerade nicht erreichbar, waere ein leeres Dropdown eine
+          Sackgasse. Getippt geht es dann immer noch.
+        */}
+        {spieler.length === 0 ? (
+          <input
+            id="bounty-target"
+            name="targetName"
+            type="text"
+            required
+            minLength={3}
+            maxLength={16}
+            pattern="[A-Za-z0-9_]{3,16}"
+            placeholder={t("targetPlaceholder")}
+            className="input"
+          />
+        ) : (
+          <select id="bounty-target" name="targetName" required defaultValue="" className="input">
+            <option value="" disabled>
+              {t("targetChoose")}
+            </option>
+            {online.length > 0 && (
+              <optgroup label={t("groupOnline")}>
+                {online.map((s) => (
+                  <option key={s.name} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+            {sonstige.length > 0 && (
+              <optgroup label={t("groupOthers")}>
+                {sonstige.map((s) => (
+                  <option key={s.name} value={s.name}>
+                    {s.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -900,6 +900,9 @@
     "targetUnknown": "Diesen Minecraft-Namen gibt es nicht.",
     "serverNotReady": "Der Server nimmt gerade keine Kopfgelder an.",
     "notEnoughMoney": "Dein Guthaben reicht dafür nicht.",
-    "notDelivered": "Die Abbuchung ist nicht durchgegangen. Es wurde nichts abgebucht – versuch es noch einmal."
+    "notDelivered": "Die Abbuchung ist nicht durchgegangen. Es wurde nichts abgebucht – versuch es noch einmal.",
+    "targetChoose": "Spieler wählen …",
+    "groupOnline": "Gerade online",
+    "groupOthers": "Alle anderen"
   }
 }
