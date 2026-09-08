@@ -1,7 +1,7 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
 import { craftyConfigured, craftyReadJson, craftyWriteFile } from "@/lib/crafty";
-import { kurzesDatum, type BountyInput } from "@/lib/bounty-types";
+import { buendleKopfgelder, kurzesDatum, type BountyInput } from "@/lib/bounty-types";
 import { SPURS_PER_COG } from "@/lib/currency";
 import { analysiereTod } from "@/lib/death-log";
 import { lookupMinecraftName, mitBindestrichen } from "@/lib/mojang";
@@ -476,15 +476,7 @@ export async function schreibeServerListe(): Promise<void> {
       take: 50,
     });
 
-    const inhalt = {
-      generatedAt: new Date().toISOString(),
-      entries: offen.map((eintrag) => ({
-        target: eintrag.targetName,
-        targetUuid: eintrag.targetUuid,
-        cogs: Math.round(eintrag.spurs / SPURS_PER_COG),
-        until: eintrag.expiresAt ? kurzesDatum(eintrag.expiresAt) : null,
-      })),
-    };
+    const inhalt = { generatedAt: new Date().toISOString(), entries: buendleKopfgelder(offen) };
 
     await craftyWriteFile(LISTENDATEI, JSON.stringify(inhalt, null, 2));
   } catch (error) {

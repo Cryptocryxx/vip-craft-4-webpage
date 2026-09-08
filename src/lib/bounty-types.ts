@@ -5,6 +5,7 @@
  * Browser dieselbe Prüfung benutzen kann wie der Server. Dieselbe Trennung wie
  * bei whitelist-types.ts und event-kinds.ts.
  */
+import { SPURS_PER_COG } from "@/lib/currency";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
 
 /**
@@ -88,4 +89,61 @@ export function kurzesDatum(zeitpunkt: Date): string {
     day: "2-digit",
     month: "2-digit",
   }).format(zeitpunkt);
+}
+
+export type ListenEintrag = { target: string; targetUuid: string | null; cogs: number; until: string | null };
+
+/**
+ * Fasst die offenen Kopfgelder je Ziel zu einer Zeile zusammen.
+ *
+ * Auf denselben Spieler können mehrere Kopfgelder stehen – das ist so gewollt,
+ * jeder legt eigenes Geld drauf, und wer ihn erledigt, kassiert alle. Dreimal
+ * „Auf Gamsa steht ein Kopfgeld von 10 Cog" im Chat hilft aber niemandem;
+ * interessant ist die Summe.
+ *
+ * Die Frist steht nur dabei, wenn alle Kopfgelder auf dieses Ziel dieselbe
+ * haben. Sonst wäre jede Angabe gelogen: Ein Teil des Geldes verfällt früher
+ * als der Rest. Die Aufschlüsselung steht auf der Website.
+ *
+ * Eigene Funktion, damit sie sich prüfen lässt, ohne dabei die Datei auf dem
+ * Spielserver zu überschreiben.
+ */
+export function buendleKopfgelder(
+  offen: Array<{ targetName: string; targetUuid: string | null; spurs: number; expiresAt: Date | null }>,
+): ListenEintrag[] {
+  const gebuendelt = new Map<
+    string,
+    { target: string; targetUuid: string | null; cogs: number; fristen: Set<string> }
+  >();
+
+  for (const eintrag of offen) {
+    const schluessel = eintrag.targetName.toLowerCase();
+    const cogs = Math.round(eintrag.spurs / SPURS_PER_COG);
+    const frist = eintrag.expiresAt ? kurzesDatum(eintrag.expiresAt) : "";
+
+    const vorhanden = gebuendelt.get(schluessel);
+    if (vorhanden) {
+      vorhanden.cogs += cogs;
+      vorhanden.fristen.add(frist);
+    } else {
+      gebuendelt.set(schluessel, {
+        target: eintrag.targetName,
+        targetUuid: eintrag.targetUuid,
+        cogs,
+        fristen: new Set([frist]),
+      });
+    }
+  }
+
+  return [...gebuendelt.values()]
+    .sort((a, b) => b.cogs - a.cogs)
+    .map((eintrag) => {
+      const einheitlich = eintrag.fristen.size === 1 ? [...eintrag.fristen][0] : "";
+      return {
+        target: eintrag.target,
+        targetUuid: eintrag.targetUuid,
+        cogs: eintrag.cogs,
+        until: einheitlich === "" ? null : einheitlich,
+      };
+    });
 }
