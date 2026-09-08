@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rechneKopfgelderAb } from "@/lib/bounties";
 import { holeDiscordNachrichten } from "@/lib/discord-chat";
 import { holeFlugdaten } from "@/lib/flight";
 import { holeEreignisse } from "@/lib/game-log";
@@ -42,6 +43,13 @@ export async function GET() {
   void holeEreignisse();
   // Flugzeit/-strecke von den Luftschiffen, gezaehlt vom KubeJS-Skript.
   void holeFlugdaten();
+  /*
+   * Kopfgelder: faellige Auszahlungen und abgelaufene Ausschreibungen. Muss
+   * NACH holeEreignisse laufen, denn die Todesmeldung, die eine Auszahlung
+   * ausloest, kommt von dort - beides ist bewusst nicht abgewartet, die
+   * Reihenfolge stellt die eigene Sperre in lib/bounties.ts sicher.
+   */
+  void rechneKopfgelderAb();
   // Unabhaengig vom Minecraft-Server: Im Discord-Kanal wird auch geschrieben,
   // waehrend der Server aus ist.
   void holeDiscordNachrichten();

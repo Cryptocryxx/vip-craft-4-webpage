@@ -66,6 +66,80 @@ model User {
   shops               Shop[]
   gameLogs            GameLog[]
   salaryClaims        SalaryClaim[]
+  bounties            Bounty[]
+}
+
+// ---------------------------------------------------------------------------
+// Kopfgelder
+//
+// Wer ein Kopfgeld aussetzt, ZAHLT SOFORT: Der Betrag wird beim Anlegen vom
+// Numismatics-Konto abgebucht (bounty.js im Spiel). Erst wenn die Abbuchung
+// quittiert ist, geht die Zeile auf OPEN - sonst stuende hier ein Kopfgeld,
+// fuer das nie jemand bezahlt hat.
+//
+// Ausgezahlt wird an den, der das Ziel als Naechstes erledigt. Die Grundlage
+// dafuer sind die DEATH-Zeilen im GameLog, also dieselbe Quelle wie die
+// PvP-Uebersicht - deshalb steht in claimedSeq die ausloesende Zeile: Wer
+// wissen will, warum jemand das Geld bekommen hat, findet dort den Satz.
+//
+// Der Status ist die Sperre gegen Doppelauszahlung: Der Wechsel OPEN -> PAYING
+// laeuft als bedingtes UPDATE, das nur einmal greifen kann.
+// ---------------------------------------------------------------------------
+
+model Bounty {
+  id String @id @default(cuid())
+
+  /// Wer ausgesetzt hat.
+  placerId String
+  placer   User   @relation(fields: [placerId], references: [id], onDelete: Cascade)
+
+  /// Minecraft-Konto des Ausschreibers, festgehalten wie beim Gehalt: Die
+  /// Verknuepfung am Account kann sich aendern, der Beleg soll bleiben.
+  placerName String
+  placerUuid String
+
+  /// Auf wen. Der Name ist der Schluessel zum Spielprotokoll (dort stehen
+  /// keine UUIDs bei Todesmeldungen), die UUID die verlaessliche Identitaet.
+  targetName String
+  targetUuid String?
+
+  /// Ausgesetzter Betrag in Spurs (siehe lib/currency.ts).
+  spurs Int
+
+  /// PENDING | OPEN | PAYING | CLAIMED | EXPIRED, siehe lib/bounty-types.ts
+  status String @default("PENDING")
+
+  /// Optionales Ende. null = laeuft, bis es jemand holt.
+  expiresAt DateTime?
+
+  /// Wer kassiert hat.
+  claimedByName String?
+  claimedByUuid String?
+  claimedAt     DateTime?
+  /// GameLog-Zeile (seq), die die Auszahlung ausgeloest hat.
+  claimedSeq Int?
+
+  /// Warum die Zeile so steht, wie sie steht - fuer den Fall, dass eine
+  /// Abbuchung oder Auszahlung nicht durchging.
+  note String?
+
+  /// Fehlgeschlagene Buchungsversuche und wann der letzte war.
+  ///
+  /// Ohne die beiden liefe eine dauerhaft scheiternde Auszahlung in eine
+  /// Endlosschleife: Sie faellt auf OPEN zurueck und wird beim naechsten
+  /// Statusabruf sofort wieder versucht - alle paar Sekunden ein Befehl an die
+  /// Server-Konsole. Damit waechst der Abstand stattdessen (siehe naechsterVersuch
+  /// in lib/bounties.ts), und aufgegeben wird nie: Das Geld liegt beim Server,
+  /// es muss irgendwann ankommen.
+  attempts  Int       @default(0)
+  lastTryAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([targetName])
+  @@index([placerId])
 }
 
 // ---------------------------------------------------------------------------

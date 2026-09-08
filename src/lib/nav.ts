@@ -3,10 +3,10 @@
  * den Übersetzungen (Namespace "Nav" in messages/*.json), damit dieselbe
  * Liste in Deutsch und Englisch funktioniert.
  */
-export type NavKey = "home" | "map" | "shops" | "spieler" | "community" | "leaderboards" | "schematics" | "streams";
+export type NavKey = "home" | "map" | "shops" | "spieler" | "community" | "leaderboards" | "bounties" | "schematics" | "streams";
 
 export type NavItem = {
-  href: "/" | "/map" | "/shops" | "/spieler" | "/community" | "/leaderboards" | "/schematics" | "/streams";
+  href: "/" | "/map" | "/shops" | "/spieler" | "/community" | "/leaderboards" | "/bounties" | "/schematics" | "/streams";
   key: NavKey;
 };
 
@@ -17,6 +17,7 @@ export const navItems: NavItem[] = [
   { href: "/spieler", key: "spieler" },
   { href: "/community", key: "community" },
   { href: "/leaderboards", key: "leaderboards" },
+  { href: "/bounties", key: "bounties" },
   // Schematics-Seite vorübergehend deaktiviert (siehe app/[locale]/schematics/page.tsx) -
   // kein Nav-Eintrag mehr, damit nirgends ein Link auf die abgeschaltete Seite zeigt.
   // { href: "/schematics", key: "schematics" },

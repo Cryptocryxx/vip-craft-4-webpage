@@ -159,6 +159,38 @@ export async function craftyReadFile(path: string): Promise<string> {
   throw new CraftyError(`Unerwartetes Antwortformat beim Lesen von ${path}.`);
 }
 
+/**
+ * Datei schreiben (anlegen, falls sie noch nicht da ist).
+ *
+ * Zwei Schritte, weil Crafty es so verlangt: `files/create` legt eine leere
+ * Datei an, `PATCH /files` füllt sie. Das Anlegen darf fehlschlagen – beim
+ * zweiten Mal gibt es die Datei ja schon, und Crafty sagt das im `error_data`.
+ * Dieselben Endpunkte benutzt scripts/kubejs-deploy.ts.
+ */
+export async function craftyWriteFile(path: string, contents: string): Promise<void> {
+  const trenner = path.lastIndexOf("/");
+  const parent = trenner > 0 ? path.slice(0, trenner) : "";
+  const name = trenner > 0 ? path.slice(trenner + 1) : path;
+
+  try {
+    await craftyRequest<unknown>("PUT", `/servers/${craftyConfig.serverId}/files/create`, {
+      parent,
+      name,
+      directory: false,
+    });
+  } catch (error) {
+    // "existiert schon" ist der Normalfall und kein Grund aufzuhören.
+    const text = error instanceof Error ? error.message : String(error);
+    if (!/exist/i.test(text)) throw error;
+  }
+
+  await craftyRequest<unknown>("PATCH", `/servers/${craftyConfig.serverId}/files`, {
+    path,
+    contents,
+    overwrite: true,
+  });
+}
+
 /** Datei als JSON lesen. Gibt null zurück, wenn sie fehlt oder unlesbar ist. */
 export async function craftyReadJson<T>(path: string): Promise<T | null> {
   try {

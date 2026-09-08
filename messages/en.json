@@ -13,7 +13,8 @@
     "leaderboards": "Leaderboards",
     "schematics": "Schematics",
     "streams": "Streams",
-    "ariaLabel": "Main navigation"
+    "ariaLabel": "Main navigation",
+    "bounties": "Bounties"
   },
   "Header": {
     "homeAriaLabel": "VIP Craft 4 – Home"
@@ -439,7 +440,10 @@
     "suggestionBodyTooShort": "Please describe your suggestion in a bit more detail (min. 20 characters).",
     "suggestionBodyTooLong": "The description can be at most 2000 characters.",
     "invalidType": "Invalid type.",
-    "messageRequired": "Please briefly say who you know on the server."
+    "messageRequired": "Please briefly say who you know on the server.",
+    "bountyOnSelf": "You cannot put a bounty on yourself.",
+    "bountyAmount": "The stake has to be between {min} and {max} Cog.",
+    "bountyDateInvalid": "That end date is not valid."
   },
   "MojangCheck": {
     "notFound": "The Minecraft name “{name}” doesn't exist. Please check the spelling."
@@ -853,5 +857,49 @@
     "kinetisch": "Flight impact",
     "magie": "Magic",
     "sonstiges": "Other"
+  },
+  "BountiesPage": {
+    "metaTitle": "Bounties",
+    "metaDescription": "Put a bounty on a player – whoever takes them down collects the money.",
+    "eyebrow": "Wanted",
+    "title": "Bounties",
+    "description": "Want someone hunted down? Put a bounty on them. The stake leaves your account right away and goes to whoever kills the target next.",
+    "summary": "{count} open bounties worth {cogs} Cog",
+    "openTitle": "Open",
+    "openEmpty": "Nobody has a price on their head right now.",
+    "historyTitle": "Settled",
+    "placeTitle": "Place a bounty",
+    "mineTitle": "My bounties",
+    "placedBy": "placed by {name}",
+    "until": "until {date}",
+    "claimedLine": "{hunter} collected the bounty on {target}",
+    "expiredLine": "Bounty on {target} expired, stake refunded",
+    "signInFirst": "Sign in to place a bounty.",
+    "linkFirst": "Link your Minecraft account first – without it there is no account to charge.",
+    "toDashboard": "To the dashboard",
+    "serverNotReady": "The server is not taking bounties right now. Try again later.",
+    "statusOPEN": "open",
+    "statusPAYING": "paying",
+    "statusCLAIMED": "collected",
+    "statusEXPIRED": "expired",
+    "rules": "The bounty pays out on the target's first death at another player's hands after it was placed. Environmental deaths and mobs do not count, and killing yourself triggers nothing. If a bounty expires unclaimed, the stake goes back to whoever placed it."
+  },
+  "BountyForm": {
+    "targetLabel": "Target",
+    "targetPlaceholder": "Minecraft name",
+    "amountLabel": "Stake in Cog",
+    "balance": "Your balance: {cogs} Cog",
+    "untilLabel": "Until (optional)",
+    "untilHint": "Leave empty: runs until someone claims it.",
+    "warning": "The stake leaves your account immediately – not only when someone collects.",
+    "submit": "Place bounty",
+    "payoutNote": "Paid to the player who kills the target next.",
+    "placed": "Bounty of {cogs} Cog placed on {target}.",
+    "notLoggedIn": "You need to be signed in.",
+    "noAccount": "Your Minecraft account is not linked.",
+    "targetUnknown": "That Minecraft name does not exist.",
+    "serverNotReady": "The server is not taking bounties right now.",
+    "notEnoughMoney": "Your balance is not enough for that.",
+    "notDelivered": "The charge did not go through. Nothing was deducted – please try again."
   }
 }

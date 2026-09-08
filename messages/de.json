@@ -13,7 +13,8 @@
     "leaderboards": "Leaderboards",
     "schematics": "Schematics",
     "streams": "Streams",
-    "ariaLabel": "Hauptnavigation"
+    "ariaLabel": "Hauptnavigation",
+    "bounties": "Kopfgelder"
   },
   "Header": {
     "homeAriaLabel": "VIP Craft 4 – Startseite"
@@ -439,7 +440,10 @@
     "suggestionBodyTooShort": "Bitte beschreibe deinen Vorschlag etwas genauer (mind. 20 Zeichen).",
     "suggestionBodyTooLong": "Die Beschreibung darf höchstens 2000 Zeichen haben.",
     "invalidType": "Ungültiger Typ.",
-    "messageRequired": "Schreib kurz, wen du auf dem Server kennst."
+    "messageRequired": "Schreib kurz, wen du auf dem Server kennst.",
+    "bountyOnSelf": "Auf dich selbst kannst du kein Kopfgeld aussetzen.",
+    "bountyAmount": "Der Einsatz muss zwischen {min} und {max} Cog liegen.",
+    "bountyDateInvalid": "Das Enddatum ist ungültig."
   },
   "MojangCheck": {
     "notFound": "Den Minecraft-Namen „{name}“ gibt es nicht. Bitte prüf die Schreibweise."
@@ -853,5 +857,49 @@
     "kinetisch": "Aufprall im Flug",
     "magie": "Magie",
     "sonstiges": "Sonstiges"
+  },
+  "BountiesPage": {
+    "metaTitle": "Kopfgelder",
+    "metaDescription": "Setz ein Kopfgeld auf einen Spieler aus – wer ihn erledigt, bekommt das Geld.",
+    "eyebrow": "Steckbriefe",
+    "title": "Kopfgelder",
+    "description": "Wer jemanden zur Strecke bringen will, setzt ein Kopfgeld aus. Der Einsatz wird sofort vom eigenen Konto abgebucht und geht an den, der das Ziel als Nächstes erledigt.",
+    "summary": "{count} offene Kopfgelder über {cogs} Cog",
+    "openTitle": "Offen",
+    "openEmpty": "Gerade steht auf niemanden ein Kopfgeld.",
+    "historyTitle": "Erledigt",
+    "placeTitle": "Kopfgeld aussetzen",
+    "mineTitle": "Meine Ausschreibungen",
+    "placedBy": "ausgesetzt von {name}",
+    "until": "bis {date}",
+    "claimedLine": "{hunter} hat das Kopfgeld auf {target} kassiert",
+    "expiredLine": "Kopfgeld auf {target} abgelaufen, Einsatz zurück",
+    "signInFirst": "Melde dich an, um ein Kopfgeld auszusetzen.",
+    "linkFirst": "Verknüpfe zuerst deinen Minecraft-Account – ohne ihn gibt es kein Konto, von dem abgebucht werden kann.",
+    "toDashboard": "Zum Dashboard",
+    "serverNotReady": "Der Server nimmt gerade keine Kopfgelder an. Versuch es später noch einmal.",
+    "statusOPEN": "offen",
+    "statusPAYING": "läuft",
+    "statusCLAIMED": "kassiert",
+    "statusEXPIRED": "abgelaufen",
+    "rules": "Ausgezahlt wird beim ersten Tod des Ziels durch einen anderen Spieler nach dem Aussetzen. Umgebungstode und Kreaturen zählen nicht, und wer sich selbst erledigt, löst nichts aus. Läuft ein Kopfgeld ab, ohne dass es jemand holt, bekommt der Ausschreiber seinen Einsatz zurück."
+  },
+  "BountyForm": {
+    "targetLabel": "Auf wen",
+    "targetPlaceholder": "Minecraft-Name",
+    "amountLabel": "Einsatz in Cog",
+    "balance": "Dein Guthaben: {cogs} Cog",
+    "untilLabel": "Bis (freiwillig)",
+    "untilHint": "Leer lassen: läuft, bis es jemand holt.",
+    "warning": "Der Einsatz wird sofort von deinem Konto abgebucht – nicht erst, wenn jemand kassiert.",
+    "submit": "Kopfgeld aussetzen",
+    "payoutNote": "Ausgezahlt wird an den Spieler, der das Ziel als Nächstes erledigt.",
+    "placed": "Kopfgeld von {cogs} Cog auf {target} ausgesetzt.",
+    "notLoggedIn": "Du musst angemeldet sein.",
+    "noAccount": "Dein Minecraft-Account ist nicht verknüpft.",
+    "targetUnknown": "Diesen Minecraft-Namen gibt es nicht.",
+    "serverNotReady": "Der Server nimmt gerade keine Kopfgelder an.",
+    "notEnoughMoney": "Dein Guthaben reicht dafür nicht.",
+    "notDelivered": "Die Abbuchung ist nicht durchgegangen. Es wurde nichts abgebucht – versuch es noch einmal."
   }
 }
