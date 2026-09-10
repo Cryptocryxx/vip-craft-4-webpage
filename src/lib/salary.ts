@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_rethrow } from "next/navigation";
-import { craftyConfigured, craftyReadJson } from "@/lib/crafty";
+import { craftyConfigured, craftyReadJson, craftyWriteFile } from "@/lib/crafty";
 import { SPURS_PER_COG } from "@/lib/currency";
 import { lookupMinecraftName, mitBindestrichen } from "@/lib/mojang";
 import { prisma } from "@/lib/prisma";
@@ -193,7 +193,12 @@ export async function holeGehalt(user: {
   if (gesendet.ok) {
     // Der Server braucht einen Moment, bis die Quittung auf der Platte steht.
     const quittiert = await warteAufQuittung(claimId);
-    if (quittiert) return { ok: true, cogs };
+    if (quittiert) {
+      // Sofort aus der Erinnerungsliste nehmen - wer gerade abgeholt hat, soll
+      // beim naechsten Betreten nicht daran erinnert werden.
+      await schreibeGehaltsListe(true);
+      return { ok: true, cogs };
+    }
   }
 
   // Nicht angekommen: Tag wieder freigeben, damit es später erneut geht.
@@ -213,4 +218,71 @@ async function warteAufQuittung(claimId: string): Promise<boolean> {
     if (datei?.payouts?.some((beleg) => beleg.claimId === claimId)) return true;
   }
   return false;
+}
+
+// ---------------------------------------------------------------------------
+// Erinnerung im Spiel
+// ---------------------------------------------------------------------------
+
+const OFFENE_DATEI = "kubejs/data/salary-open.json";
+
+/** Oefter als alle fuenf Minuten lohnt sich das Schreiben nicht. */
+const LISTE_ABSTAND_MS = 5 * 60_000;
+let listeZuletzt = 0;
+let listeLaeuft = false;
+
+/**
+ * Legt fuer das Spiel ab, wer sein Gehalt heute noch nicht geholt hat.
+ *
+ * Das Skript salary.js liest die Datei, wenn jemand den Server betritt, und
+ * erinnert ihn. Es muss diesen Weg nehmen, weil nur die Website weiss, welcher
+ * Kalendertag gerade laeuft und wer schon abgeholt hat - und weil sie selbst
+ * erst mit bis zu einer Minute Verzoegerung erfaehrt, dass jemand da ist.
+ *
+ * Regelmaessig aufgefrischt, damit der Wechsel um Mitternacht ankommt: Ab 0:00
+ * sind alle wieder dran, ohne dass irgendwer etwas tut.
+ */
+export async function schreibeGehaltsListe(erzwingen = false): Promise<number> {
+  if (!craftyConfigured) return 0;
+  if (!erzwingen && (listeLaeuft || Date.now() - listeZuletzt < LISTE_ABSTAND_MS)) return 0;
+  listeLaeuft = true;
+  listeZuletzt = Date.now();
+
+  try {
+    const settings = await getSiteSettings();
+    const cogs = settings.dailySalaryCogs;
+    const heute = heutigerTag();
+
+    // Ist die Auszahlung abgeschaltet, steht niemand offen - dann erinnert das
+    // Skript auch niemanden, ohne dass es davon wissen muesste.
+    const uuids: string[] = [];
+    if (cogs > 0) {
+      const [verknuepft, abgeholt] = await Promise.all([
+        prisma.user.findMany({
+          where: { NOT: { minecraftUuid: null } },
+          select: { id: true, minecraftUuid: true },
+        }),
+        prisma.salaryClaim.findMany({ where: { day: heute }, select: { userId: true } }),
+      ]);
+
+      const fertig = new Set(abgeholt.map((zeile) => zeile.userId));
+      for (const person of verknuepft) {
+        if (fertig.has(person.id) || !person.minecraftUuid) continue;
+        uuids.push(mitBindestrichen(person.minecraftUuid));
+      }
+    }
+
+    await craftyWriteFile(
+      OFFENE_DATEI,
+      JSON.stringify({ generatedAt: new Date().toISOString(), day: heute, cogs, uuids }, null, 2),
+    );
+    return uuids.length;
+  } catch (error) {
+    unstable_rethrow(error);
+    // Folgenlos: Ohne frische Liste erinnert das Skript nach dem vorigen Stand.
+    console.error("[gehalt] Erinnerungsliste konnte nicht geschrieben werden:", error);
+    return 0;
+  } finally {
+    listeLaeuft = false;
+  }
 }

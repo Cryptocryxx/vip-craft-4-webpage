@@ -55,6 +55,14 @@ export type ParsedStats = {
   largeCogwheelsPlaced: number;
   /** Verlegte Create-Zugschienen. */
   trackPlaced: number;
+  /**
+   * Aufgestellte Lesepulte.
+   *
+   * Zaehlt, wie oft der Gegenstand benutzt wurde - bei einem Block ist das
+   * genau das Aufstellen. Wieder abgebaute Pulte bleiben also mitgezaehlt; die
+   * Zahl sagt "so oft aufgestellt", nicht "so viele stehen".
+   */
+  lecternsPlaced: number;
   /** Benutzte Aeronautics-Bauteile (Propeller, Brenner, Dampfventile …). */
   aeronauticsParts: number;
   /** Benutzte Create-Bauteile insgesamt – Wellen, Motoren, Pumpen und so weiter. */
@@ -128,6 +136,7 @@ export function parseStats(raw: RawStatsFile): ParsedStats {
     cogwheelsPlaced: pick(used, "create:cogwheel"),
     largeCogwheelsPlaced: pick(used, "create:large_cogwheel"),
     trackPlaced: pick(used, "create:track"),
+    lecternsPlaced: pick(used, "minecraft:lectern"),
     // Über das Präfix statt über eine feste Liste: Das Pack bringt mehrere
     // Aeronautics-Erweiterungen mit, und neue Bauteile sollen mitzählen.
     aeronauticsParts: sum(used, (key) => key.startsWith("aeronautics:") || key.startsWith("cbcaeronautics")),

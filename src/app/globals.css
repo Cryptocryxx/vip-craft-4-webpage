@@ -244,6 +244,36 @@
     @apply focus:border-diamond-400/70 focus:ring-2 focus:ring-diamond-400/25 focus:outline-none;
   }
 
+  /*
+   * Sterne-Auswahl fuer Shop-Bewertungen.
+   *
+   * Die Sterne stehen im Markup ABSTEIGEND (5 zuerst) und werden per
+   * row-reverse wieder in die richtige Reihenfolge gedreht. Nur so laesst sich
+   * "der gewaehlte Stern und alle davor leuchten" ohne JavaScript bauen: CSS
+   * erreicht mit ~ nur Geschwister NACH einem Element, und das sind hier genau
+   * die kleineren Sterne.
+   *
+   * Die Radio-Knoepfe liegen deshalb NEBEN den Labels, nicht darin - sonst
+   * saehe der Geschwister-Selektor sie gar nicht.
+   */
+  .stars {
+    @apply flex flex-row-reverse justify-end gap-1;
+  }
+  .stars input {
+    @apply sr-only;
+  }
+  .stars label {
+    @apply cursor-pointer text-cream/25 transition-colors;
+  }
+  .stars input:checked ~ label,
+  .stars label:hover,
+  .stars label:hover ~ label {
+    @apply text-brass-300;
+  }
+  .stars input:focus-visible ~ label {
+    @apply ring-2 ring-brass-400/70 rounded-sm;
+  }
+
   .chip {
     @apply inline-flex items-center gap-1 rounded-md border px-2 py-0.5 font-display text-[11px] font-semibold tracking-wide uppercase;
   }

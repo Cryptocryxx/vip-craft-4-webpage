@@ -6,6 +6,15 @@
  * Kontrollraum jederzeit entfernen (Moderation nach der Veröffentlichung).
  */
 
+import { enthaeltBeleidigung, fuerKonsole } from "@/lib/schimpfwoerter";
+
+/** So viele Sterne gibt es. */
+export const MIN_STERNE = 1;
+export const MAX_STERNE = 5;
+
+/** So lang darf ein Kommentar sein. */
+export const MAX_KOMMENTAR_LAENGE = 200;
+
 export const DIMENSIONS = ["overworld", "nether", "end"] as const;
 export type Dimension = (typeof DIMENSIONS)[number];
 
@@ -21,6 +30,23 @@ export function toDimension(value: string): Dimension {
 
 export type ShopOwnerSummary = { id: string; name: string | null; image: string | null; minecraftName: string | null };
 
+export type ShopBewertung = {
+  id: string;
+  stars: number;
+  comment: string | null;
+  createdAt: string;
+  /** Minecraft-Name, sonst der Anzeigename - wer bewertet hat, steht dabei. */
+  autor: string;
+};
+
+export type ShopBewertungen = {
+  /** Durchschnitt, auf eine Nachkommastelle. 0, wenn es noch keine gibt. */
+  schnitt: number;
+  anzahl: number;
+  /** Die letzten Kommentare, neueste zuerst. */
+  letzte: ShopBewertung[];
+};
+
 export type ShopDTO = {
   id: string;
   name: string;
@@ -33,7 +59,36 @@ export type ShopDTO = {
   createdAt: string;
   updatedAt: string;
   owner: ShopOwnerSummary;
+  bewertungen: ShopBewertungen;
 };
+
+export type BewertungsInput = { stars: number; comment: string | null };
+
+type BewertungsUebersetzer = (schluessel: string, werte?: Record<string, string | number>) => string;
+
+/**
+ * Prueft eine abgegebene Bewertung.
+ *
+ * Der Kommentar wird ZUERST entschaerft und dann auf Beschimpfungen geprueft -
+ * nicht umgekehrt. Sonst kaeme "Idi§ot" durch die Wortliste und stuende
+ * hinterher sauber lesbar neben dem Laden.
+ */
+export function validateBewertung(
+  raw: { stars?: unknown; comment?: unknown },
+  t: BewertungsUebersetzer,
+): { ok: true; data: BewertungsInput } | { ok: false; error: string } {
+  const stars = Number(typeof raw.stars === "string" ? raw.stars.trim() : raw.stars);
+  if (!Number.isInteger(stars) || stars < MIN_STERNE || stars > MAX_STERNE) {
+    return { ok: false, error: t("ratingStars", { min: MIN_STERNE, max: MAX_STERNE }) };
+  }
+
+  const roh = typeof raw.comment === "string" ? fuerKonsole(raw.comment, MAX_KOMMENTAR_LAENGE) : "";
+  if (roh.length > 0 && enthaeltBeleidigung(roh)) {
+    return { ok: false, error: t("ratingRude") };
+  }
+
+  return { ok: true, data: { stars, comment: roh.length > 0 ? roh : null } };
+}
 
 export type ShopInput = {
   name: string;

@@ -10,6 +10,7 @@ import {
   Clock,
   Coins,
   Cog,
+  BookOpen,
   Footprints,
   Heart,
   Pickaxe,
@@ -234,6 +235,7 @@ export default async function SpielerDetailPage({ params }: Props) {
         { icon: Heart, label: t("damageTaken"), wert: `${formatNumber(s.damageTaken)} ♥` },
         { icon: Store, label: t("shopAndBank"), wert: formatNumber(s.shopInteractions), hinweis: t("shopAndBankHint") },
         { icon: Cake, label: t("cake"), wert: formatNumber(s.cakeUsed), hinweis: t("cakeHint") },
+        { icon: BookOpen, label: t("lecterns"), wert: formatNumber(s.lecternsPlaced), hinweis: t("lecternsHint") },
       ]
     : [];
 

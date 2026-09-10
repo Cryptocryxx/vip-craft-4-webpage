@@ -444,7 +444,9 @@
     "bountyOnSelf": "Auf dich selbst kannst du kein Kopfgeld aussetzen.",
     "bountyAmount": "Der Einsatz muss zwischen {min} und {max} Cog liegen.",
     "bountyDateInvalid": "Das Enddatum ist ungültig.",
-    "bountyReasonRude": "Die Begründung enthält eine Beschimpfung. Schreib es bitte sachlich."
+    "bountyReasonRude": "Die Begründung enthält eine Beschimpfung. Schreib es bitte sachlich.",
+    "ratingStars": "Bitte wähle {min} bis {max} Sterne.",
+    "ratingRude": "Der Kommentar enthält eine Beschimpfung. Schreib es bitte sachlich."
   },
   "MojangCheck": {
     "notFound": "Den Minecraft-Namen „{name}“ gibt es nicht. Bitte prüf die Schreibweise."
@@ -656,7 +658,9 @@
     "airborneDistanceHint": "Sprünge und Stürze",
     "flightTime": "Flugzeit",
     "flightDistance": "Flugstrecke",
-    "flightHint": "auf Luftschiffen"
+    "flightHint": "auf Luftschiffen",
+    "lecterns": "Lesepulte",
+    "lecternsHint": "aufgestellt"
   },
   "LeaderboardCategories": {
     "playtime": {
@@ -908,5 +912,23 @@
     "reasonLabel": "Begründung (freiwillig)",
     "reasonPlaceholder": "z. B. hat mein Lager geplündert",
     "reasonHint": "Steht öffentlich auf der Seite und geht in den Chat. Beleidigungen werden abgewiesen."
+  },
+  "ShopRating": {
+    "starsLegend": "Deine Bewertung",
+    "starsCount": "{count} von 5 Sternen",
+    "commentLabel": "Kommentar",
+    "commentPlaceholder": "Was war gut, was nicht? (freiwillig)",
+    "submit": "Bewertung abgeben",
+    "update": "Bewertung ändern",
+    "saved": "Danke, deine Bewertung steht.",
+    "none": "noch keine Bewertung",
+    "count": "{count} Bewertungen",
+    "showAndRate": "Bewertungen ansehen und selbst bewerten",
+    "showOnly": "Bewertungen ansehen",
+    "ownShopHint": "Den eigenen Laden kannst du nicht bewerten.",
+    "signInFirst": "Melde dich an, um zu bewerten.",
+    "notLoggedIn": "Du musst angemeldet sein.",
+    "shopMissing": "Diesen Laden gibt es nicht (mehr).",
+    "ownShop": "Den eigenen Laden kannst du nicht bewerten."
   }
 }

@@ -3,6 +3,7 @@ import { rechneKopfgelderAb } from "@/lib/bounties";
 import { holeDiscordNachrichten } from "@/lib/discord-chat";
 import { holeFlugdaten } from "@/lib/flight";
 import { holeEreignisse } from "@/lib/game-log";
+import { schreibeGehaltsListe } from "@/lib/salary";
 import { fetchServerStatus } from "@/lib/server-status";
 import { getSiteSettings } from "@/lib/settings";
 import { viewerMaySeeServerIp } from "@/lib/viewer";
@@ -50,6 +51,13 @@ export async function GET() {
    * Reihenfolge stellt die eigene Sperre in lib/bounties.ts sicher.
    */
   void rechneKopfgelderAb();
+  /*
+   * Wer sein Gehalt heute noch nicht geholt hat, wird beim Betreten des
+   * Servers daran erinnert. Die Liste dafuer muss regelmaessig neu
+   * geschrieben werden - um Mitternacht sind sonst alle faelschlich als
+   * erledigt vermerkt (eigene Sperre, hoechstens alle fuenf Minuten).
+   */
+  void schreibeGehaltsListe();
   // Unabhaengig vom Minecraft-Server: Im Discord-Kanal wird auch geschrieben,
   // waehrend der Server aus ist.
   void holeDiscordNachrichten();

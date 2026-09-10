@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SPURS_PER_COG } from "@/lib/currency";
-import { listShops } from "@/lib/shops";
+import { auth } from "@/auth";
+import { eigeneBewertungen, listShops } from "@/lib/shops";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("ShopsPage");
@@ -14,7 +15,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ShopsPage() {
-  const [shops, t] = await Promise.all([listShops(), getTranslations("ShopsPage")]);
+  const [shops, t, session] = await Promise.all([listShops(), getTranslations("ShopsPage"), auth()]);
+
+  // Nur fuer Angemeldete nachschlagen - fuer alle anderen gibt es kein Formular,
+  // das etwas voreinstellen koennte.
+  const viewerId = session?.user?.id ?? null;
+  const eigene = viewerId ? await eigeneBewertungen(viewerId) : undefined;
 
   return (
     <>
@@ -30,7 +36,7 @@ export default async function ShopsPage() {
       </PageHeader>
 
       <Container className="py-10">
-        <ShopGrid shops={shops} />
+        <ShopGrid shops={shops} viewerId={viewerId} eigene={eigene} />
       </Container>
     </>
   );

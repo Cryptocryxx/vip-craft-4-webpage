@@ -35,6 +35,17 @@
 //     starter_cogs steht in der Numismatics-Config auf 0)
 //   BankAccount.deposit(int)  — schreibt den Betrag in Spurs gut
 //
+// ERINNERUNG BEIM BETRETEN: Wer sein Gehalt heute noch nicht geholt hat, wird
+// beim Betreten daran erinnert. Wer noch offen ist, steht in
+// kubejs/data/salary-open.json - diese Datei pflegt die WEBSITE (siehe
+// schreibeGehaltsListe in lib/salary.ts), denn nur sie kennt die Kalendertage
+// und die Konten. Andersherum ginge es nicht: Die Website erfaehrt erst mit bis
+// zu einer Minute Verzoegerung, dass jemand da ist - fuer eine Begruessung viel
+// zu spaet.
+//
+// Zugestellt wird ueber eine kleine Warteschlange im Tick statt sofort: Direkt
+// beim Login geht die Nachricht im Ladegetuemmel unter.
+//
 // INSTALLATION
 //   1. Datei nach kubejs/server_scripts/salary.js (npm run kubejs:deploy)
 //   2. Konsolenbefehl "reload" absetzen — der normale Datapack-Reload laedt die
@@ -52,6 +63,9 @@
 // Der Kontenexport schrieb daraufhin in salary.json statt in numismatics.json.
 // Dasselbe galt fuer MAX_EINTRAEGE und fehler aus insights-log.js.
 var GEHALT_DATEI = "salary.json";
+var GEHALT_OFFENE_DATEI = "salary-open.json"; // von der Website gepflegt
+var GEHALT_VERZOEGERUNG = 60; // Ticks bis zur Erinnerung (3 s)
+var gehaltWartende = []; // { uuid, faelligTick }
 var GEHALT_MAX_BELEGE = 200; // Ringpuffer – die Website braucht nur die letzten Belege.
 
 var GehaltPathsClass = null;
@@ -138,6 +152,105 @@ function gehaltZahleAus(uuidText, spurs, belegId) {
     gehaltSchreibeDatei();
 
     return "OK: " + spurs + " Spur auf " + uuidText + " (neuer Stand " + konto.getBalance() + ")";
+}
+
+/** Liest die von der Website gepflegte Liste der offenen Gehaelter. */
+function gehaltLiesOffene() {
+    try {
+        if (GehaltPathsClass === null || GehaltJsonIO === null) return null;
+        var quelle = GehaltPathsClass.GAMEDIR.resolve("kubejs/data/" + GEHALT_OFFENE_DATEI);
+        var roh = GehaltJsonIO.read(quelle);
+        if (roh === null || roh === undefined) return null;
+        var text = String(roh);
+        if (!text || text === "null") return null;
+        return JSON.parse(text);
+    } catch (e) {
+        // Solange die Website noch nie geschrieben hat, gibt es die Datei nicht.
+        // Das ist kein Fehler, sondern der Anfangszustand.
+        return null;
+    }
+}
+
+/** Schickt eine Zeile, moeglichst in Gruen - es sind gute Nachrichten. */
+function gehaltSage(spieler, text) {
+    try {
+        spieler.tell(Text.green(text));
+    } catch (e) {
+        try {
+            spieler.tell(text);
+        } catch (e2) {
+            /* Geht auch das nicht, ist die Erinnerung verloren - kein Drama. */
+        }
+    }
+}
+
+function gehaltErinnere(spieler, offene) {
+    if (offene === null || !offene.uuids || offene.uuids.length === 0) return;
+
+    var uuid = String(spieler.getUuid()).toLowerCase();
+    var dabei = false;
+    for (var i = 0; i < offene.uuids.length; i++) {
+        if (String(offene.uuids[i]).toLowerCase() === uuid) {
+            dabei = true;
+            break;
+        }
+    }
+    if (!dabei) return;
+
+    var betrag = offene.cogs ? offene.cogs : "?";
+    gehaltSage(spieler, "Dein taegliches Gehalt von " + betrag + " Cog liegt noch bereit.");
+    gehaltSage(spieler, "Abholen kannst du es auf der Website unter Dashboard.");
+}
+
+try {
+    PlayerEvents.loggedIn(function (event) {
+        try {
+            var spieler = event.player || event.getPlayer();
+            gehaltWartende.push({
+                uuid: String(spieler.getUuid()),
+                faelligTick: event.server.getTickCount() + GEHALT_VERZOEGERUNG,
+            });
+        } catch (e) {
+            gehaltMerkeFehler("Login nicht vermerkt: " + e);
+        }
+    });
+} catch (e) {
+    gehaltMerkeFehler("PlayerEvents.loggedIn nicht registrierbar: " + e);
+}
+
+try {
+    ServerEvents.tick(function (event) {
+        if (gehaltWartende.length === 0) return;
+        try {
+            var tick = event.server.getTickCount();
+            var offen = [];
+            var liste = null;
+            var gelesen = false;
+            for (var i = 0; i < gehaltWartende.length; i++) {
+                var eintrag = gehaltWartende[i];
+                if (tick < eintrag.faelligTick) {
+                    offen.push(eintrag);
+                    continue;
+                }
+                // Erst lesen, wenn wirklich jemand zu erinnern ist.
+                if (!gelesen) {
+                    liste = gehaltLiesOffene();
+                    gelesen = true;
+                }
+                var spieler = null;
+                event.server.getPlayers().forEach(function (p) {
+                    if (String(p.getUuid()) === eintrag.uuid) spieler = p;
+                });
+                if (spieler !== null) gehaltErinnere(spieler, liste);
+            }
+            gehaltWartende = offen;
+        } catch (e) {
+            gehaltWartende = [];
+            gehaltMerkeFehler("Erinnerung fehlgeschlagen: " + e);
+        }
+    });
+} catch (e) {
+    gehaltMerkeFehler("ServerEvents.tick nicht registrierbar: " + e);
 }
 
 try {

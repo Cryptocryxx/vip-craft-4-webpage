@@ -60,9 +60,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 4
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 5
 
-var KOPF_FASSUNG = 4; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
+var KOPF_FASSUNG = 5; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
@@ -70,12 +70,30 @@ var KOPF_MAX_MELDUNGEN = 5; // so viele Kopfgelder nennt die Begruessung namentl
 var KOPF_VERZOEGERUNG = 60; // Ticks bis zur Begruessung (3 s) - direkt beim Login
                             // geht die Nachricht im Ladegetuemmel unter.
 /*
- * Abstand des Rundrufs in Ticks (20 pro Sekunde), also eine Stunde. Gezaehlt
- * wird ab Serverstart, nicht nach der Uhr - eine Stunde nach dem Hochfahren,
- * dann jede weitere. Nach einem Neustart faengt die Zaehlung neu an; das ist
- * kein Schaden, weil beim Betreten ohnehin jeder die Liste bekommt.
+ * Abstand des Rundrufs in Ticks (20 pro Sekunde), also eine Stunde, plus ein
+ * Vorlauf nach dem Laden.
+ *
+ * WARUM NICHT "tick % TAKT === 0", wie es hier zuerst stand: Das verlangt, die
+ * eine richtige Tickzahl GENAU zu treffen. Wird dieser Handler auch nur einmal
+ * nicht aufgerufen - weil der Server hakt, ein Neustart dazwischenkommt oder
+ * ein anderer Mod den Durchlauf abbricht -, ist das Fenster weg und es bleibt
+ * eine volle Stunde still. Genau das ist passiert.
+ *
+ * Ausserdem faengt getTickCount() nach jedem Neustart wieder bei null an. Wer
+ * abends neu startet, wartet mit der Modulo-Rechnung erst eine ganze Stunde auf
+ * die erste Ansage - deshalb der kuerzere Vorlauf beim Start.
+ *
+ * Mit einem gemerkten Faelligkeitstick und ">=" ist beides erledigt: Ein
+ * verpasster Tick verschiebt die Ansage um Millisekunden statt um eine Stunde.
  */
 var KOPF_RUNDRUF_TAKT = 20 * 60 * 60;
+var KOPF_RUNDRUF_VORLAUF = 20 * 60 * 5; // erster Rundruf 5 Minuten nach dem Laden
+var kopfNaechsterRundruf = -1; // -1 = noch nicht gesetzt, wird beim ersten Tick gefuellt
+
+/* Nachweis, dass der Rundruf laeuft - ohne das ist "kommt nicht" nicht pruefbar. */
+var kopfRundrufe = 0;
+var kopfLetzterRundruf = null;
+var kopfLetzteEmpfaenger = 0;
 
 var KopfPathsClass = null;
 var KopfJsonIO = null;
@@ -122,6 +140,9 @@ function kopfSchreibeDatei() {
             ready: kopfBereit,
             script: KOPF_FASSUNG,
             errors: kopfFehler,
+            broadcasts: kopfRundrufe,
+            lastBroadcastAt: kopfLetzterRundruf,
+            lastBroadcastReached: kopfLetzteEmpfaenger,
             receipts: kopfBelege,
         };
         KopfJsonIO.write(ziel, KopfJsonIO.parseRaw(JSON.stringify(inhalt, null, 2)));
@@ -383,13 +404,26 @@ function kopfRundruf(server) {
     var liste = kopfLiesListe();
     if (liste === null || !liste.entries || liste.entries.length === 0) return;
 
+    var erreicht = 0;
     server.getPlayers().forEach(function (spieler) {
         try {
             kopfBegruesse(spieler, liste);
+            erreicht += 1;
         } catch (e) {
             /* Einer, der die Nachricht nicht bekommt, darf die anderen nicht kosten. */
         }
     });
+
+    /*
+     * In die Quittungsdatei schreiben, WANN der Rundruf zuletzt lief und wie
+     * viele er erreicht hat. Ohne diese Zahlen laesst sich "die Nachricht kommt
+     * nicht" nicht von "es gab nichts anzusagen" unterscheiden - dieselbe Luecke
+     * wie damals bei der Flugmessung.
+     */
+    kopfRundrufe += 1;
+    kopfLetzterRundruf = new Date().toISOString();
+    kopfLetzteEmpfaenger = erreicht;
+    kopfSchreibeDatei();
 }
 
 // ---------------------------------------------------------------------------
@@ -488,7 +522,12 @@ try {
          * nur in den seltenen Momenten, in denen zufaellig etwas anderes ansteht.
          */
         try {
-            if (event.server.getTickCount() % KOPF_RUNDRUF_TAKT === 0) kopfRundruf(event.server);
+            var jetzt = event.server.getTickCount();
+            if (kopfNaechsterRundruf < 0) kopfNaechsterRundruf = jetzt + KOPF_RUNDRUF_VORLAUF;
+            if (jetzt >= kopfNaechsterRundruf) {
+                kopfNaechsterRundruf = jetzt + KOPF_RUNDRUF_TAKT;
+                kopfRundruf(event.server);
+            }
         } catch (e) {
             kopfMerkeFehler("Rundruf fehlgeschlagen: " + e);
         }
