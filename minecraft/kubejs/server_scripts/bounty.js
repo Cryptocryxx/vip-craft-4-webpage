@@ -60,9 +60,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 5
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 6
 
-var KOPF_FASSUNG = 5; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
+var KOPF_FASSUNG = 6; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
@@ -94,6 +94,16 @@ var kopfNaechsterRundruf = -1; // -1 = noch nicht gesetzt, wird beim ersten Tick
 var kopfRundrufe = 0;
 var kopfLetzterRundruf = null;
 var kopfLetzteEmpfaenger = 0;
+
+/*
+ * Zaehler fuer die Selbstpruefung. Ohne sie war nicht zu unterscheiden, ob die
+ * Tickschleife gar nicht laeuft oder ob nur nichts anzusagen war - genau daran
+ * ist die Suche zuletzt haengengeblieben.
+ */
+var kopfTicks = 0;
+var kopfListenVersuche = 0;
+var kopfListenTreffer = 0;
+var kopfListenFehler = null;
 
 var KopfPathsClass = null;
 var KopfJsonIO = null;
@@ -140,9 +150,13 @@ function kopfSchreibeDatei() {
             ready: kopfBereit,
             script: KOPF_FASSUNG,
             errors: kopfFehler,
+            ticks: kopfTicks,
             broadcasts: kopfRundrufe,
             lastBroadcastAt: kopfLetzterRundruf,
             lastBroadcastReached: kopfLetzteEmpfaenger,
+            listReads: kopfListenVersuche,
+            listOk: kopfListenTreffer,
+            lastListError: kopfListenFehler,
             receipts: kopfBelege,
         };
         KopfJsonIO.write(ziel, KopfJsonIO.parseRaw(JSON.stringify(inhalt, null, 2)));
@@ -256,19 +270,45 @@ function kopfZahleAus(uuidText, spurs, belegId) {
 // Begruessung beim Betreten
 // ---------------------------------------------------------------------------
 
-/** Liest die von der Website gepflegte Liste. Fehlt sie, gibt es eben nichts zu sagen. */
+/**
+ * Liest die von der Website gepflegte Liste.
+ *
+ * JsonIO.readString(Path) - NICHT JsonIO.read(Path). Genau daran hat es
+ * gelegen: read() verlangt zwei Argumente (Context, Path), der Aufruf mit
+ * einem schlug fehl, und ein stiller catch machte daraus "es gibt nichts
+ * anzusagen". Dieselbe Falle wie getClass() in flight-log.js.
+ *
+ * Deshalb wird der Fehler jetzt FESTGEHALTEN statt verschluckt. Dass die Datei
+ * fehlt, ist ein normaler Anfangszustand - aber auch der soll in der
+ * Quittungsdatei stehen, sonst sieht er aus wie ein leerer Abend.
+ */
 function kopfLiesListe() {
+    kopfListenVersuche += 1;
     try {
-        if (KopfPathsClass === null || KopfJsonIO === null) return null;
+        if (KopfPathsClass === null || KopfJsonIO === null) {
+            kopfListenFehler = "KubeJS-Klassen fehlen";
+            return null;
+        }
         var quelle = KopfPathsClass.GAMEDIR.resolve("kubejs/data/" + KOPF_LISTE);
-        var roh = KopfJsonIO.read(quelle);
-        if (roh === null || roh === undefined) return null;
-        var text = String(roh);
-        if (!text || text === "null") return null;
-        return JSON.parse(text);
+
+        var text = null;
+        try {
+            text = String(KopfJsonIO.readString(quelle));
+        } catch (e1) {
+            // Zweiter Weg, falls readString in dieser Fassung anders heisst.
+            text = String(KopfJsonIO.readJson(quelle));
+        }
+
+        if (!text || text === "null" || text === "undefined") {
+            kopfListenFehler = "Datei leer";
+            return null;
+        }
+        var daten = JSON.parse(text);
+        kopfListenTreffer += 1;
+        kopfListenFehler = null;
+        return daten;
     } catch (e) {
-        // Kein Fehler im engeren Sinn: Solange die Website noch nie geschrieben
-        // hat, gibt es die Datei schlicht nicht.
+        kopfListenFehler = String(e);
         return null;
     }
 }
@@ -522,12 +562,16 @@ try {
          * nur in den seltenen Momenten, in denen zufaellig etwas anderes ansteht.
          */
         try {
+            kopfTicks += 1;
             var jetzt = event.server.getTickCount();
             if (kopfNaechsterRundruf < 0) kopfNaechsterRundruf = jetzt + KOPF_RUNDRUF_VORLAUF;
             if (jetzt >= kopfNaechsterRundruf) {
                 kopfNaechsterRundruf = jetzt + KOPF_RUNDRUF_TAKT;
                 kopfRundruf(event.server);
             }
+            // Lebenszeichen alle fuenf Minuten: Daran ist von aussen zu sehen,
+            // dass die Schleife ueberhaupt laeuft.
+            if (jetzt % (20 * 300) === 0) kopfSchreibeDatei();
         } catch (e) {
             kopfMerkeFehler("Rundruf fehlgeschlagen: " + e);
         }

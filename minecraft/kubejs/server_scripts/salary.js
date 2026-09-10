@@ -66,6 +66,9 @@ var GEHALT_DATEI = "salary.json";
 var GEHALT_OFFENE_DATEI = "salary-open.json"; // von der Website gepflegt
 var GEHALT_VERZOEGERUNG = 60; // Ticks bis zur Erinnerung (3 s)
 var gehaltWartende = []; // { uuid, faelligTick }
+var gehaltListenVersuche = 0;
+var gehaltListenTreffer = 0;
+var gehaltListenFehler = null;
 var GEHALT_MAX_BELEGE = 200; // Ringpuffer – die Website braucht nur die letzten Belege.
 
 var GehaltPathsClass = null;
@@ -106,7 +109,11 @@ function gehaltSchreibeDatei() {
         var inhalt = {
             generatedAt: new Date().toISOString(),
             ready: gehaltBereit,
+            script: 2,
             errors: gehaltFehler,
+            listReads: gehaltListenVersuche,
+            listOk: gehaltListenTreffer,
+            lastListError: gehaltListenFehler,
             payouts: gehaltBelege,
         };
         GehaltJsonIO.write(ziel, GehaltJsonIO.parseRaw(JSON.stringify(inhalt, null, 2)));
@@ -154,19 +161,40 @@ function gehaltZahleAus(uuidText, spurs, belegId) {
     return "OK: " + spurs + " Spur auf " + uuidText + " (neuer Stand " + konto.getBalance() + ")";
 }
 
-/** Liest die von der Website gepflegte Liste der offenen Gehaelter. */
+/**
+ * Liest die von der Website gepflegte Liste der offenen Gehaelter.
+ *
+ * JsonIO.readString(Path) - NICHT JsonIO.read(Path): read() verlangt zwei
+ * Argumente (Context, Path). Der Aufruf mit einem schlug fehl, und ein stiller
+ * catch machte daraus "niemand ist offen". Deshalb wird der Fehler jetzt
+ * festgehalten und steht in salary.json.
+ */
 function gehaltLiesOffene() {
+    gehaltListenVersuche += 1;
     try {
-        if (GehaltPathsClass === null || GehaltJsonIO === null) return null;
+        if (GehaltPathsClass === null || GehaltJsonIO === null) {
+            gehaltListenFehler = "KubeJS-Klassen fehlen";
+            return null;
+        }
         var quelle = GehaltPathsClass.GAMEDIR.resolve("kubejs/data/" + GEHALT_OFFENE_DATEI);
-        var roh = GehaltJsonIO.read(quelle);
-        if (roh === null || roh === undefined) return null;
-        var text = String(roh);
-        if (!text || text === "null") return null;
-        return JSON.parse(text);
+
+        var text = null;
+        try {
+            text = String(GehaltJsonIO.readString(quelle));
+        } catch (e1) {
+            text = String(GehaltJsonIO.readJson(quelle));
+        }
+
+        if (!text || text === "null" || text === "undefined") {
+            gehaltListenFehler = "Datei leer";
+            return null;
+        }
+        var daten = JSON.parse(text);
+        gehaltListenTreffer += 1;
+        gehaltListenFehler = null;
+        return daten;
     } catch (e) {
-        // Solange die Website noch nie geschrieben hat, gibt es die Datei nicht.
-        // Das ist kein Fehler, sondern der Anfangszustand.
+        gehaltListenFehler = String(e);
         return null;
     }
 }
@@ -244,6 +272,9 @@ try {
                 if (spieler !== null) gehaltErinnere(spieler, liste);
             }
             gehaltWartende = offen;
+            // Zaehler nach draussen bringen: Sonst stuende in der Datei bis zur
+            // naechsten Auszahlung nicht, ob das Lesen geklappt hat.
+            if (gelesen) gehaltSchreibeDatei();
         } catch (e) {
             gehaltWartende = [];
             gehaltMerkeFehler("Erinnerung fehlgeschlagen: " + e);
