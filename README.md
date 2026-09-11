@@ -25,6 +25,7 @@ npm run dev                 # http://localhost:3000
 | `CRAFTY_URL` / `CRAFTY_TOKEN` / `CRAFTY_SERVER_ID` | Crafty Controller – Statistiken lesen und Whitelist-Befehle senden |
 | `CRAFTY_WORLD_DIR` | Optional: Name des Weltordners, Vorgabe `world` |
 | `CRAFTY_ALLOW_INSECURE_TLS` | Optional: TLS-Prüfung abschalten (nur bei selbstsigniertem Zertifikat) |
+| `GOOGLE_TRANSLATE_API_KEY` | Optional: Schlüssel der Google Cloud Translation API; leer = kostenloser Endpunkt |
 | `NEXT_PUBLIC_SERVER_IP` | Startwert der Server-Adresse (im Admin-Panel überschreibbar) |
 | `NEXT_PUBLIC_MAP_URL` | Startwert der Squaremap-URL |
 | `NEXT_PUBLIC_DISCORD_INVITE` | Startwert des Discord-Einladungslinks |
@@ -134,6 +135,37 @@ mit drehendem Zahnrad), unvollständig (Gamertag fehlt) und abgelehnt (rot, mit 
 Globale Komponenten: Ankündigungsbanner, Header mit **Live-Server-Status-Widget** (Online/Offline + Spielerzahl via
 `mcsrvstat.us`, Aktualisierung alle 60 s), Login/Avatar, mobile Navigation, Footer.
 
+## Sprachen (Deutsch / Englisch)
+
+Die Seite gibt es auf Deutsch (Vorgabe, ohne Präfix) und Englisch (unter `/en/...`), siehe
+[`src/i18n/routing.ts`](src/i18n/routing.ts). Die Oberfläche liegt übersetzt in `messages/de.json` und
+`messages/en.json`.
+
+**Was Spieler schreiben, steht dort naturgemäß nicht.** Shop-Beschreibungen, Shop-Bewertungen, Vorschläge und die
+Begründungen ausgeschriebener Kopfgelder entstehen erst im Betrieb und sind fast immer deutsch. Auf der englischen
+Fassung laufen sie deshalb beim Anzeigen durch Google Translate
+([`src/lib/uebersetzung.ts`](src/lib/uebersetzung.ts)):
+
+- **Nur zur Anzeige.** In der Datenbank bleibt das Original stehen. Das Bearbeitungsformular im Dashboard bekommt
+  bewusst die unübersetzten Daten – sonst würde beim nächsten Speichern die Rückübersetzung zum neuen Original.
+- **Zwischengespeichert** in der Tabelle `Translation`, mit dem Hash des Ausgangstextes als Schlüssel. Jeder Text
+  kostet also genau eine Anfrage nach draußen, danach nie wieder. Wird ein Text geändert, entsteht ein neuer Hash
+  und damit eine neue Übersetzung; ungültig zu machen gibt es nichts.
+- **Ausfallsicher.** Antwortet Google nicht, erscheint der deutsche Originaltext – keine Fehlerseite, kein leeres
+  Feld. Nach einem Fehlschlag wird eine Minute lang nicht erneut gefragt, damit nicht jeder Seitenaufruf in einen
+  Zeitablauf läuft.
+- **Namen bleiben Namen.** Ladennamen, Spielernamen und die Todesmeldungen aus dem Spiel werden nicht angefasst.
+- Unter der Liste steht der Hinweis „maschinell übersetzt“ (Namespace `AutoTranslate`), damit niemand eine
+  schiefe Formulierung dem Verfasser anlastet.
+
+Ohne `GOOGLE_TRANSLATE_API_KEY` läuft es über den kostenlosen Endpunkt, den auch translate.google.com benutzt –
+ohne Anmeldung, aber ohne Zusage. Mit Schlüssel über die offizielle Cloud Translation API. Die Anfrage stellt in
+beiden Fällen ausschließlich der Server; die IP-Adresse der Besucher erreicht Google nie (siehe
+[Rechtliches](#rechtliches), Abschnitt 11 der Datenschutzerklärung).
+
+Termine aus dem Kontrollraum sind davon ausgenommen: Die haben eigene Felder für Titel und Beschreibung auf
+Englisch und werden von Hand übersetzt.
+
 ## Kontrollraum (`/admin`)
 
 Offen für die Rollen `ADMIN` und `MODERATOR`. Alle anderen sehen eine Zugriff-verweigert-Seite.
@@ -204,7 +236,9 @@ besonders wenn ein Auswertungs-Plugin angebunden wird.
 **Datenschutzfreundliche Umsetzung im Code:**
 
 - Der Serverstatus wird serverseitig abgefragt, die IP-Adresse der Besucher erreicht `mcsrvstat.us` nie.
-- Schriftarten werden über `next/font` lokal ausgeliefert, es gibt keine Verbindung zu Google.
+- Schriftarten werden über `next/font` lokal ausgeliefert, der Browser baut dafür keine Verbindung zu Google auf.
+- Die maschinelle Übersetzung der Spielertexte läuft serverseitig; übermittelt wird nur der Text, nie die
+  IP-Adresse der Besucher. Sie ist in Abschnitt 11 der Datenschutzerklärung beschrieben.
 - Es werden ausschließlich technisch notwendige Cookies gesetzt (Login-Sitzung, CSRF-Schutz).
 - `GET /api/suggestions` erfordert einen Login, damit Beiträge und Namen nicht öffentlich abrufbar sind.
 
@@ -446,7 +480,7 @@ pm2 logs deploy-webhook     # zeigt jeden Lauf mit allen Schritten
 ## Projektstruktur
 
 ```
-prisma/               Schema (Auth.js, WhitelistApplication, Suggestion, Vote, Shop, ServerEvent, GameLog, Setting)
+prisma/               Schema (Auth.js, WhitelistApplication, Suggestion, Vote, Shop, ServerEvent, GameLog, Setting, Translation)
 minecraft/kubejs/     Skripte für den Spielserver (Numismatics-Export, Chat- und Befehlsprotokoll)
 src/app/              Routen (App Router), Admin-Bereich und API-Handler
 src/components/       UI-Bausteine, nach Bereich gruppiert (layout, home, dashboard, admin, …)

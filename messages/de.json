@@ -930,5 +930,8 @@
     "notLoggedIn": "Du musst angemeldet sein.",
     "shopMissing": "Diesen Laden gibt es nicht (mehr).",
     "ownShop": "Den eigenen Laden kannst du nicht bewerten."
+  },
+  "AutoTranslate": {
+    "note": "Spielertexte werden maschinell übersetzt – kleine Fehler sind möglich."
   }
 }

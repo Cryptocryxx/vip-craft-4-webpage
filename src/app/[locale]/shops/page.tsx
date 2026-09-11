@@ -5,9 +5,11 @@ import { ShopGrid } from "@/components/shops/ShopGrid";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { UebersetzungsHinweis } from "@/components/ui/UebersetzungsHinweis";
 import { SPURS_PER_COG } from "@/lib/currency";
 import { auth } from "@/auth";
 import { eigeneBewertungen, listShops } from "@/lib/shops";
+import { uebersetzeShops } from "@/lib/uebersetzung";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("ShopsPage");
@@ -15,7 +17,13 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ShopsPage() {
-  const [shops, t, session] = await Promise.all([listShops(), getTranslations("ShopsPage"), auth()]);
+  const [roheShops, t, session] = await Promise.all([listShops(), getTranslations("ShopsPage"), auth()]);
+
+  // Beschreibungen, Warenlisten und Bewertungen kommen von Spielern und sind
+  // fast immer deutsch. Auf der englischen Fassung laufen sie durch die
+  // Maschinenuebersetzung (lib/uebersetzung.ts); faellt die aus, steht hier
+  // wieder das Original.
+  const shops = await uebersetzeShops(roheShops);
 
   // Nur fuer Angemeldete nachschlagen - fuer alle anderen gibt es kein Formular,
   // das etwas voreinstellen koennte.
@@ -37,6 +45,7 @@ export default async function ShopsPage() {
 
       <Container className="py-10">
         <ShopGrid shops={shops} viewerId={viewerId} eigene={eigene} />
+        <UebersetzungsHinweis className="mt-8" />
       </Container>
     </>
   );

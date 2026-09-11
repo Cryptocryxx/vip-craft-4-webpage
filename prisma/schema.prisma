@@ -536,3 +536,37 @@ model GameLog {
   @@index([userId, seq])
   @@index([at])
 }
+
+// ---------------------------------------------------------------------------
+// Zwischenspeicher der Maschinenuebersetzung
+//
+// Auf der englischen Seite laufen die Texte, die Spieler selbst schreiben
+// (Shop-Beschreibungen, Bewertungen, Vorschlaege, Kopfgeld-Begruendungen),
+// durch Google Translate - siehe lib/uebersetzung.ts. Ohne Zwischenspeicher
+// waere das eine Anfrage nach draussen pro Text und Seitenaufruf: langsam und
+// eine sichere Art, sich eine Sperre einzufangen.
+//
+// Der Schluessel ist der Hash des Ausgangstextes, nicht die Zeilen-ID: Wird
+// eine Beschreibung geaendert, entsteht ein neuer Hash und damit eine neue
+// Uebersetzung, waehrend die alte einfach liegenbleibt. Es gibt also nichts
+// ungueltig zu machen - ein falsch zugeordneter Text ist so unmoeglich.
+// ---------------------------------------------------------------------------
+
+model Translation {
+  /// SHA-256 des Ausgangstextes (gekuerzt auf 32 Zeichen).
+  hash String
+
+  /// Zielsprache, wie in i18n/routing.ts ("en").
+  locale String
+
+  /// Der Ausgangstext - nur, damit die Tabelle lesbar bleibt, wenn jemand
+  /// nachsehen will, warum eine Uebersetzung schief aussieht.
+  source String
+
+  /// Was Google zurueckgegeben hat.
+  text String
+
+  createdAt DateTime @default(now())
+
+  @@id([hash, locale])
+}

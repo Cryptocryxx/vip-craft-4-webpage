@@ -13,6 +13,7 @@ import { SuggestionBoard } from "@/components/dashboard/SuggestionBoard";
 import { WhitelistStatus } from "@/components/dashboard/WhitelistStatus";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { UebersetzungsHinweis } from "@/components/ui/UebersetzungsHinweis";
 import { serverStartZeit } from "@/lib/event-types";
 import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
 import { ensureNameChecked } from "@/lib/name-check";
@@ -22,6 +23,7 @@ import { gehaltsStand } from "@/lib/salary";
 import { getSiteSettings } from "@/lib/settings";
 import { listShopsForUser } from "@/lib/shops";
 import { listSuggestions } from "@/lib/suggestions";
+import { uebersetzeVorschlaege } from "@/lib/uebersetzung";
 import { getApplicationForUser } from "@/lib/whitelist";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -70,7 +72,7 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
   // Discord-Mitgliedschaft nebenbei nachziehen: Wer nach dem Login beitritt,
   // sieht den Schritt beim naechsten Aufruf des Dashboards von selbst abgehakt,
   // ohne auf „Erneut pruefen" zu druecken.
-  const [application, settings, suggestions, shops, discord, name, locale, gehalt] = await Promise.all([
+  const [application, settings, roheVorschlaege, shops, discord, name, locale, gehalt] = await Promise.all([
     getApplicationForUser(user.id),
     getSiteSettings(),
     listSuggestions(user.id),
@@ -80,6 +82,16 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
     getLocale(),
     gehaltsStand(user.id),
   ]);
+
+  /*
+   * Die Vorschlaege kommen von Spielern und sind fast immer deutsch - auf der
+   * englischen Fassung laufen sie durch die Maschinenuebersetzung.
+   *
+   * Die eigenen Laeden darunter ausdruecklich NICHT: Die stecken im
+   * Bearbeitungsformular, und was dort steht, wird beim naechsten Speichern
+   * zum neuen Original.
+   */
+  const suggestions = await uebersetzeVorschlaege(roheVorschlaege);
 
   const start = serverStartZeit();
   const serverStartText =
@@ -150,6 +162,7 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
         </div>
 
         <SuggestionBoard suggestions={suggestions} currentUserId={user.id} />
+        <UebersetzungsHinweis />
 
         {/* Dezent, ganz am Ende - hier sucht niemand versehentlich danach,
             wer die Sprache wirklich wechseln will, findet sie trotzdem. */}

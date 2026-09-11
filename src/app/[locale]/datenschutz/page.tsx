@@ -303,7 +303,7 @@ export default function DatenschutzPage() {
         lit. f DSGVO.
       </p>
 
-      <h2>11. Externe Inhalte</h2>
+      <h2>11. Externe Dienste und Inhalte</h2>
       <h3>Twitch-Einbettung</h3>
       <p>
         Auf der Seite „Streams“ können Übertragungen über den Player von Twitch angesehen werden. Anbieter ist die Twitch
@@ -341,6 +341,23 @@ export default function DatenschutzPage() {
         nicht gesetzt.
       </p>
 
+      <h3>Maschinelle Übersetzung von Spielertexten</h3>
+      <p>
+        Auf der englischsprachigen Fassung dieser Website werden Texte, die Spielerinnen und Spieler selbst verfasst
+        haben – Shop-Beschreibungen und -Bewertungen, Vorschläge sowie Begründungen ausgeschriebener Kopfgelder –
+        maschinell ins Englische übersetzt. Dafür wird der Übersetzungsdienst von Google (Google Ireland Limited,
+        Gordon House, Barrow Street, Dublin 4, Irland; für Nutzer außerhalb des EWR Google LLC, USA) verwendet.
+      </p>
+      <p>
+        Die Anfrage stellt <strong>ausschließlich unser Server</strong>; Ihr Browser baut keine Verbindung zu Google
+        auf, Ihre IP-Adresse wird dabei <strong>nicht</strong> übermittelt und es werden keine Cookies gesetzt.
+        Übermittelt wird allein der jeweilige Textinhalt – ohne Namen und ohne Kennungen. Jeder Text wird nur einmal
+        übersetzt; das Ergebnis speichern wir in unserer Datenbank, damit keine weiteren Anfragen nötig sind.
+        Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO – unser berechtigtes Interesse daran, die Inhalte dieser Website
+        auch für englischsprachige Besucher verständlich zu machen. Bitte beachten Sie, dass Texte, die Sie hier
+        veröffentlichen, auf diesem Weg an Google gelangen; die deutsche Fassung der Seite ist davon nicht betroffen.
+      </p>
+
       <h3>Schriftarten</h3>
       <p>
         Die verwendeten Schriftarten werden von unserem eigenen Server ausgeliefert. Eine Verbindung zu Servern von
@@ -352,10 +369,11 @@ export default function DatenschutzPage() {
       <p>
         Personenbezogene Daten geben wir nur weiter, soweit dies für den Betrieb erforderlich ist oder wir gesetzlich
         dazu verpflichtet sind. Empfänger sind der Hosting-Anbieter der Website, der Anbieter des Spielservers sowie –
-        bei entsprechender Nutzung – Discord und Twitch.
+        bei entsprechender Nutzung – Discord und Twitch. Hinzu kommt der Übersetzungsdienst von Google, an den auf der
+        englischsprachigen Fassung die von Spielern verfassten Texte übermittelt werden (siehe Abschnitt 11).
       </p>
       <p>
-        Bei Discord und Twitch kann eine Verarbeitung in den Vereinigten Staaten stattfinden. Die Anbieter stützen solche
+        Bei Discord, Twitch und Google kann eine Verarbeitung in den Vereinigten Staaten stattfinden. Die Anbieter stützen solche
         Übermittlungen auf die Standardvertragsklauseln der Europäischen Kommission nach Art. 46 Abs. 2 lit. c DSGVO
         und/oder auf den Angemessenheitsbeschluss zum EU-US Data Privacy Framework nach Art. 45 DSGVO. Ungeachtet dessen
         kann in den Vereinigten Staaten nicht vollständig ausgeschlossen werden, dass dortige Behörden auf Daten

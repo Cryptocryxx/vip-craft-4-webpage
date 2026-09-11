@@ -930,5 +930,8 @@
     "notLoggedIn": "You need to be signed in.",
     "shopMissing": "That shop no longer exists.",
     "ownShop": "You cannot rate your own shop."
+  },
+  "AutoTranslate": {
+    "note": "Player texts are machine-translated from German – small mistakes are possible."
   }
 }

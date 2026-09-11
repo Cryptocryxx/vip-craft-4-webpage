@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { UebersetzungsHinweis } from "@/components/ui/UebersetzungsHinweis";
 import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import {
@@ -19,6 +20,7 @@ import {
 } from "@/lib/bounties";
 import { formatNumber } from "@/lib/format";
 import { listPlayers } from "@/lib/players";
+import { uebersetzeKopfgelder } from "@/lib/uebersetzung";
 import { prisma } from "@/lib/prisma";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -88,13 +90,18 @@ function ErledigteZeile({ eintrag, locale, t }: ZeilenProps) {
 
 export default async function BountiesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const [t, session, offen, erledigt, bereit] = await Promise.all([
+  const [t, session, roheOffen, erledigt, bereit] = await Promise.all([
     getTranslations("BountiesPage"),
     auth(),
     offeneKopfgelder(),
     erledigteKopfgelder(),
     kopfgeldSkriptBereit(),
   ]);
+
+  // Die Begruendung schreibt der Ausschreiber selbst - auf der englischen
+  // Fassung laeuft sie durch die Maschinenuebersetzung. Die Todesmeldung in
+  // der Liste darunter bleibt so, wie sie im Spiel stand.
+  const offen = await uebersetzeKopfgelder(roheOffen);
 
   const nutzer = session?.user?.id
     ? await prisma.user.findUnique({
@@ -157,6 +164,7 @@ export default async function BountiesPage({ params }: { params: Promise<{ local
                   </ul>
                 )}
               </Panel>
+              {offen.some((eintrag) => eintrag.reason) && <UebersetzungsHinweis className="mt-3 justify-start" />}
             </section>
 
             {erledigt.length > 0 && (
