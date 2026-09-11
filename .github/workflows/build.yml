@@ -1,0 +1,178 @@
+# Baut die Website und legt das fertige Ergebnis als Release-Asset ab.
+#
+# WARUM: Auf dem Webserver hat `npm ci` zuletzt 1,1 GB angefordert und wurde
+# vom OOM-Killer erschlagen (dmesg, 11.09.2026). Weil `npm ci` node_modules
+# vorher löscht, war danach die Startdatei der laufenden Seite weg und die
+# Website kam nicht mehr hoch. Bauen gehört deshalb auf eine Maschine, die
+# Speicher hat - der Server soll nur noch starten, was hier fertig wird.
+#
+# Das Ergebnis ist ein Tarball aus `output: "standalone"` (siehe
+# next.config.ts): Er enthält den Server, die wirklich benutzten Teile von
+# node_modules und die statischen Dateien. Auf dem Server läuft danach kein
+# npm und kein Build mehr, nur `node server.js`.
+#
+# Der Server holt sich den Tarball über das öffentliche Release - kein Token,
+# kein SSH-Schlüssel, keine eingehende Verbindung von GitHub aus.
+
+name: Build
+
+on:
+  push:
+    branches: [main]
+  # Damit sich ein Build ohne neuen Commit wiederholen lässt.
+  workflow_dispatch:
+
+# Nötig, um das Release anzulegen. Sonst darf der Lauf nur lesen.
+permissions:
+  contents: write
+
+# Zwei Pushes kurz hintereinander: Der ältere Build wird abgebrochen, statt
+# dass zwei Läufe um dasselbe Release streiten.
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # ACHTUNG: MUSS zur Node-Hauptversion auf dem Webserver passen.
+  #
+  # better-sqlite3 bringt eine kompilierte .node-Datei mit, und die ist an die
+  # ABI der Node-Hauptversion gebunden. Wird hier mit einer anderen gebaut als
+  # dort gestartet, lädt die Bindung nicht und die Seite startet nicht - mit
+  # einer Fehlermeldung, die nach allem Möglichen aussieht, nur nicht danach.
+  # Auf dem Server: Node v24.11.1, x86_64, glibc 2.39 (geprueft am 11.09.2026).
+  # Prüfen mit `node -v`.
+  NODE_VERSION: "24"
+
+  # Nur für den Build. Die echte Datenbank und die echten Geheimnisse bleiben
+  # auf dem Server; hier wird lediglich etwas gebraucht, das existiert.
+  DATABASE_URL: "file:./prisma/ci.db"
+  AUTH_SECRET: "ci-build-only-not-a-real-secret"
+
+jobs:
+  build:
+    # Bewusst festgenagelt statt ubuntu-latest: Der Webserver laeuft auf
+    # Ubuntu 24.04 (glibc 2.39, geprueft am 11.09.2026). Die native
+    # SQLite-Bindung wird hier gebaut und dort geladen - waechst der Runner
+    # eines Tages auf eine neuere glibc, koennte sie dort nicht mehr laden.
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      # Erst prüfen, dann bauen: Ein Typfehler soll hier auffallen und nicht
+      # erst, wenn der Tarball schon auf dem Server liegt.
+      - name: Typen prüfen
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      # Legt die Wegwerf-Datenbank für den Build und den Rauchtest an. Der
+      # Prisma-Client wird dabei ohnehin schon erzeugt (postinstall).
+      - name: Datenbank für den Build anlegen
+        run: npm run db:push
+
+      - name: Bauen
+        run: npm run build
+
+      # Der Standalone-Ordner bekommt public/ und .next/static nicht von
+      # selbst - das sagt die Next-Doku ausdrücklich. schema.prisma kommt mit,
+      # damit auf dem Server das Schema nachgezogen werden kann.
+      - name: Bündel zusammenstellen
+        run: |
+          cp -r public .next/standalone/
+          cp -r .next/static .next/standalone/.next/
+          mkdir -p .next/standalone/prisma
+          cp prisma/schema.prisma .next/standalone/prisma/
+          echo "${{ github.sha }}" > .next/standalone/BUILD_COMMIT
+          node -v > .next/standalone/BUILD_NODE
+
+      # Der eigentliche Zweck dieses Schritts: beweisen, dass das Bündel
+      # vollständig ist und wirklich ausliefert. Zwei Dinge gehen hier
+      # erfahrungsgemäss schief, und beide sind auf dem Server teuer:
+      #
+      # 1. Eine Datei fehlt, die die statische Analyse nicht gefunden hat -
+      #    klassisch die native SQLite-Bindung.
+      # 2. Die deutschen Adressen laufen in einen Weiterleitungs-Ring. Sie
+      #    haben kein Präfix (/shops statt /de/shops) und entstehen erst durch
+      #    einen Rewrite der next-intl-Middleware. Ist HOSTNAME auf eine
+      #    bestimmte Adresse gesetzt, hält das Standalone-Bundle diesen Rewrite
+      #    für fremde Herkunft und macht eine 307-Weiterleitung auf sich selbst
+      #    daraus - am 11.09.2026 genau so nachgestellt. Die englische Seite
+      #    bleibt dabei heil, deshalb wird hier BEIDES geprueft und auf 200
+      #    bestanden: Ein 3xx zählt NICHT als Erfolg.
+      #
+      # Deshalb steht hier auch kein HOSTNAME. Wer eines braucht, nimmt
+      # 0.0.0.0 - das ist geprueft und unschaedlich.
+      - name: Rauchtest - startet und liefert das Bündel?
+        run: |
+          set -e
+          cp prisma/ci.db .next/standalone/prisma/ci.db
+          cd .next/standalone
+
+          echo "→ Lädt die native SQLite-Bindung?"
+          node -e "require('better-sqlite3'); console.log('  ok')"
+
+          echo "→ Startet der Server?"
+          PORT=3001 node server.js &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+
+          bereit=0
+          for i in $(seq 1 30); do
+            if curl -sS -o /dev/null http://localhost:3001/en/shops; then
+              bereit=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$bereit" != "1" ]; then
+            echo "  Der Server hat 30 Sekunden lang nicht geantwortet."
+            exit 1
+          fi
+
+          echo "→ Antworten beide Sprachfassungen mit 200?"
+          fehler=0
+          # Bewusst nur Seiten, die mit Datenbank und Uebersetzung auskommen.
+          # /bounties und /admin fragen Crafty - das gibt es hier nicht, ein
+          # Fehlschlag dort saegte also am falschen Ast.
+          for pfad in / /shops /en/shops; do
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "http://localhost:3001${pfad}")
+            echo "  ${pfad} -> ${code}"
+            if [ "$code" != "200" ]; then fehler=1; fi
+          done
+          if [ "$fehler" != "0" ]; then
+            echo "  Mindestens eine Seite hat nicht mit 200 geantwortet (307 = Weiterleitungs-Ring, siehe oben)."
+            exit 1
+          fi
+          echo "  ok"
+
+      # Die Wegwerf-Datenbank hat im Tarball nichts verloren - sie würde auf
+      # dem Server im schlimmsten Fall die echte überschreiben.
+      - name: Bündel packen
+        run: |
+          rm -f .next/standalone/prisma/ci.db
+          # Next kopiert eine vorhandene .env mit in den Standalone-Ordner.
+          # Hier gibt es keine - aber falls doch je eine entsteht, wuerde sie
+          # auf dem Server die echte ueberschreiben. Also sicherheitshalber weg.
+          rm -f .next/standalone/.env .next/standalone/.env.*
+          tar -czf vipcraft-build.tar.gz -C .next/standalone .
+
+      # gh ist auf den Runnern vorinstalliert - damit braucht es keine
+      # fremde Action, die Schreibrechte auf das Repo bekommt.
+      - name: Release veröffentlichen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "build-${{ github.run_number }}" \
+            vipcraft-build.tar.gz \
+            --title "Build ${{ github.run_number }}" \
+            --notes "Commit ${{ github.sha }}, gebaut mit Node ${{ env.NODE_VERSION }}."

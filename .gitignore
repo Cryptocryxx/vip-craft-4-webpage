@@ -17,6 +17,11 @@
 /.next/
 /out/
 
+# Auf dem Server: die entpackten Bündel aus GitHub Actions und der Symlink
+# auf das gerade laufende (siehe deploy/webhook.mjs).
+/releases/
+/current
+
 # production
 /build
 

@@ -18,15 +18,39 @@ module.exports = {
   apps: [
     {
       name: "vipcraft",
-      // Direkt die Next-Binary statt "npm run start": spart den npm-Wrapper-Prozess,
-      // dadurch trifft pm2 stop/restart wirklich den Server und nicht nur die Hülle.
-      script: "node_modules/next/dist/bin/next",
-      args: "start",
+      /*
+       * Gestartet wird das fertige Bündel aus GitHub Actions, nicht mehr die
+       * Next-Binary aus node_modules.
+       *
+       * `current` ist ein Symlink auf das zuletzt erfolgreich geprüfte Release
+       * unter releases/ (siehe deploy/webhook.mjs). Ein Deploy legt diesen
+       * Symlink in einem Zug um; ein `pm2 restart vipcraft` greift danach die
+       * neue Fassung. Zurückrudern heißt: Symlink auf ein älteres Release
+       * zeigen lassen und neu starten - mehr ist es nicht.
+       *
+       * node_modules gibt es auf dem Server nicht mehr. Genau darum geht es:
+       * `npm ci` hat die Maschine den Arbeitsspeicher gekostet und dabei die
+       * laufende Seite mitgerissen.
+       */
+      script: "current/server.js",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
       // Absichtlich kein max_memory_restart: Jeder Neustart setzt den Watchdog
       // zurück, der dann erst wieder eine Runde nur beobachtet, bevor er handelt.
+      /*
+       * HOSTNAME wird hier BEWUSST nicht gesetzt, obwohl die Next-Doku es beim
+       * Standalone-Betrieb nebenbei erwähnt.
+       *
+       * Die deutschen Adressen haben kein Sprachpräfix (/shops statt
+       * /de/shops) und entstehen erst durch einen Rewrite der
+       * next-intl-Middleware. Steht HOSTNAME auf einer konkreten Adresse, hält
+       * das Standalone-Bündel diesen Rewrite für fremde Herkunft und macht
+       * eine 307-Weiterleitung auf sich selbst daraus: Jede deutsche Seite
+       * landet im Ring, während die englische heil bleibt. Am 11.09.2026 genau
+       * so nachgestellt. Ohne HOSTNAME lauscht der Server ohnehin auf allen
+       * Adressen, und nginx spricht ihn über 127.0.0.1:3000 an.
+       */
       env: {
         NODE_ENV: "production",
         PORT: 3000,

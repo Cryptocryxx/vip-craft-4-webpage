@@ -364,14 +364,95 @@ abgefangen und protokolliert, ohne die Seite zu beeinträchtigen.
 
 ## Deployment (Linux, hinter einem Reverse Proxy)
 
-Reihenfolge ist wichtig: Die `.env` muss vor `npm ci` existieren, weil `postinstall`
-bereits `prisma generate` aufruft.
+**Gebaut wird in GitHub Actions, nicht auf dem Server.** Am 11.09.2026 hat `npm ci`
+dort 1,1 GB angefordert und wurde vom OOM-Killer erschlagen – und weil `npm ci`
+`node_modules` vorher löscht, war danach die Startdatei der laufenden Seite weg.
+Die Website kam beim nächsten Neustart nicht mehr hoch, ohne dass jemand etwas
+gepusht hatte. Auf dem Server läuft deshalb kein npm und kein Build mehr, sondern
+nur noch das fertige Bündel: `node current/server.js`.
+
+Der Ablauf im Überblick:
+
+```
+Push auf main
+  → GitHub Actions baut (.github/workflows/build.yml), prüft Typen, lintet,
+    startet das Bündel zur Probe und hängt es als Release-Asset an
+  → GitHub ruft den Deploy-Webhook auf dem Server
+  → der lädt das Release, packt es nach releases/<tag>/, zieht das Schema nach,
+    startet es zur Probe auf Port 3999 und legt erst dann current um
+```
+
+Ordnerbild auf dem Server:
+
+```
+~/vip-craft-4-webpage/
+    .env                  die echten Geheimnisse (nicht im Repo, nicht im Bündel)
+    prisma/dev.db         die Datenbank
+    releases/build-42/    ein entpacktes Bündel
+    current -> releases/build-42
+```
+
+### Einmalige Einrichtung
+
+Die Reihenfolge ist wichtig – der Webhook aktualisiert sich selbst erst beim
+nächsten Lauf, also muss er **vor** dem ersten Push auf dem neuen Stand sein.
 
 ```bash
-cp .env.example .env        # ausfuellen, siehe unten
-npm ci
-npm run db:push             # legt die SQLite-Datei an (nicht im Repo)
-npm run build
+cd ~/vip-craft-4-webpage && git pull
+```
+
+**1. `DATABASE_URL` absolut eintragen.** Das Standalone-Bündel wechselt beim
+Start in seinen eigenen Ordner (`process.chdir(__dirname)`). Ein relatives
+`file:./prisma/dev.db` zeigte damit in den Release-Ordner, und jeder Deploy
+legte dort eine frische, leere Datenbank an – die Seite käme hoch und sähe aus,
+als wäre alles fort. Der Webhook verweigert den Dienst, solange das so steht:
+
+```bash
+DATABASE_URL="file:/home/lorenz/vip-craft-4-webpage/prisma/dev.db"
+```
+
+**2. Prisma-CLI getrennt installieren.** Sie ist eine devDependency und liegt
+deshalb nicht im Bündel, wird aber für `db push` gebraucht. Dieses eine Paket
+passt in den Speicher, ein volles `npm ci` nicht:
+
+```bash
+npm i --prefix ~/prisma-cli prisma@7
+```
+
+**3. Den Webhook auf den neuen Stand bringen:**
+
+```bash
+pm2 restart deploy-webhook
+```
+
+**4. Einmal von Hand deployen**, damit `current` existiert – danach macht das
+der Webhook allein. Vorher einmal in GitHub unter *Actions → Build → Run
+workflow* einen Lauf anstoßen (oder etwas pushen), damit es ein Release gibt:
+
+```bash
+cd ~/vip-craft-4-webpage && mkdir -p releases/erster
+curl -sL "$(curl -s https://api.github.com/repos/Cryptocryxx/vip-craft-4-webpage/releases/latest | grep browser_download_url | cut -d '"' -f 4)" -o /tmp/vipcraft.tar.gz
+tar -xzf /tmp/vipcraft.tar.gz -C releases/erster
+ln -s ~/vip-craft-4-webpage/.env releases/erster/.env
+ln -sfn releases/erster current
+```
+
+**5. pm2 auf die neue Startdatei umstellen.** `pm2 restart` allein genügt
+nicht – pm2 merkt sich die alte Definition:
+
+```bash
+pm2 delete vipcraft && pm2 start ecosystem.config.cjs && pm2 save
+```
+
+Ab hier genügt ein Push auf `main`.
+
+### Alte Fassung zurückholen
+
+Kein Rückbau, nur ein Symlink:
+
+```bash
+cd ~/vip-craft-4-webpage && ls releases/
+ln -sfn releases/<älterer-tag> current && pm2 restart vipcraft
 ```
 
 Auf dem Produktivhost zusaetzlich in die `.env`:
@@ -404,8 +485,9 @@ pm2 restart vipcraft    # nach einem Deploy
 pm2 status
 ```
 
-Nach jedem `git pull` gehoert `npm ci && npm run build && pm2 restart vipcraft`
-zusammen -- ein Restart allein serviert weiter den alten Build.
+Von Hand gebaut wird auf dem Server nicht mehr – das erledigt GitHub Actions,
+und der Webhook holt das Ergebnis ab (siehe oben). `pm2 restart vipcraft` startet
+nur neu, was `current` gerade zeigt.
 
 ### Reverse Proxy (nginx)
 
@@ -430,15 +512,39 @@ location / {
 
 ### Deploy-Webhook
 
-`deploy/webhook.mjs` nimmt GitHub-Push-Events entgegen und zieht das Projekt
-nach: `git merge --ff-only`, `npm ci`, `npm run db:push`, `npm run build`,
-`pm2 restart vipcraft`. Schlaegt ein Schritt fehl, bricht der Lauf ab und die
-bisherige Fassung laeuft unveraendert weiter.
+`deploy/webhook.mjs` nimmt GitHub-Push-Events entgegen und holt das fertig
+gebaute Bündel aus dem neuesten Release:
 
-Der Dienst laeuft bewusst getrennt von der Website: nach einem kaputten Build
-waere die Seite unten -- und mit ihr das Werkzeug, mit dem man das repariert.
-Er hat keine Abhaengigkeiten und ueberlebt dadurch das `npm ci`, das er selbst
-ausloest.
+1. `git fetch` + `git merge --ff-only` – nur für dieses Skript selbst, die
+   pm2-Konfiguration und das Schema. Die Website kommt fertig aus dem Tarball.
+2. Prüfen, dass `DATABASE_URL` absolut ist (siehe oben).
+3. Release-Tarball laden und nach `releases/<tag>/` auspacken, `.env` als
+   Symlink dazu.
+4. `prisma db push` mit der getrennt installierten CLI.
+5. **Probelauf** auf Port 3999: Das neue Bündel muss starten und `/`, `/shops`
+   und `/en/shops` mit **200** ausliefern.
+6. Erst dann `current` umlegen (per `rename`, also in einem Zug) und
+   `pm2 restart vipcraft`.
+7. Alte Releases aufräumen, die letzten drei bleiben liegen.
+
+**Bis Schritt 6 wird die laufende Fassung nicht angefasst.** Das war vorher
+anders: `npm ci` löschte `node_modules`, bevor es installierte – ein Abbruch
+zog der laufenden Seite den Boden weg, auch wenn im Log „die laufende Fassung
+bleibt unverändert" stand.
+
+Der Probelauf startet ausdrücklich **ohne** `SERVER_WATCHDOG` und **ohne**
+`HOSTNAME`. Ersteres, weil der Beobachter den Minecraft-Server starten kann und
+zwei davon gleichzeitig genau das sind, was `ecosystem.config.cjs` mit „eine
+Instanz" verhindert. Letzteres, weil ein gesetztes `HOSTNAME` im
+Standalone-Bündel alle deutschen Adressen in eine 307-Schleife auf sich selbst
+schickt, während die englischen heil bleiben.
+
+Der Dienst läuft bewusst getrennt von der Website: Nach einem kaputten Deploy
+wäre die Seite unten – und mit ihr das Werkzeug, mit dem man das repariert.
+
+Bricht ein Lauf ab, steht das Signal jetzt mit im Log: `Exit-Code null` heißt
+nicht „Fehler 0", sondern „abgeschossen" – bei `SIGKILL` fast immer der
+OOM-Killer, nachzusehen mit `dmesg -T | grep -i "killed process"`.
 
 Einrichtung:
 
