@@ -411,6 +411,15 @@ als wäre alles fort. Der Webhook verweigert den Dienst, solange das so steht:
 DATABASE_URL="file:/home/lorenz/vip-craft-4-webpage/prisma/dev.db"
 ```
 
+Die vorhandene Zeile **ersetzen**, nicht eine zweite anhängen: Beim Einlesen der
+`.env` gewinnt die letzte Zeile. Stehen beide drin, zählt weiter die relative –
+und der Fehler sieht dann so aus, als wäre die Datenbank leer. Danach prüfen,
+dass genau eine übrig ist:
+
+```bash
+grep -c DATABASE_URL .env    # muss 1 ergeben
+```
+
 **2. Prisma-CLI getrennt installieren.** Sie ist eine devDependency und liegt
 deshalb nicht im Bündel, wird aber für `db push` gebraucht. Dieses eine Paket
 passt in den Speicher, ein volles `npm ci` nicht:
@@ -435,6 +444,16 @@ curl -sL "$(curl -s https://api.github.com/repos/Cryptocryxx/vip-craft-4-webpage
 tar -xzf /tmp/vipcraft.tar.gz -C releases/erster
 ln -s ~/vip-craft-4-webpage/.env releases/erster/.env
 ln -sfn releases/erster current
+```
+
+Und das Schema nachziehen, was sonst der Webhook tut. **Aus dem Release-Ordner
+heraus**, nicht aus dem Projektordner: Die Prisma-CLI lädt eine
+`prisma.config.ts`, die im aktuellen Verzeichnis liegt – die hier beginnt mit
+`import "dotenv/config"`, und `dotenv` gibt es auf dem Server nicht mehr. Im
+Release-Ordner liegt keine, also greift `--url` wie gedacht:
+
+```bash
+cd ~/vip-craft-4-webpage/releases/erster && ~/prisma-cli/node_modules/.bin/prisma db push --schema prisma/schema.prisma --url "file:/home/lorenz/vip-craft-4-webpage/prisma/dev.db"
 ```
 
 **5. pm2 auf die neue Startdatei umstellen.** `pm2 restart` allein genügt

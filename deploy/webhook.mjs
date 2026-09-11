@@ -118,10 +118,14 @@ const KEEP_RELEASES = Number(process.env.DEPLOY_KEEP_RELEASES ?? 3);
  */
 const PROBE_PFADE = ["/", "/shops", "/en/shops"];
 
-function run(command, args) {
+/**
+ * `cwd` ist nicht immer der Projektordner - siehe den Prisma-Aufruf weiter
+ * unten. git und pm2 wollen dorthin, die Schema-Angleichung ausdruecklich nicht.
+ */
+function run(command, args, cwd = REPO_DIR) {
   return new Promise((resolve) => {
     log(`$ ${command} ${args.join(" ")}`);
-    const child = spawn(command, args, { cwd: REPO_DIR, env: process.env });
+    const child = spawn(command, args, { cwd, env: process.env });
 
     child.stdout.on("data", (chunk) => process.stdout.write(chunk));
     child.stderr.on("data", (chunk) => process.stderr.write(chunk));
@@ -409,14 +413,21 @@ async function einDurchgang() {
    * Tabelle muss da sein, bevor Code sie abfragt. Ohne --accept-data-loss -
    * was Daten kosten wuerde, soll hier laut scheitern.
    */
-  const schemaOk = await run(PRISMA_CLI, [
-    "db",
-    "push",
-    "--schema",
-    join(zielDir, "prisma", "schema.prisma"),
-    "--url",
-    process.env.DATABASE_URL,
-  ]);
+  /*
+   * NICHT im Projektordner ausfuehren, sondern im Release-Ordner.
+   *
+   * Die Prisma-CLI sucht im aktuellen Verzeichnis (nur dort, nicht in den
+   * uebergeordneten - am 11.09.2026 nachgemessen) nach einer
+   * prisma.config.ts. Im Projektordner liegt eine, und die beginnt mit
+   * `import "dotenv/config"` - ein Paket, das es hier seit der Umstellung
+   * nicht mehr gibt. Die CLI bricht dann ab, noch bevor sie --url ueberhaupt
+   * ansieht. Im Release-Ordner liegt keine Config, also auch kein Problem.
+   */
+  const schemaOk = await run(
+    PRISMA_CLI,
+    ["db", "push", "--schema", join(zielDir, "prisma", "schema.prisma"), "--url", process.env.DATABASE_URL],
+    zielDir,
+  );
   if (!schemaOk) {
     log("  Schema-Abgleich fehlgeschlagen. Liegt die Prisma-CLI da, wo DEPLOY_PRISMA_CLI hinzeigt?");
     log(`  Erwartet: ${PRISMA_CLI}`);
