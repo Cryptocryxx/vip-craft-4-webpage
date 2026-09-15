@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Link } from "@/i18n/navigation";
 import {
   ArrowLeft,
+  Backpack,
   Clock,
   Coins,
   ExternalLink,
@@ -14,6 +15,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { GameLogList } from "@/components/admin/GameLogList";
+import { InventarPanel } from "@/components/admin/InventarPanel";
 import { RefreshLogButton } from "@/components/admin/RefreshLogButton";
 import { ServerPlayerRow } from "@/components/admin/ServerPlayerRow";
 import { Badge } from "@/components/ui/Badge";
@@ -47,6 +49,10 @@ const auditLabels: Record<string, string> = {
   BAN: "Gebannt",
   UNBAN: "Entbannt",
   IP_VIEW: "IP abgerufen",
+  INVENTORY_VIEW: "Inventar angesehen",
+  ITEM_TAKE: "Item entnommen",
+  ITEM_GIVE: "Item gegeben",
+  ITEM_RETURN: "Item zurückgegeben",
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -246,6 +252,21 @@ export default async function AdminSpielerDetailPage({ params }: Props) {
         </section>
       )}
 
+      {/* Nur für Admins – Moderatoren sehen den Abschnitt nicht, und die
+          Actions dahinter prüfen die Rolle noch einmal selbst. */}
+      {darfAlles && (
+        <section className="mt-10">
+          <SectionHeading
+            eyebrow="Nur Admins"
+            icon={Backpack}
+            title="Inventar"
+            description="Stand der letzten Speicherung – mit Endertruhe, Curios und Rucksäcken. Jeder Abruf und jeder Eingriff wird protokolliert."
+            className="mb-5"
+          />
+          <InventarPanel name={name} online={profil?.online ?? false} />
+        </section>
+      )}
+
       <section className="mt-10">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <SectionHeading
@@ -271,7 +292,7 @@ export default async function AdminSpielerDetailPage({ params }: Props) {
           eyebrow="Protokoll"
           icon={ScrollText}
           title="Eingriffe des Teams"
-          description="Kicks, Banns und IP-Abfragen zu diesem Spieler."
+          description="Kicks, Banns, IP-Abfragen und Inventar-Eingriffe zu diesem Spieler."
           className="mb-5"
         />
         <Panel className="overflow-hidden">

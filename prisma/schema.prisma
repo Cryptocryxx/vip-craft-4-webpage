@@ -461,7 +461,7 @@ model ServerEvent {
 
 model PlayerAudit {
   id String @id @default(cuid())
-  /// KICK | BAN | UNBAN | IP_VIEW
+  /// KICK | BAN | UNBAN | IP_VIEW | INVENTORY_VIEW | ITEM_TAKE | ITEM_GIVE | ITEM_RETURN
   type String
   /// Minecraft-Name des betroffenen Spielers
   target String
@@ -473,6 +473,37 @@ model PlayerAudit {
 
   @@index([createdAt])
   @@index([target])
+}
+
+/// Eingriffe ins Inventar eines Spielers – nur Admins (siehe lib/inventar-aktionen.ts).
+///
+/// Eigene Tabelle neben PlayerAudit, weil ein Eingriff mehr braucht als eine
+/// Zeile Text: Der entnommene Stapel wird vollständig aufgehoben (itemSnbt),
+/// damit er sich zurückgeben lässt – mit Namen, Verzauberungen und allem.
+model InventoryAction {
+  id         String  @id @default(cuid())
+  /// TAKE | GIVE | RETURN
+  kind       String
+  /// PENDING | OK | FAILED
+  status     String  @default("PENDING")
+  /// Minecraft-Name und UUID des betroffenen Spielers
+  target     String
+  targetUuid String
+  /// Ort der Entnahme, z. B. "inv:12" oder "rucksack:<uuid>:3" – bei GIVE leer
+  location   String?
+  itemId     String
+  count      Int
+  /// Der entnommene Stapel als SNBT, geliefert vom Spielskript
+  itemSnbt   String?
+  error      String?
+  /// Bei TAKE: die RETURN-Zeile, mit der der Stapel zurückging
+  returnedById String?
+  actorId    String?
+  actorName  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([target, createdAt])
 }
 
 // ---------------------------------------------------------------------------

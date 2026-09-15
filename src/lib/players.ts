@@ -169,7 +169,15 @@ export async function saveAndRefresh(): Promise<RefreshErgebnis> {
 // Admin-Eingriffe
 // ---------------------------------------------------------------------------
 
-export type AuditTyp = "KICK" | "BAN" | "UNBAN" | "IP_VIEW";
+export type AuditTyp =
+  | "KICK"
+  | "BAN"
+  | "UNBAN"
+  | "IP_VIEW"
+  | "INVENTORY_VIEW"
+  | "ITEM_TAKE"
+  | "ITEM_GIVE"
+  | "ITEM_RETURN";
 
 export async function protokolliere(
   type: AuditTyp,

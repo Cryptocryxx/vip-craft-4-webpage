@@ -116,6 +116,11 @@ export type CraftyDirectoryEntry = {
   dir?: boolean;
   type?: string;
   size?: number;
+  /**
+   * Letzte Änderung, so wie Crafty sie liefert: "2026/09/11 21:21" – Ortszeit
+   * des Servers, ohne Zeitzone und nur auf die Minute.
+   */
+  modified?: string;
 };
 
 /** Verzeichnis auflisten. `path` ist relativ zum Serververzeichnis. */
@@ -139,8 +144,14 @@ function normaliseDirectory(data: unknown): CraftyDirectoryEntry[] {
   const entries: CraftyDirectoryEntry[] = [];
   for (const [name, value] of Object.entries(data as Record<string, unknown>)) {
     if (name === "root_path" || !value || typeof value !== "object") continue;
-    const item = value as { path?: string; dir?: boolean; size?: number };
-    entries.push({ name, path: item.path, dir: Boolean(item.dir), size: item.size });
+    const item = value as { path?: string; dir?: boolean; size?: number; modified?: unknown };
+    entries.push({
+      name,
+      path: item.path,
+      dir: Boolean(item.dir),
+      size: item.size,
+      modified: typeof item.modified === "string" ? item.modified : undefined,
+    });
   }
   return entries;
 }
@@ -198,6 +209,48 @@ export async function craftyReadJson<T>(path: string): Promise<T | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Datei als Bytes herunterladen – für Binärdateien wie NBT oder gzip.
+ *
+ * `craftyReadFile` kann das nicht: Crafty liest dort als UTF-8 und bricht bei
+ * Binärdaten mit DECODE_ERROR ab. Dieser Endpunkt steht ebenfalls nicht in der
+ * OpenAPI-Spezifikation (Crafty 4.10.8, ApiServersServerFileDownload) und
+ * braucht dieselbe FILES-Berechtigung.
+ */
+export async function craftyDownloadFile(path: string, timeoutMs = 60_000): Promise<Buffer> {
+  if (!craftyConfigured) {
+    throw new CraftyError("Crafty ist nicht konfiguriert (CRAFTY_URL, CRAFTY_TOKEN, CRAFTY_SERVER_ID).");
+  }
+
+  const url = `${craftyConfig.url}/api/v2/servers/${craftyConfig.serverId}/files/${encodeURIComponent(path)}/download`;
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { Authorization: `Bearer ${craftyConfig.token}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (error) {
+    unstable_rethrow(error);
+    const reason = error instanceof Error ? error.message : String(error);
+    throw new CraftyError(`Verbindung zu Crafty fehlgeschlagen: ${reason}`);
+  }
+
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (!response.ok) {
+    // Fehler kommen als JSON-Umschlag, wie bei den anderen Endpunkten.
+    let code = `HTTP_${response.status}`;
+    try {
+      const json = JSON.parse(bytes.toString("utf8")) as CraftyEnvelope<unknown>;
+      if (json.error) code = json.error + (json.error_data ? ` (${json.error_data})` : "");
+    } catch {
+      // Keine JSON-Antwort – dann bleibt es beim HTTP-Status.
+    }
+    throw new CraftyError(`Crafty GET ${path}: ${code}`, response.status);
+  }
+  return bytes;
 }
 
 // ---------------------------------------------------------------------------

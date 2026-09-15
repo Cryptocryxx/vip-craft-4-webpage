@@ -49,6 +49,28 @@ async function run(command: string, reason: string, actor: Actor): Promise<Comma
   return success ? { ok: true } : { ok: false, error: errorMessage ?? "Unbekannter Fehler." };
 }
 
+/** Länger darf ein Skriptbefehl nicht werden – ein Rucksack-Ort mit Item-ID bleibt weit darunter. */
+const MAX_SKRIPTBEFEHL = 400;
+
+/**
+ * Ein Befehl an ein KubeJS-Skript (etwa `vipinventar …`), der länger als 200
+ * Zeichen werden kann.
+ *
+ * runPlayerCommand schneidet dort ab. Bei einem Befehl, der mit der Beleg-ID
+ * endet, wäre das fatal: Das Skript führt ihn trotzdem aus, quittiert aber
+ * unter einer verstümmelten ID – das Item ist weg, und die Website hält den
+ * Eingriff für gescheitert. Deshalb wird hier abgelehnt statt gekürzt.
+ */
+export async function runScriptCommand(command: string, reason: string, actor: Actor): Promise<CommandResult> {
+  const sauber = command.trim();
+  if (!sauber) return { ok: false, error: "Leerer Befehl." };
+  if (/[\r\n]/.test(sauber)) return { ok: false, error: "Befehle dürfen keine Zeilenumbrüche enthalten." };
+  if (sauber.length > MAX_SKRIPTBEFEHL) {
+    return { ok: false, error: `Befehl zu lang (${sauber.length} Zeichen) – nicht abgeschickt.` };
+  }
+  return run(sauber, reason.replace(/[\r\n]+/g, " ").slice(0, 200), actor);
+}
+
 function assertValidName(name: string): void {
   if (!GAMERTAG_RE.test(name)) {
     throw new Error(`Ungültiger Minecraft-Name: ${name}`);
