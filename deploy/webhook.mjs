@@ -1,5 +1,6 @@
 /**
- * Deploy-Webhook: nimmt GitHub-Push-Events entgegen und zieht das Projekt nach.
+ * Deploy-Webhook: nimmt GitHub-Push-Events entgegen und spielt das fertig
+ * gebaute Release ein.
  *
  * Bewusst ein eigener Dienst neben der Website und keine Next.js-Route:
  * Nach einem kaputten Build waere die Website unten – und mit ihr das Werkzeug,
@@ -12,7 +13,8 @@
  * ▸ Der Dienst lauscht nur auf 127.0.0.1. Von aussen erreichbar ist er allein
  *   ueber nginx, das TLS beisteuert.
  * ▸ Es gibt nichts zu parametrisieren: Die Schritte sind fest verdrahtet, aus dem
- *   Request wird ausser "war es ein Push auf den richtigen Branch" nichts gelesen.
+ *   Request wird nur der Name des Build-Tags gelesen – und der muss exakt
+ *   build-<Zahl> heissen (BUILD_TAG_RE), sonst passiert nichts.
  *
  * Ohne Abhaengigkeiten, laeuft mit dem Node, der ohnehin da ist.
  */
@@ -31,6 +33,9 @@ const SECRET = process.env.DEPLOY_WEBHOOK_SECRET ?? "";
 const BRANCH = process.env.DEPLOY_BRANCH ?? "main";
 const REPO_DIR = process.env.DEPLOY_REPO_DIR ?? process.cwd();
 const PM2_APP = process.env.DEPLOY_PM2_APP ?? "vipcraft";
+
+/** Tags, die der Build-Lauf nach Erfolg anlegt (.github/workflows/build.yml). */
+const BUILD_TAG_RE = /^refs\/tags\/(build-\d{1,6})$/;
 
 /** GitHub-Payloads sind klein; alles Groessere wird gar nicht erst gelesen. */
 const MAX_BODY_BYTES = 1_000_000;
@@ -174,32 +179,55 @@ function datenbankPfadTaugt() {
   return false;
 }
 
-/** Das neueste Release samt Tarball-Adresse. Oeffentliches Repo, also ohne Token. */
-async function neuestesRelease() {
-  let antwort;
-  try {
-    antwort = await fetch(`https://api.github.com/repos/${REPO_SLUG}/releases/latest`, {
-      headers: { Accept: "application/vnd.github+json", "User-Agent": "vipcraft-deploy" },
-      signal: AbortSignal.timeout(30_000),
-    });
-  } catch (error) {
-    log(`GitHub nicht erreichbar: ${error.message}`);
-    return null;
+/** So oft wird nach dem Release gefragt, falls GitHub es noch nicht fertig ausliefert. */
+const RELEASE_VERSUCHE = Number(process.env.DEPLOY_RELEASE_VERSUCHE ?? 6);
+const RELEASE_PAUSE_MS = Number(process.env.DEPLOY_RELEASE_PAUSE_MS ?? 10_000);
+
+/**
+ * Das Release zu GENAU diesem Tag samt Tarball-Adresse. Oeffentliches Repo,
+ * also ohne Token.
+ *
+ * Frueher stand hier "das neueste Release" - und das war beim Push auf main
+ * regelmaessig das VORIGE: Der Webhook fragte sofort, der Build brauchte noch
+ * eine Minute. Am 15.09.2026 lief deshalb build-3 statt build-4, und jeder
+ * Deploy davor war genauso einen Stand zu alt (siehe die Behandlung der
+ * Push-Events unten).
+ *
+ * Nachgefragt wird ein paarmal, weil das Tag-Event wenige Sekunden nach der
+ * Veroeffentlichung eintrifft und ein Asset kurz noch im Upload stecken kann.
+ */
+async function releaseFuerTag(tag) {
+  const adresse = `https://api.github.com/repos/${REPO_SLUG}/releases/tags/${encodeURIComponent(tag)}`;
+
+  for (let versuch = 1; versuch <= RELEASE_VERSUCHE; versuch++) {
+    let antwort = null;
+    try {
+      antwort = await fetch(adresse, {
+        headers: { Accept: "application/vnd.github+json", "User-Agent": "vipcraft-deploy" },
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch (error) {
+      log(`  GitHub nicht erreichbar: ${error.message} (Versuch ${versuch}/${RELEASE_VERSUCHE})`);
+    }
+
+    if (antwort?.ok) {
+      const daten = await antwort.json();
+      const asset = (daten.assets ?? []).find(
+        (eintrag) => String(eintrag.name).endsWith(".tar.gz") && eintrag.state === "uploaded",
+      );
+      if (asset && daten.draft !== true) {
+        return { tag: String(daten.tag_name), url: String(asset.browser_download_url) };
+      }
+      log(`  Release ${tag} ist da, aber noch ohne fertigen Tarball (Versuch ${versuch}/${RELEASE_VERSUCHE}).`);
+    } else if (antwort) {
+      log(`  GitHub antwortete mit ${antwort.status} auf die Frage nach ${tag} (Versuch ${versuch}/${RELEASE_VERSUCHE}).`);
+    }
+
+    if (versuch < RELEASE_VERSUCHE) await new Promise((weiter) => setTimeout(weiter, RELEASE_PAUSE_MS));
   }
 
-  if (!antwort.ok) {
-    log(`GitHub antwortete mit ${antwort.status} auf die Frage nach dem neuesten Release.`);
-    return null;
-  }
-
-  const daten = await antwort.json();
-  const asset = (daten.assets ?? []).find((eintrag) => String(eintrag.name).endsWith(".tar.gz"));
-  if (!asset) {
-    log(`Im Release ${daten.tag_name} liegt kein .tar.gz - hat der Build-Lauf ihn wirklich angehaengt?`);
-    return null;
-  }
-
-  return { tag: String(daten.tag_name), url: String(asset.browser_download_url) };
+  log(`Zu ${tag} gibt es kein vollstaendiges Release - hat der Build-Lauf es wirklich veroeffentlicht?`);
+  return null;
 }
 
 /**
@@ -380,8 +408,10 @@ async function raeumeAlteReleasesWeg(aktuellerTag) {
 }
 
 let running = false;
-/** Kam waehrend eines Laufs ein weiterer Push, wird genau einmal nachgelegt. */
-let rerunPending = false;
+/** Kam waehrend eines Laufs ein weiteres Build-Tag, wird danach das neueste davon deployt. */
+let naechsterTag = null;
+
+const buildNummer = (tag) => Number(String(tag).slice("build-".length));
 
 /**
  * Ein Durchgang.
@@ -389,7 +419,7 @@ let rerunPending = false;
  * Die Reihenfolge ist die ganze Sicherheit dieses Skripts: Alles, was
  * schiefgehen kann, passiert VOR dem Umlegen von `current`.
  */
-async function einDurchgang() {
+async function einDurchgang(tag) {
   /*
    * Der Projektordner wird weiter nachgezogen - nicht wegen der Website (die
    * kommt fertig aus dem Tarball), sondern wegen dieses Skripts selbst, der
@@ -401,9 +431,9 @@ async function einDurchgang() {
 
   if (!datenbankPfadTaugt()) return false;
 
-  const release = await neuestesRelease();
+  const release = await releaseFuerTag(tag);
   if (!release) return false;
-  log(`Neuestes Release: ${release.tag}`);
+  log(`Release: ${release.tag}`);
 
   const zielDir = await holeUndEntpacke(release);
   if (!zielDir) return false;
@@ -443,22 +473,23 @@ async function einDurchgang() {
   return true;
 }
 
-async function deploy() {
+async function deploy(tag) {
   if (running) {
-    rerunPending = true;
-    log("Läuft bereits – ein weiterer Durchgang wird angehängt.");
+    if (naechsterTag === null || buildNummer(tag) > buildNummer(naechsterTag)) naechsterTag = tag;
+    log(`Läuft bereits – danach wird ${naechsterTag} deployt.`);
     return;
   }
 
   running = true;
   try {
-    do {
-      rerunPending = false;
-      log(`=== Deploy startet (${BRANCH}) ===`);
+    let aktuell = tag;
+    while (aktuell) {
+      naechsterTag = null;
+      log(`=== Deploy startet (${aktuell}) ===`);
 
       let ok = false;
       try {
-        ok = await einDurchgang();
+        ok = await einDurchgang(aktuell);
       } catch (error) {
         log(`Unerwarteter Fehler: ${error.stack ?? error.message}`);
       }
@@ -468,7 +499,8 @@ async function deploy() {
       } else {
         log("=== Abgebrochen. Die laufende Fassung laeuft unveraendert weiter. ===");
       }
-    } while (rerunPending);
+      aktuell = naechsterTag;
+    }
   } finally {
     running = false;
   }
@@ -527,19 +559,42 @@ const server = createServer((req, res) => {
       return reply(400, "Kein gültiges JSON.");
     }
 
-    if (payload.ref !== `refs/heads/${BRANCH}`) {
-      log(`Push auf ${payload.ref} – ignoriert, erwartet wird refs/heads/${BRANCH}.`);
-      return reply(200, "Anderer Branch, nichts zu tun.");
+    // Auch das Löschen eines Tags kommt als Push – dafür gibt es nichts zu tun.
+    if (payload.deleted === true) {
+      log(`Push auf ${payload.ref} löscht nur etwas – ignoriert.`);
+      return reply(200, "Löschung, nichts zu tun.");
     }
 
-    // GitHub gibt einem 10 Sekunden. Der Deploy dauert länger, also sofort
-    // quittieren und im Hintergrund arbeiten.
-    reply(202, "Deploy angestoßen.");
-    log(`Push von ${payload.pusher?.name ?? "unbekannt"} auf ${BRANCH}.`);
-    void deploy();
+    /*
+     * Deployt wird auf das BUILD-TAG, nicht auf den Push auf main.
+     *
+     * Der Push auf main startet zwar alles, aber zu diesem Zeitpunkt baut
+     * GitHub Actions noch – das passende Release gibt es erst eine Minute
+     * später. Der Webhook holte bis zum 15.09.2026 trotzdem sofort "das
+     * neueste Release" und spielte damit jedes Mal den VORIGEN Stand ein.
+     * Das Tag build-<n> legt der Build-Lauf erst an, wenn er fertig und
+     * erfolgreich ist, und sein Push-Event kommt genau dann hier an.
+     */
+    const tag = BUILD_TAG_RE.exec(String(payload.ref ?? ""))?.[1];
+    if (tag) {
+      // GitHub gibt einem 10 Sekunden. Der Deploy dauert länger, also sofort
+      // quittieren und im Hintergrund arbeiten.
+      reply(202, `Deploy von ${tag} angestoßen.`);
+      log(`Build-Tag ${tag} angelegt – genau dieses Release wird eingespielt.`);
+      void deploy(tag);
+      return;
+    }
+
+    if (payload.ref === `refs/heads/${BRANCH}`) {
+      log(`Push von ${payload.pusher?.name ?? "unbekannt"} auf ${BRANCH} – der Deploy folgt, sobald der Build sein Tag anlegt.`);
+      return reply(200, "Warte auf das Build-Tag.");
+    }
+
+    log(`Push auf ${payload.ref} – ignoriert.`);
+    return reply(200, "Nichts zu tun.");
   });
 });
 
 server.listen(PORT, "127.0.0.1", () => {
-  log(`Lauscht auf 127.0.0.1:${PORT}, Branch ${BRANCH}, Projekt ${REPO_DIR}.`);
+  log(`Lauscht auf 127.0.0.1:${PORT}, deployt Build-Tags (build-<n>), Branch ${BRANCH}, Projekt ${REPO_DIR}.`);
 });

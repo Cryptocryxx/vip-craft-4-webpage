@@ -376,11 +376,17 @@ Der Ablauf im Überblick:
 ```
 Push auf main
   → GitHub Actions baut (.github/workflows/build.yml), prüft Typen, lintet,
-    startet das Bündel zur Probe und hängt es als Release-Asset an
-  → GitHub ruft den Deploy-Webhook auf dem Server
-  → der lädt das Release, packt es nach releases/<tag>/, zieht das Schema nach,
-    startet es zur Probe auf Port 3999 und legt erst dann current um
+    startet das Bündel zur Probe und veröffentlicht es als Release build-<n>
+  → das Anlegen des Tags build-<n> ist selbst ein Push-Event:
+    GitHub ruft den Deploy-Webhook auf dem Server
+  → der lädt GENAU dieses Release, packt es nach releases/<tag>/, zieht das
+    Schema nach, startet es zur Probe auf Port 3999 und legt erst dann current um
 ```
+
+Der Push auf `main` selbst löst **keinen** Deploy aus. Bis zum 15.09.2026 tat er
+das – und holte sofort „das neueste Release", während GitHub noch baute. Jeder
+Deploy spielte so den Stand **davor** ein; aufgefallen ist es, als die
+Inventar-Ansicht nach dem Push einfach nicht auftauchte.
 
 Ordnerbild auf dem Server:
 
@@ -531,14 +537,17 @@ location / {
 
 ### Deploy-Webhook
 
-`deploy/webhook.mjs` nimmt GitHub-Push-Events entgegen und holt das fertig
-gebaute Bündel aus dem neuesten Release:
+`deploy/webhook.mjs` nimmt GitHub-Push-Events entgegen. Ausgelöst wird nur vom
+Tag `build-<n>`, das der Build-Lauf nach Erfolg anlegt – ein Push auf `main`
+wird bloß protokolliert, gelöschte Tags werden ignoriert. Kommen während eines
+Laufs weitere Tags an, wird danach das neueste davon eingespielt.
 
 1. `git fetch` + `git merge --ff-only` – nur für dieses Skript selbst, die
    pm2-Konfiguration und das Schema. Die Website kommt fertig aus dem Tarball.
 2. Prüfen, dass `DATABASE_URL` absolut ist (siehe oben).
-3. Release-Tarball laden und nach `releases/<tag>/` auspacken, `.env` als
-   Symlink dazu.
+3. Das Release **zu genau diesem Tag** holen (bei Bedarf ein paarmal
+   nachfragen, `DEPLOY_RELEASE_VERSUCHE` / `DEPLOY_RELEASE_PAUSE_MS`), den
+   Tarball nach `releases/<tag>/` auspacken, `.env` als Symlink dazu.
 4. `prisma db push` mit der getrennt installierten CLI.
 5. **Probelauf** auf Port 3999: Das neue Bündel muss starten und `/`, `/shops`
    und `/en/shops` mit **200** ausliefern.
@@ -597,6 +606,11 @@ abgewiesen, verglichen wird zeitkonstant. Der Dienst lauscht nur auf
 
 Aendert ein Deploy den Webhook selbst, laeuft weiter die alte Fassung, bis man
 ihn einmal von Hand neu startet: `pm2 restart deploy-webhook`.
+
+**Einen Deploy nachholen** (etwa weil der Webhook gerade neu startete): In GitHub
+unter *Settings → Webhooks → Recent Deliveries* die Zustellung für
+`refs/tags/build-<n>` öffnen und **Redeliver** drücken. Ein erneut zugestellter
+Push auf `main` bewirkt nichts mehr.
 
 ```bash
 pm2 logs deploy-webhook     # zeigt jeden Lauf mit allen Schritten
