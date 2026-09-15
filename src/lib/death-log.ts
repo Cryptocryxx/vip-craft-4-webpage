@@ -64,11 +64,30 @@ const UMWELT_URSACHEN: Array<{ schluessel: string; muster: RegExp }> = [
 export const UMWELT_SCHLUESSEL = [...UMWELT_URSACHEN.map((u) => u.schluessel), "sonstiges"] as const;
 
 /**
+ * Das Wort direkt vor dem Verursacher.
+ *
+ * In JEDER Vanilla-Meldung (en_us.json, 1.21.1) steht der Verursacher ganz
+ * hinten, nur das Wort davor wechselt: „slain by X", „burned to a crisp while
+ * fighting X", „tried to swim in lava to escape X", „walked into the danger
+ * zone due to X", „didn't want to live in the same world as X", „shot by a
+ * skull from X", „killed while trying to hurt X", „died because of X".
+ *
+ * Das gierige `.*` sorgt dafür, dass das LETZTE dieser Wörter zählt – bei
+ * „squashed by a falling anvil while fighting X" also „fighting", nicht „by".
+ */
+const VOR_DEM_VERURSACHER = /^.*\b(?:by|fighting|escape|due to|same world as|because of|from|hurt)\s+(.+)$/i;
+
+/**
  * Zerlegt eine Todesmeldung.
  *
- * Vanilla baut die Sätze immer nach demselben Muster: „<Opfer> <Vorgang> [by
- * <Verursacher>] [using <Gegenstand>]". Deshalb wird von hinten gelesen – erst
- * der Gegenstand abgeschnitten, dann der Verursacher hinter dem letzten „by".
+ * Vanilla baut die Sätze immer nach demselben Muster: „<Opfer> <Vorgang>
+ * [<Bindewort> <Verursacher>] [using <Gegenstand>]". Deshalb wird von hinten
+ * gelesen – erst der Gegenstand abgeschnitten, dann der Verursacher hinter dem
+ * letzten Bindewort (VOR_DEM_VERURSACHER).
+ *
+ * Früher kannte diese Stelle nur „by" und „whilst fighting". Minecraft schreibt
+ * aber „while fighting" – wer jemanden im Kampf ins Feuer trieb, zählte dadurch
+ * als Umwelttod, und ein Kopfgeld blieb liegen (15.09.2026).
  *
  * Ob der Verursacher eine Person oder eine Kreatur ist, entscheidet die Liste
  * bekannter Spielernamen. Kreaturen schreibt Minecraft ohne Artikel und groß
@@ -81,13 +100,11 @@ export function analysiereTod(text: string, opfer: string, spieler: Set<string>)
   // Opfernamen vorne abschneiden, sonst verfängt sich die Suche darin.
   const satz = rohtext.startsWith(opfer) ? rohtext.slice(opfer.length).trim() : rohtext;
 
-  // „... using [Item]" gehört zur Waffe, nicht zum Verursacher.
-  const ohneWaffe = satz.replace(/\s+using\s+.+$/i, "").trim();
+  // Die Waffe gehört nicht zum Verursacher: „using [Mace]", „using magic",
+  // „wielding [Sword]", „with [Trident]".
+  const ohneWaffe = satz.replace(/\s+(?:using\s+.+|(?:wielding|with)\s+\[.*\])$/i, "").trim();
 
-  // „whilst fighting X" / „trying to escape X" nennen den Gegner ebenfalls.
-  const kampf = /(?:whilst fighting|trying to escape)\s+(.+)$/i.exec(ohneWaffe);
-  const nachBy = /\bby\s+(.+)$/i.exec(ohneWaffe);
-  const verursacherRoh = (kampf?.[1] ?? nachBy?.[1] ?? "").trim().replace(/[.!]+$/, "");
+  const verursacherRoh = (VOR_DEM_VERURSACHER.exec(ohneWaffe)?.[1] ?? "").trim().replace(/[.!]+$/, "");
 
   if (verursacherRoh) {
     const ohneArtikel = verursacherRoh.replace(/^(?:a|an|the)\s+/i, "").trim();
