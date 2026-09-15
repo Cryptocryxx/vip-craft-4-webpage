@@ -410,6 +410,10 @@ async function zahleAus(): Promise<number> {
   if (tode.length === 0) return 0;
 
   let erledigt = 0;
+  // Pro Jäger und Ziel eine Ansage: Stehen drei Kopfgelder auf derselben
+  // Person, sollen nicht drei Zeilen durch den Chat laufen.
+  const kassiert = new Map<string, { jaeger: string; ziel: string; spurs: number }>();
+
   for (const kopfgeld of offen) {
     if (!darfVersuchen(kopfgeld.attempts, kopfgeld.lastTryAt)) continue;
 
@@ -463,11 +467,42 @@ async function zahleAus(): Promise<number> {
         },
       });
       erledigt += 1;
+
+      const schluessel = `${jaeger.toLowerCase()} ${kopfgeld.targetName.toLowerCase()}`;
+      const bisher = kassiert.get(schluessel);
+      if (bisher) bisher.spurs += kopfgeld.spurs;
+      else kassiert.set(schluessel, { jaeger, ziel: kopfgeld.targetName, spurs: kopfgeld.spurs });
     } else {
       await merkeFehlversuch(kopfgeld.id, kopfgeld.attempts, "Auszahlung fehlgeschlagen, wird wiederholt");
     }
   }
+
+  for (const eintrag of kassiert.values()) {
+    await sageKassiertAn(eintrag.jaeger, eintrag.ziel, Math.round(eintrag.spurs / SPURS_PER_COG));
+  }
   return erledigt;
+}
+
+/**
+ * Sagt im Spiel an, dass ein Kopfgeld kassiert wurde.
+ *
+ * Erst nach der bestätigten Auszahlung – dieselbe Regel wie beim Aussetzen.
+ * Die Buchung selbst ("auszahlen") kennt nur UUIDs und sagt nichts an; ohne
+ * diese Zeile merkte niemand, dass sich ein Kill gelohnt hat (15.09.2026).
+ *
+ * Beide Namen gehen als Einzelwörter in die Konsole. Der Zielname kommt
+ * kanonisch von Mojang, der Jägername aus dem Spielprotokoll – geprüft wird
+ * trotzdem beides, weil ein Leerzeichen den Befehl verschieben würde.
+ *
+ * Scheitert die Ansage, bleibt das folgenlos: Das Geld ist schon gebucht.
+ */
+async function sageKassiertAn(jaeger: string, ziel: string, cogs: number): Promise<void> {
+  if (!GAMERTAG_RE.test(jaeger) || !GAMERTAG_RE.test(ziel)) return;
+  await runPlayerCommand(
+    `vipkopfgeld kassiert ${jaeger} ${ziel} ${cogs}`,
+    `Kopfgeld auf ${ziel} im Spiel als kassiert angesagt`,
+    null,
+  );
 }
 
 // ---------------------------------------------------------------------------

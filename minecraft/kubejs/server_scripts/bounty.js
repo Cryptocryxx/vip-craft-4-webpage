@@ -1,10 +1,11 @@
 // VIP Craft 4 — Kopfgelder: abbuchen, auszahlen, beim Betreten ankündigen
 //
-// Registriert zwei Konsolenbefehle:
+// Registriert einen Konsolenbefehl mit vier Unterbefehlen:
 //
 //     vipkopfgeld abbuchen  <spieler-uuid> <spurs> <beleg-id>
 //     vipkopfgeld auszahlen <spieler-uuid> <spurs> <beleg-id>
 //     vipkopfgeld melden    <ziel-name> <cogs> <frist|-> <ausschreiber> [grund ...]
+//     vipkopfgeld kassiert  <jaeger-name> <ziel-name> <cogs>
 //
 // und schreibt jede Buchung nach kubejs/data/bounty.json. Die Website liest
 // diese Quittung und glaubt erst dann, dass etwas passiert ist — genau wie beim
@@ -18,7 +19,7 @@
 // "ok": false in der Quittung, und die Website legt das Kopfgeld dann gar nicht
 // erst an. Ein Kopfgeld ohne Deckung wäre Falschgeld.
 //
-// ZWEI ARTEN VON ANKÜNDIGUNG, und sie brauchen verschiedene Wege:
+// ANKÜNDIGUNGEN, und sie brauchen verschiedene Wege:
 //
 //   Beim BETRETEN liest dieses Skript kubejs/data/bounty-list.json, das die
 //   Website pflegt. Bewusst so herum: Die Website erfährt erst mit bis zu einer
@@ -33,6 +34,11 @@
 //   Die Ansage geht erst raus, wenn das Geld abgebucht IST — siehe
 //   setzeKopfgeldAus in lib/bounties.ts. Ein angekündigtes Kopfgeld, das an der
 //   Bezahlung scheitert, wäre schlimmer als gar keine Ansage.
+//
+//   Beim KASSIEREN schickt die Website "vipkopfgeld kassiert", ebenfalls erst
+//   nach der bestätigten Auszahlung. Die Buchung ("auszahlen") kennt nur
+//   UUIDs und sagt nichts an - ohne diese Zeile merkte niemand, dass sich ein
+//   Kill gelohnt hat.
 //
 //   Die Begründung steht im Befehl GANZ HINTEN, weil sie als Einzige
 //   Leerzeichen enthält: Alles ab dem sechsten Wort wird wieder zusammengefügt.
@@ -60,9 +66,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 6
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 7
 
-var KOPF_FASSUNG = 6; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
+var KOPF_FASSUNG = 7; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
@@ -139,7 +145,7 @@ var kopfWartende = []; // { uuid, faelligTick } - Begruessungen, die noch ansteh
  * bereitsteht - der Tick liefert eins nachweislich (siehe flight-log.js), und
  * eine Verzoegerung von einem Tick merkt niemand.
  */
-var kopfAnsagen = []; // { ziel, cogs, frist }
+var kopfAnsagen = []; // { art: "melden", ziel, cogs, frist, von, grund } oder { art: "kassiert", jaeger, ziel, cogs }
 
 function kopfSchreibeDatei() {
     try {
@@ -352,6 +358,31 @@ function kopfSageAnsageAn(server, ansage) {
 }
 
 /**
+ * Sagt an, dass ein Kopfgeld kassiert wurde.
+ *
+ * Drei Fassungen: Der Jaeger erfaehrt, dass das Geld auf seinem Konto liegt,
+ * das Ziel, wer es erwischt hat, und alle anderen beides in einem Satz.
+ */
+function kopfSageKassiertAn(server, meldung) {
+    var jaegerKlein = String(meldung.jaeger).toLowerCase();
+    var zielKlein = String(meldung.ziel).toLowerCase();
+    var fuerAlle = "Kopfgeld kassiert: " + meldung.jaeger + " hat " + meldung.ziel + " erwischt und " + meldung.cogs + " Cog bekommen.";
+    var fuerJaeger = "Kopfgeld auf " + meldung.ziel + " kassiert: " + meldung.cogs + " Cog sind auf deinem Konto.";
+    var fuersZiel = meldung.jaeger + " hat das Kopfgeld auf DICH kassiert (" + meldung.cogs + " Cog).";
+
+    server.getPlayers().forEach(function (spieler) {
+        try {
+            var name = String(spieler.getUsername()).toLowerCase();
+            if (name === jaegerKlein) kopfSage(spieler, fuerJaeger);
+            else if (name === zielKlein) kopfSage(spieler, fuersZiel);
+            else kopfSage(spieler, fuerAlle);
+        } catch (e) {
+            /* Einer, der die Nachricht nicht bekommt, darf die anderen nicht kosten. */
+        }
+    });
+}
+
+/**
  * Setzt den Schlusspunkt - aber nur, wenn nicht schon einer da ist.
  *
  * Das deutsche Kurzdatum bringt seinen Punkt selbst mit ("12.09."), sonst
@@ -480,6 +511,7 @@ try {
             if (teile.length < 4) {
                 console.log("[bounty] Aufruf: vipkopfgeld <abbuchen|auszahlen> <uuid> <spurs> <belegId>");
                 console.log("[bounty]     oder: vipkopfgeld melden <ziel> <cogs> <frist|->");
+                console.log("[bounty]     oder: vipkopfgeld kassiert <jaeger> <ziel> <cogs>");
                 return;
             }
 
@@ -497,6 +529,7 @@ try {
                     return;
                 }
                 kopfAnsagen.push({
+                    art: "melden",
                     ziel: teile[1],
                     cogs: cogs,
                     frist: teile[3],
@@ -505,6 +538,18 @@ try {
                     // einzige Feld, in dem Leerzeichen vorkommen duerfen.
                     grund: teile.length > 5 ? teile.slice(5).join(" ") : "",
                 });
+                return;
+            }
+
+            // Ebenfalls nur eine Ansage: Das Geld ist zu diesem Zeitpunkt schon
+            // gebucht ("auszahlen"), die Website schickt das hinterher.
+            if (art === "kassiert") {
+                var betrag = parseInt(teile[3], 10);
+                if (!isFinite(betrag) || betrag <= 0) {
+                    console.log("[bounty] Betrag unplausibel: " + teile[3]);
+                    return;
+                }
+                kopfAnsagen.push({ art: "kassiert", jaeger: teile[1], ziel: teile[2], cogs: betrag });
                 return;
             }
 
@@ -583,7 +628,8 @@ try {
         while (kopfAnsagen.length > 0) {
             var ansage = kopfAnsagen.shift();
             try {
-                kopfSageAnsageAn(event.server, ansage);
+                if (ansage.art === "kassiert") kopfSageKassiertAn(event.server, ansage);
+                else kopfSageAnsageAn(event.server, ansage);
             } catch (e) {
                 kopfMerkeFehler("Ansage fehlgeschlagen: " + e);
             }
