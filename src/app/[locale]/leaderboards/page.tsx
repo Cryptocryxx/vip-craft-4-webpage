@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { Coins, Skull, Trophy } from "lucide-react";
-import { EconomyOverview } from "@/components/leaderboards/EconomyOverview";
+import { EconomyTeaser } from "@/components/leaderboards/EconomyTeaser";
 import { LeaderboardTabs } from "@/components/leaderboards/LeaderboardTabs";
 import { Button } from "@/components/ui/Button";
 import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { SPURS_PER_COG } from "@/lib/currency";
 import { getEconomyData } from "@/lib/economy-source";
 import { getLeaderboardData } from "@/lib/leaderboard-source";
 
@@ -66,9 +65,9 @@ export default async function LeaderboardsPage() {
             eyebrow={t("economy")}
             icon={Coins}
             title={t("economyTitle")}
-            description={t("economyDescription", { spursPerCog: SPURS_PER_COG })}
+            description={t("economyDescription")}
           />
-          <EconomyOverview data={economy.overview} source={economy.source} />
+          <EconomyTeaser data={economy.overview} source={economy.source} />
         </section>
       </Container>
     </>

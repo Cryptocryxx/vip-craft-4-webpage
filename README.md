@@ -125,7 +125,8 @@ mit drehendem Zahnrad), unvollständig (Gamertag fehlt) und abgelehnt (rot, mit 
 | `/` | Hero mit Logo und **Join-Server-Button** (kopiert die IP), Teaser, Feature-Übersicht, Einstiegs-Anleitung |
 | `/map` | Großformatige Squaremap-Einbettung (iframe) mit Reload / „neuer Tab“ |
 | `/community` | Event-Kalender (Grid) und Server-Timeline („Die Lore“) |
-| `/leaderboards` | Hall of Fame / Hall of Shame (Tabs) und Wirtschaftsübersicht (reichste Spieler, Shops) |
+| `/leaderboards` | Hall of Fame / Hall of Shame (Tabs), am Ende ein kurzer Blick auf die Wirtschaft |
+| `/economy` | **Wirtschaft**: Umlauf, Vermögensrangliste, Organisationen (Blaze-Banker-Konten) und Münzkunde |
 | `/schematics` | Bauplan-Galerie mit Suche, Tag-Filter und `.nbt`-Download |
 | `/streams` | Verknüpfte Twitch-Kanäle mit echtem Live-Status, Player-Embed nach Einwilligung |
 | `/dashboard` | Discord-Login, Profil, **Whitelist-Antrag**, persönliche Stats, **Vorschlags-Board** mit Upvotes |
@@ -316,7 +317,7 @@ Rangliste leer.
 | --- | --- |
 | `GET /api/server-status` | Proxy zu `api.mcsrvstat.us/3/<ip>`, 60 s gecacht |
 | `GET /api/leaderboards?kind=fame\|shame` | Rankings aus den Statistikdateien des Servers |
-| `GET /api/economy` | Umlauf & reichste Spieler aus den Numismatics-Bankkonten (Beträge in Spurs) |
+| `GET /api/economy` | Umlauf, Vermögen und Organisationen aus der Numismatics-Bank (Beträge in Spurs) |
 | `GET /api/schematics?q=&tag=` | Schematic-Liste (noch ohne Speicher, daher leer) |
 | `GET /api/schematics/[id]/download` | `.nbt`-Download (aktuell leere, gültige NBT-Struktur als Platzhalter) |
 | `GET /api/streamers` | Verknüpfte Twitch-Kanäle inkl. Live-Status aus der Twitch-API |
@@ -334,6 +335,33 @@ Die zugehörigen Typen liegen in `src/lib/event-types.ts`, `timeline-types.ts` u
 
 Numismatics rechnet intern in **Spurs**, angezeigt wird auf der Website in **Cog** – ein Cog sind 64 Spurs.
 Die Umrechnung und alle Münzwerte stehen in [`src/lib/currency.ts`](src/lib/currency.ts).
+
+### Woher die Wirtschaftsdaten kommen
+
+Erste Quelle ist **`world/data/numismatics_bank.dat`**, die Bankdatei der Mod. Sie wird binär über den
+Crafty-Download geholt und mit dem eigenen NBT-Leser ([`src/lib/nbt.ts`](src/lib/nbt.ts)) gelesen, siehe
+[`src/lib/economy-source.ts`](src/lib/economy-source.ts). Darin steht alles, was Numismatics überhaupt speichert:
+
+- `balance` (+ `additionalBalance`) – Kontostand in Spurs
+- `AccountType` – `PLAYER` oder `BLAZE_BANKER`; ein Blaze-Banker-Konto ist auf dem Server die „Organisation"
+- `Label` – der Name eines Blaze-Banker-Kontos
+- `TrustList` – die Spieler mit vollem Zugriff, also die Mitglieder (Numismatics dedupliziert nicht, die Website schon)
+- `SubAccounts` – ausgegebene Bankkarten mit eigenem Ausgabelimit (`limit`/`spent`)
+
+**Eine Buchungshistorie gibt es nicht.** Die Mod speichert nur den aktuellen Stand, nicht einzelne Zahlungen –
+wer wann wem etwas überwiesen hat, ließe sich nur erfassen, wenn wir es ab sofort selbst mitschreiben.
+
+Das **Bargeld** – Münzen, die nicht auf der Bank liegen – kommt aus den Spielerdateien
+([`src/lib/muenzen.ts`](src/lib/muenzen.ts)): Inventar, Endertruhe, Curios-Slots und Rucksäcke, dazu Shulkerkisten
+und Bündel. Münzen in Truhen irgendwo in der Welt zählen **nicht** mit, dafür müsste man die Regionsdateien lesen.
+Nebenbei fällt dabei ab, wer eine Bankkarte (`numismatics:card_account_id`) für welches Konto bei sich trägt.
+
+Rückfall, falls die Bankdatei nicht lesbar ist: der KubeJS-Export `kubejs/data/numismatics.json`
+([`minecraft/kubejs/server_scripts/numismatics-export.js`](minecraft/kubejs/server_scripts/numismatics-export.js)).
+Darin stehen nur Kontostände, keine Mitglieder.
+
+Der **Anteil** eines Spielers an einer Organisation ist deren Guthaben geteilt durch die Zahl der Mitglieder.
+Das ist eine Annahme der Website, keine Buchung der Mod: Numismatics kennt keine Beteiligungen, sondern nur Zugriff.
 
 > **Hinweis:** Frühere Fassungen dieses Dokuments nannten das Plugin *Plan (Player Analytics)* als geplante Quelle.
 > Das war falsch: Plan unterstützt Spigot/Paper, Sponge, Velocity und Fabric, **aber kein Forge/NeoForge**. Da dieser

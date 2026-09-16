@@ -14,7 +14,8 @@
     "schematics": "Schematics",
     "streams": "Streams",
     "ariaLabel": "Hauptnavigation",
-    "bounties": "Kopfgelder"
+    "bounties": "Kopfgelder",
+    "economy": "Wirtschaft"
   },
   "Header": {
     "homeAriaLabel": "VIP Craft 4 – Startseite"
@@ -80,13 +81,14 @@
     "shops": "Wer was verkauft und wo der Laden steht.",
     "spieler": "Wer gerade spielt – und die Zahlen aller anderen.",
     "community": "Termine und die Chronik des Servers.",
-    "leaderboards": "Ranglisten aus der Welt und die Wirtschaft in Cog.",
+    "leaderboards": "Ranglisten aus der Welt – wer fleißig war und wer oft gestorben ist.",
     "schematics": "Blaupausen zum Nachbauen mit der Schematicannon.",
     "streams": "Wer aus der Community gerade sendet.",
     "shopsOpen": "{count, plural, one {# Laden hat geöffnet} other {# Läden haben geöffnet}}",
     "playersOnline": "{count, plural, one {# Spieler ist gerade online} other {# Spieler sind gerade online}}",
     "streamsLive": "{count, plural, one {# Kanal ist gerade live} other {# Kanäle sind gerade live}}",
-    "nextEvent": "{title} – {relative}"
+    "nextEvent": "{title} – {relative}",
+    "economy": "Kontostände, gemeinsame Kassen und wer wirklich reich ist."
   },
   "Hero": {
     "minecraftBadge": "Minecraft {version}",
@@ -549,7 +551,7 @@
     "shameLive": "Wer zählt, verliert. Tode, Creeper und eingesteckter Schaden – direkt vom Server.",
     "shamePending": "Tode, Creeper und eingesteckter Schaden – sobald es etwas zu zählen gibt.",
     "economyTitle": "Cogs & Sparfüchse",
-    "economyDescription": "Bezahlt wird mit Create: Numismatics. Gerechnet wird in Cog – ein Cog sind {spursPerCog} Spurs. Hier siehst du, wie viel Geld im Umlauf ist und wer am meisten davon gehortet hat."
+    "economyDescription": "Wie viel Geld im Umlauf ist und wer vorne liegt. Organisationen, Bargeld und Münzkunde stehen auf der Wirtschaftsseite."
   },
   "SchematicsPage": {
     "metaTitle": "Schematics",
@@ -660,7 +662,10 @@
     "flightDistance": "Flugstrecke",
     "flightHint": "auf Luftschiffen",
     "lecterns": "Lesepulte",
-    "lecternsHint": "aufgestellt"
+    "lecternsHint": "aufgestellt",
+    "cash": "Bargeld {amount}",
+    "memberOf": "Beteiligt an:",
+    "share": "Anteil {amount}"
   },
   "LeaderboardCategories": {
     "playtime": {
@@ -703,16 +708,6 @@
       "description": "Gemessen in Herzen. Autsch.",
       "unit": "Herzen"
     }
-  },
-  "EconomyOverview": {
-    "noAccountsTitle": "Noch keine Kontodaten",
-    "noAccountsText": "Sobald auf dem Server die ersten Numismatics-Konten Guthaben haben, stehen hier der Umlauf und die reichsten Spieler.",
-    "inCirculation": "Im Umlauf",
-    "accounts": "Konten",
-    "richestPlayers": "Reichste Spieler",
-    "coinsCalculatedIn": "Gerechnet wird in <b>Cog</b> – ein Cog sind {spursPerCog} Spurs.",
-    "coinsLabel": "Münzen:",
-    "source": "Quelle: Bankkonten des Servers"
   },
   "LeaderboardTabs": {
     "noDataTitle": "Noch keine Zahlen",
@@ -933,5 +928,60 @@
   },
   "AutoTranslate": {
     "note": "Spielertexte werden maschinell übersetzt – kleine Fehler sind möglich."
+  },
+  "EconomyTeaser": {
+    "emptyTitle": "Noch keine Kontodaten",
+    "emptyText": "Sobald auf dem Server die ersten Numismatics-Konten Guthaben haben, steht hier, wie viel im Umlauf ist.",
+    "inCirculation": "Im Umlauf",
+    "accounts": "{count, plural, one {# Konto} other {# Konten}}",
+    "note": "Konto, Bargeld und Anteile an Organisationen zusammengerechnet.",
+    "more": "Zur Wirtschaft"
+  },
+  "EconomyPage": {
+    "metaTitle": "Wirtschaft",
+    "metaDescription": "Kontostände, Organisationen und Münzen auf VIP Craft 4 – bezahlt wird mit Create: Numismatics.",
+    "eyebrow": "Create: Numismatics",
+    "title": "Wirtschaft",
+    "description": "Bezahlt wird in Cog. Hier steht, wie viel Geld es gibt, wem es gehört und welche Organisationen sich zusammengetan haben.",
+    "wealth": "Vermögen",
+    "organisations": "Organisationen",
+    "coins": "Münzen",
+    "emptyTitle": "Noch keine Kontodaten",
+    "emptyText": "Sobald der Server seine Bankdatei geschrieben hat, stehen hier Kontostände, Organisationen und Vermögen.",
+    "statTotal": "Im Umlauf",
+    "statBank": "Auf Konten",
+    "statBankHint": "{count, plural, one {# Konto bei der Bank} other {# Konten bei der Bank}}",
+    "statOrganisations": "In Organisationen",
+    "statOrganisationsHint": "{count, plural, one {# gemeinsame Kasse} other {# gemeinsame Kassen}}",
+    "statCash": "In den Taschen",
+    "statCashHint": "Münzen in Inventaren, Endertruhen und Rucksäcken",
+    "statCashMissing": "Inventare gerade nicht lesbar",
+    "sourceFile": "Stand {stand} – gelesen aus der Bankdatei des Servers, die beim Weltspeichern geschrieben wird.",
+    "sourceExport": "Gelesen aus dem Kontenexport des Servers. Mitglieder und Unterkonten fehlen darin.",
+    "wealthHeading": "Wer hat was",
+    "wealthDescription": "Persönliches Konto, Münzen in den Taschen und der Anteil an jeder Organisation, zusammengerechnet.",
+    "wealthTitle": "Die zehn Reichsten",
+    "partAccount": "Konto {amount}",
+    "partShare": "Anteil {amount}",
+    "partCash": "Bargeld {amount}",
+    "partOrganisations": "Dabei bei {names}",
+    "wealthNote": "Der Anteil an einer Organisation ist ihr Guthaben geteilt durch die Zahl der Mitglieder. Numismatics selbst kennt keine Beteiligungen, sondern nur Zugriff: Wer auf der Vertrauensliste steht, kommt an das ganze Konto.",
+    "orgHeading": "Gemeinsame Kassen",
+    "orgDescription": "Ein Blaze Banker ist ein Konto mit Namen, auf das mehrere Spieler zugreifen dürfen – auf dem Server benutzt als Organisation oder Firma.",
+    "orgEmptyTitle": "Noch keine Organisation",
+    "orgEmptyText": "Sobald jemand einen Blaze Banker aufstellt, ihm einen Namen gibt und Mitspieler auf die Vertrauensliste setzt, steht die Kasse hier.",
+    "orgMembers": "Mitglieder",
+    "orgMemberCount": "{count, plural, =0 {Niemand eingetragen} one {# Mitglied} other {# Mitglieder}}",
+    "orgShare": "Rechnerisch {amount} je Mitglied",
+    "orgCardHolders": "Bankkarte dabei, aber nicht eingetragen: {names}",
+    "orgSubAccounts": "Unterkonten",
+    "orgNoLimit": "ohne Limit",
+    "orgLimit": "Limit {limit}, davon {spent} ausgegeben",
+    "coinHeading": "Die Münzen",
+    "coinDescription": "Sechs Münzen, ein Kurs. Die Bank rechnet intern in Spur, gehandelt wird in Cog.",
+    "coinName": "Münze",
+    "coinSpurs": "Wert in Spur",
+    "coinCogs": "In Cog",
+    "coinNote": "Ein Cog sind {spursPerCog} Spur. Krumme Beträge stehen deshalb als „x Cog y Spur“ da."
   }
 }

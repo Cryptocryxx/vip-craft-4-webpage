@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
-import { ArrowRight, CalendarDays, DraftingCompass, Map as MapIcon, Radio, Store, Trophy, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, CalendarDays, Coins, DraftingCompass, Map as MapIcon, Radio, Store, Trophy, Users, type LucideIcon } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Panel } from "@/components/ui/Panel";
 import { getUpcomingEvents } from "@/lib/event-types";
@@ -26,6 +26,7 @@ const meta: Record<string, CardMeta> = {
   "/spieler": { icon: Users, key: "spieler", accent: "diamond" },
   "/community": { icon: CalendarDays, key: "community", accent: "brass" },
   "/leaderboards": { icon: Trophy, key: "leaderboards", accent: "brass" },
+  "/economy": { icon: Coins, key: "economy", accent: "brass" },
   "/schematics": { icon: DraftingCompass, key: "schematics", accent: "diamond" },
   "/streams": { icon: Radio, key: "streams", accent: "diamond" },
 };

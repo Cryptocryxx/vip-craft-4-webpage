@@ -1,9 +1,13 @@
 // VIP Craft 4 — Numismatics-Kontostände als JSON exportieren
 //
 // Schreibt kubejs/data/numismatics.json mit allen Bankkonten aus Create: Numismatics.
-// Die Website liest diese Datei über den Crafty-Dateizugriff (dieselbe Anbindung wie für
-// die Vanilla-Spielerstatistiken) und zeigt sie auf der Leaderboards-Seite unter
-// "Wirtschaft" an, statt der aktuellen Beispieldaten.
+//
+// STAND 16.09.2026: Die Website liest die Konten inzwischen direkt aus der Bankdatei
+// world/data/numismatics_bank.dat (binär über den Crafty-Download, siehe src/lib/nbt.ts
+// und src/lib/economy-source.ts). Dort stehen zusätzlich die Vertrauenslisten der
+// Blaze-Banker-Konten und deren Unterkonten, die hier fehlen. Dieses Skript bleibt als
+// RÜCKFALL bestehen: Kann die Bankdatei einmal nicht gelesen werden, zeigt die
+// Wirtschaftsseite die Kontostände aus dieser JSON-Datei an.
 //
 // WARUM DIREKTER JAVA-ZUGRIFF: Numismatics hat weder KubeJS-Bindings noch einen
 // Befehl, der Kontostände ausgibt. Die Kontodaten liegen zwar in world/data/numismatics_bank.dat,

@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   ArrowUp,
   Bomb,
+  Building2,
   Cake,
   Clock,
   Coins,
@@ -19,6 +20,7 @@ import {
   Store,
   Swords,
   TrainTrack,
+  Wallet,
   Wrench,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +30,7 @@ import { Panel } from "@/components/ui/Panel";
 import { PlayerHead } from "@/components/ui/PlayerHead";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { formatCogsLong } from "@/lib/currency";
+import { vermoegenFuer } from "@/lib/economy-source";
 import { todeVonSpieler } from "@/lib/death-log";
 import { flugBilanz } from "@/lib/flight";
 import { formatDistanceKm, formatHours, formatNumber } from "@/lib/format";
@@ -185,7 +188,7 @@ export default async function SpielerDetailPage({ params }: Props) {
   const [spieler, t] = await Promise.all([findPlayer(decodeURIComponent(name)), getTranslations("PlayerDetailPage")]);
   if (!spieler) notFound();
 
-  const flug = await flugBilanz(spieler.uuid, spieler.name);
+  const [flug, geld] = await Promise.all([flugBilanz(spieler.uuid, spieler.name), vermoegenFuer(spieler.name)]);
 
   const s = spieler.stats;
 
@@ -257,7 +260,32 @@ export default async function SpielerDetailPage({ params }: Props) {
                 <Coins className="size-3" /> {formatCogsLong(spieler.balanceSpurs)}
               </Badge>
             )}
+            {geld.zeile && geld.zeile.bargeldSpurs > 0 && (
+              <Badge tone="neutral">
+                <Wallet className="size-3" /> {t("cash", { amount: formatCogsLong(geld.zeile.bargeldSpurs) })}
+              </Badge>
+            )}
           </div>
+
+          {/* Geld, das auf einem gemeinsamen Konto liegt, taucht im eigenen
+              Kontostand gar nicht auf - ohne diese Zeile sieht es so aus, als
+              haette der Spieler nichts. */}
+          {geld.organisationen.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-cream/60">
+              <Building2 className="size-3.5 shrink-0 text-brass-200" />
+              <span>{t("memberOf")}</span>
+              {geld.organisationen.map((organisation) => (
+                <Link
+                  key={organisation.id}
+                  href="/economy#organisationen"
+                  className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-cream/85 hover:border-brass-400/50 hover:text-cream"
+                >
+                  {organisation.name}
+                  <span className="text-cream/45"> · {t("share", { amount: formatCogsLong(organisation.anteilSpurs) })}</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </Panel>
 
