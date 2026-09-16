@@ -236,8 +236,11 @@ oben in der Datei.
 
 * **Warum nicht die Tankgröße halbieren** (`gadgetCapacity` in `config/create-stuff-additions.toml`): Das wäre nur
   halb so viel Sprit pro Füllung. Geflogen würde dieselbe Strecke, man müsste bloß doppelt so oft nachtanken.
-* **Gegen Fehlalarm:** Rückgänge über 50 mB in einem Tick gelten nicht als Verbrauch – sonst würde ein Jetpackwechsel
-  mitten im Flug das frische Gerät sofort leeren.
+* **Gegen Fehlalarm:** Rückgänge über 50 mB zwischen zwei Kontrollen gelten nicht als Verbrauch – sonst würde ein
+  Jetpackwechsel mitten im Flug das frische Gerät sofort leeren.
+* **Was es kostet:** Nachgesehen wird nur alle 5 Ticks, im selben Takt, in dem die Mod abzieht. Verglichen wird der
+  Füllstand und nicht die Zeit, es geht also nichts verloren. Pro Durchgang sind das je Spieler eine Handvoll Aufrufe –
+  bei fünf Spielern rund 50 pro Sekunde, gegenüber 50 Millisekunden Tickbudget.
 * **Läuft es?** In `kubejs/data/jetpack-fuel.json` steht `"ready": true`, der eingestellte Faktor und wie viel mB das
   Skript seit dem Start zusätzlich abgezogen hat.
 

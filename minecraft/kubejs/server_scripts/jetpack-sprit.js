@@ -15,12 +15,22 @@
 //         Fluid1 = "minecraft:water"  Amount1 = <mB als int>
 //     Ist ein Tank leer, werden BEIDE Schlüssel entfernt (setStoredFluid).
 //
-// WIE DIESES SKRIPT ES MACHT: Es schaut jedem Spieler jeden Tick auf die
-// Brustplatte und merkt sich die Füllstände. Sinkt ein Tank, zieht es genau
-// dieselbe Menge noch einmal ab — aus 10 mB werden 20. Es rechnet also nicht
-// selbst aus, wann verbraucht wird, sondern verdoppelt, was die Mod verbraucht.
-// Das bleibt richtig, wenn ein Update die Zeiten oder Mengen ändert, und es
-// trifft Wasser und Lava gleichermaßen.
+// WIE DIESES SKRIPT ES MACHT: Es schaut jedem Spieler auf die Brustplatte und
+// merkt sich die Füllstände. Sinkt ein Tank, zieht es genau dieselbe Menge noch
+// einmal ab — aus 10 mB werden 20. Es rechnet also nicht selbst aus, wann
+// verbraucht wird, sondern verdoppelt, was die Mod verbraucht. Das bleibt
+// richtig, wenn ein Update die Zeiten oder Mengen ändert, und es trifft Wasser
+// und Lava gleichermaßen.
+//
+// WAS DAS KOSTET: Nachgesehen wird nur alle SPRIT_TAKT Ticks, nicht in jedem.
+// Häufiger brächte nichts, weil die Mod ohnehin nur alle 5 Ticks etwas abzieht;
+// verglichen wird der Füllstand, nicht die Zeit, also geht durch den größeren
+// Abstand kein Verbrauch verloren — er wird nur einen Sekundenbruchteil später
+// verdoppelt. Pro Durchgang sind es je Spieler eine Handvoll Aufrufe (vier
+// Rüstungsteile ansehen, bei einem Jetpack zusätzlich die Komponente lesen).
+// Bei fünf Spielern also grob 50 Aufrufe je Sekunde gegenüber einem Tickbudget
+// von 50 Millisekunden: Das fällt nicht ins Gewicht. Wer ohne Jetpack herumläuft,
+// kostet nur den Blick auf die vier Rüstungsteile.
 //
 // WARUM NICHT DIE TANKGRÖSSE HALBIEREN (gadgetCapacity in
 // config/create-stuff-additions.toml): Das wäre nur halb so viel Sprit PRO
@@ -56,7 +66,18 @@ var SPRIT_DATEI = "jetpack-fuel.json";
  */
 var SPRIT_FAKTOR = 2;
 
-/** Größere Rückgänge in einem Tick sind kein Verbrauch (Tausch, fremder Zugriff). */
+/**
+ * Abstand zwischen zwei Kontrollen in Ticks. 5 ist der Takt, in dem die Mod
+ * selbst abzieht - öfter nachzusehen brächte nichts.
+ */
+var SPRIT_TAKT = 5;
+
+/**
+ * Größere Rückgänge zwischen zwei Kontrollen sind kein Verbrauch, sondern ein
+ * Gerätetausch oder ein fremder Zugriff. Die Mod zieht 10 mB je Zyklus ab, bei
+ * Serverruckeln können in einem Abstand auch zwei Zyklen liegen - 50 lässt
+ * dafür reichlich Luft.
+ */
 var SPRIT_MAX_SCHLUCK = 50;
 
 /** Nur diese Items. Exoskelette und Werkzeuge bleiben, wie sie sind. */
@@ -219,11 +240,13 @@ try {
     ServerEvents.tick(function (event) {
         if (SpritRegistries === null || SpritDataComponents === null || SpritCustomData === null) return;
         try {
+            var jetzt = event.server.getTickCount();
+            if (jetzt % SPRIT_TAKT !== 0) return;
+
             event.server.getPlayers().forEach(function (spieler) {
                 spritPruefeSpieler(spieler);
             });
 
-            var jetzt = event.server.getTickCount();
             if (spritLetzterSchreib < 0 || jetzt - spritLetzterSchreib >= SPRIT_SCHREIB_TAKT) {
                 spritLetzterSchreib = jetzt;
                 spritSchreibeDatei();
