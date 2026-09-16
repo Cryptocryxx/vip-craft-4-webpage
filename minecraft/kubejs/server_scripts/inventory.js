@@ -35,6 +35,10 @@
 // GEPRÜFT gegen Quelltext UND die installierten Jars (15.09.2026):
 //   KubeJS 2101 kubejs.classfilter.txt: "+ net.minecraft" (nur net.minecraft.Util
 //     gesperrt), Mod-Klassen nicht gelistet und damit erlaubt
+//   KubeJS 2101 Umbenennungen für Skripte (core/mixin, @RemapForJS/@HideFromJS):
+//     Entity.getUUID heisst getUuid; ItemStack.enchant/getEnchantments/getTags
+//     sind ausgeblendet (hier nicht benutzt). Vanilla-Namen also nicht blind
+//     übernehmen – in Fassung 1 fehlte genau das.
 //   Curios 9.5.1:
 //     CuriosApi.getCuriosInventory(LivingEntity) : Optional<ICuriosItemHandler>
 //     ICuriosItemHandler.getCurios() : Map<String, ICurioStacksHandler>
@@ -52,9 +56,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- inventory
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/inventory.json prüfen: "ready": true und "script": 1
+//   3. kubejs/data/inventory.json prüfen: "ready": true und "script": 2
 
-var INV_FASSUNG = 1;
+var INV_FASSUNG = 2;
 var INV_DATEI = "inventory.json"; // Quittungen, geschrieben von HIER
 var INV_RUECKGABEN = "inventory-return.json"; // Stapel zum Zurückgeben, geschrieben von der WEBSITE
 var INV_MAX_BELEGE = 200;
@@ -229,9 +233,15 @@ function invCuriosHandler(spieler, kennung, kosmetisch) {
     return kosmetisch ? stacks.getCosmeticStacks() : stacks.getStacks();
 }
 
+/**
+ * getUuid, NICHT getUUID: KubeJS benennt Entity.getUUID() für Skripte um
+ * (core/mixin/EntityMixin, @RemapForJS("getUuid")). Unter dem Vanilla-Namen
+ * gibt es die Methode in Rhino nicht. Genau daran ist am 15.09.2026 jede
+ * Entnahme aus einem Rucksack gescheitert – die Suche kommt auch hier vorbei.
+ */
 function invKosmetik(spieler) {
     if (InvKosmetik === null) return null;
-    return InvKosmetik.getCAStacks(spieler.getUUID());
+    return InvKosmetik.getCAStacks(spieler.getUuid());
 }
 
 /** Alle Plätze, die dem Spieler direkt gehören – Ausgangspunkt der Rucksack-Suche. */
