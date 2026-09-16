@@ -35,6 +35,14 @@
 //     starter_cogs steht in der Numismatics-Config auf 0)
 //   BankAccount.deposit(int)  — schreibt den Betrag in Spurs gut
 //
+// MELDUNG BEIM ABHOLEN: Wer sein Gehalt auf der Website abholt, bekommt die
+// Gutschrift im Spiel angesagt - sonst sieht man erst beim naechsten Blick ins
+// Bankterminal, dass wirklich Geld angekommen ist. Die Ansage laeuft ueber
+// dieselbe kleine Warteschlange wie die Erinnerung: Der Konsolenbefehl selbst
+// hat keinen Zugriff auf die Spielerliste des Servers, der Tick schon. Wer
+// gerade nicht online ist, bekommt nichts zu sehen - dann steht die Gutschrift
+// eben nur in der Website.
+//
 // ERINNERUNG BEIM BETRETEN: Wer sein Gehalt heute noch nicht geholt hat, wird
 // beim Betreten daran erinnert. Wer noch offen ist, steht in
 // kubejs/data/salary-open.json - diese Datei pflegt die WEBSITE (siehe
@@ -65,7 +73,9 @@
 var GEHALT_DATEI = "salary.json";
 var GEHALT_OFFENE_DATEI = "salary-open.json"; // von der Website gepflegt
 var GEHALT_VERZOEGERUNG = 60; // Ticks bis zur Erinnerung (3 s)
+var GEHALT_SPURS_JE_COG = 64; // Numismatics rechnet in Spurs, gesagt wird es in Cog
 var gehaltWartende = []; // { uuid, faelligTick }
+var gehaltAnsagen = []; // { uuid, spurs, stand } - Gutschriften, die noch anzusagen sind
 var gehaltListenVersuche = 0;
 var gehaltListenTreffer = 0;
 var gehaltListenFehler = null;
@@ -109,7 +119,7 @@ function gehaltSchreibeDatei() {
         var inhalt = {
             generatedAt: new Date().toISOString(),
             ready: gehaltBereit,
-            script: 2,
+            script: 3,
             errors: gehaltFehler,
             listReads: gehaltListenVersuche,
             listOk: gehaltListenTreffer,
@@ -155,6 +165,7 @@ function gehaltZahleAus(uuidText, spurs, belegId) {
         balanceAfter: konto.getBalance(),
         at: new Date().toISOString(),
     });
+    gehaltAnsagen.push({ uuid: uuidText, spurs: spurs, stand: konto.getBalance() });
     if (gehaltBelege.length > GEHALT_MAX_BELEGE) gehaltBelege.shift();
     gehaltSchreibeDatei();
 
@@ -212,6 +223,28 @@ function gehaltSage(spieler, text) {
     }
 }
 
+/** "12 Cog" bzw. "12 Cog 5 Spur" - Spurs allein sagt niemandem etwas. */
+function gehaltCogText(spurs) {
+    var cogs = Math.floor(spurs / GEHALT_SPURS_JE_COG);
+    var rest = spurs % GEHALT_SPURS_JE_COG;
+    return rest === 0 ? cogs + " Cog" : cogs + " Cog " + rest + " Spur";
+}
+
+/** Sagt die frische Gutschrift an, wenn der Empfaenger gerade spielt. */
+function gehaltSageGutschrift(server, ansage) {
+    var uuid = String(ansage.uuid).toLowerCase();
+    var spieler = null;
+    server.getPlayers().forEach(function (p) {
+        if (String(p.getUuid()).toLowerCase() === uuid) spieler = p;
+    });
+    if (spieler === null) {
+        console.log("[salary] Gutschrift nicht angesagt, niemand online: " + ansage.uuid);
+        return;
+    }
+    gehaltSage(spieler, "Gehalt abgeholt: " + gehaltCogText(ansage.spurs) + " sind auf deinem Konto.");
+    gehaltSage(spieler, "Neuer Kontostand: " + gehaltCogText(ansage.stand) + ".");
+}
+
 function gehaltErinnere(spieler, offene) {
     if (offene === null || !offene.uuids || offene.uuids.length === 0) return;
 
@@ -248,6 +281,17 @@ try {
 
 try {
     ServerEvents.tick(function (event) {
+        // Ansagen zuerst und getrennt abgesichert: Eine Gutschrift soll nicht
+        // ausfallen, nur weil bei einer Erinnerung etwas schiefgeht.
+        while (gehaltAnsagen.length > 0) {
+            var ansage = gehaltAnsagen.shift();
+            try {
+                gehaltSageGutschrift(event.server, ansage);
+            } catch (e) {
+                gehaltMerkeFehler("Gutschrift nicht angesagt: " + e);
+            }
+        }
+
         if (gehaltWartende.length === 0) return;
         try {
             var tick = event.server.getTickCount();

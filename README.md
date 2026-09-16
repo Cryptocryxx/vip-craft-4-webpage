@@ -368,6 +368,22 @@ Das ist eine Annahme der Website, keine Buchung der Mod: Numismatics kennt keine
 > Server auf NeoForge läuft, ist die Quelle stattdessen `world/stats/<uuid>.json`, das Minecraft ohne Zusatzmod
 > für jeden Spieler schreibt.
 
+### Im Spiel: `/vip balance` und Ansagen
+
+Drei Stellen sagen den Spielern ohne Umweg über die Website, wie es um ihr Geld steht:
+
+- **`/vip balance`** zeigt jedem sein Guthaben und die gemeinsamen Kassen, an die er herankommt
+  ([`minecraft/kubejs/server_scripts/balance.js`](minecraft/kubejs/server_scripts/balance.js)). Registriert wird der
+  Befehl mit `ServerEvents.basicPublicCommand` – `basicCommand` hängt ein `.requires(spOrOP)` an und wäre damit nur für
+  Operatoren nutzbar (nachgesehen in `KubeJSCommands.java`, Branch 2101).
+- **Beim Betreten** kommt dieselbe Auskunft automatisch, zwei Sekunden nach der Kopfgeld-Begrüßung aus `bounty.js`
+  (100 statt 60 Ticks Verzögerung – so steht sie immer darunter).
+- **Beim Abholen des Tagesgehalts** meldet `salary.js` die Gutschrift im Chat („Gehalt abgeholt: 12 Cog sind auf deinem
+  Konto."). Wer offline abholt, bekommt nichts zu sehen – die Auszahlung selbst ist davon unberührt.
+
+Der Kontostand kommt in allen Fällen direkt aus Numismatics, nicht aus einer Datei. `getAccount(UUID)` legt bewusst
+kein Konto an, wer noch nie Geld hatte, sieht schlicht `0 Cog`.
+
 ## Twitch-Streams
 
 Jede Person verknüpft ihren Kanal selbst: Dashboard → Profil → **Twitch-Kanal**. Eingetragen wird nur der Kanalname
