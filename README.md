@@ -400,7 +400,11 @@ Drei Stellen sagen den Spielern ohne Umweg über die Website, wie es um ihr Geld
 - **`/vip balance`** zeigt jedem sein Guthaben und die gemeinsamen Kassen, an die er herankommt
   ([`minecraft/kubejs/server_scripts/balance.js`](minecraft/kubejs/server_scripts/balance.js)). Registriert wird der
   Befehl mit `ServerEvents.basicPublicCommand` – `basicCommand` hängt ein `.requires(spOrOP)` an und wäre damit nur für
-  Operatoren nutzbar (nachgesehen in `KubeJSCommands.java`, Branch 2101).
+  Operatoren nutzbar (nachgesehen in `KubeJSCommands.java`, Branch 2101). Ob jemand an eine Kasse darf, beantwortet
+  `BankAccount.isAuthorized`; weil es die Überladungen `(Player)` und `(UUID)` gibt und Rhino daran mit
+  „choice of Java method … is ambiguous" scheitert, wird die Signatur ausgeschrieben:
+  `konto["isAuthorized(java.util.UUID)"](uuid)`. Welcher Weg genommen wurde, steht als `weg` in
+  `kubejs/data/balance.json`.
 - **Beim Betreten** kommt dieselbe Auskunft automatisch, zwei Sekunden nach der Kopfgeld-Begrüßung aus `bounty.js`
   (100 statt 60 Ticks Verzögerung – so steht sie immer darunter).
 - **Beim Abholen des Tagesgehalts** meldet `salary.js` die Gutschrift im Chat („Gehalt abgeholt: 12 Cog sind auf deinem

@@ -36,8 +36,19 @@
 //     wird hier bewusst die UUID übergeben: Ein Kontostand-Befehl soll kein Konto anlegen.
 //   BankAccount.getBalance()              Guthaben in Spurs
 //   BankAccount.getLabel()                Name, nur bei BLAZE_BANKER gesetzt
-//   BankAccount.isAuthorized(Player)      true, wenn es das eigene Konto ist oder
+//   BankAccount.isAuthorized(UUID)        true, wenn es das eigene Konto ist oder
 //     der Spieler auf der Vertrauensliste eines Blaze-Banker-Kontos steht
+//
+// WARUM DIE SIGNATUR AUSGESCHRIEBEN WIRD: BankAccount hat isAuthorized(Player)
+// UND isAuthorized(UUID). Rhino sucht sich bei Ueberladungen die passende
+// Methode selbst - und scheiterte hier live am 17.09.2026 mit
+//     InternalError: The choice of Java method ... isAuthorized matching
+//     JavaScript argument types (net.minecraft.server.level.ServerPlayer) is
+//     ambiguous; candidate methods are: isAuthorized(Player) / isAuthorized(UUID)
+// Der Kontostand kam durch, die Zeile mit den gemeinsamen Kassen fiel aus.
+// In Rhino waehlt konto["isAuthorized(java.util.UUID)"](uuid) genau eine
+// Ueberladung aus. Welcher Weg tatsaechlich funktioniert hat, steht als "weg"
+// in balance.json - dort ist auch zu sehen, wenn keiner geht.
 //
 // WICHTIG zu spieler.getUuid(): KubeJS benennt getUUID() für Skripte in
 // getUuid() um (EntityMixin, @RemapForJS("getUuid")). getUUID() gibt es im
@@ -59,13 +70,14 @@
 //      das quittiert dieser Server mit einem Parse-Fehler.
 //   3. kubejs/data/balance.json prüfen: Dort muss "ready": true stehen.
 
-var KONTO_FASSUNG = 1;
+var KONTO_FASSUNG = 2;
 var KONTO_DATEI = "balance.json";
 var KONTO_VERZOEGERUNG = 100; // Ticks bis zur Begruessung (5 s) — nach der Kopfgeldliste
 var KONTO_MAX_KASSEN = 5; // so viele gemeinsame Kassen nennt die Ansage
 var KONTO_SPURS_JE_COG = 64;
 
 var kontoWartende = []; // { uuid, faelligTick }
+var kontoWeg = null; // "signatur" | "uuid" | "aus" - siehe kontoWaehleWeg
 var kontoFehler = [];
 var kontoBereit = false;
 var kontoAbfragen = 0;
@@ -95,6 +107,7 @@ function kontoSchreibeDatei() {
             ready: kontoBereit,
             script: KONTO_FASSUNG,
             lookups: kontoAbfragen,
+            weg: kontoWeg,
             errors: kontoFehler,
         };
         KontoJsonIO.write(ziel, KontoJsonIO.parseRaw(JSON.stringify(inhalt, null, 2)));
@@ -142,20 +155,55 @@ function kontoStandVon(spieler) {
 }
 
 /**
+ * Einmal herausfinden, wie sich isAuthorized in diesem Rhino aufrufen laesst.
+ * Beide Versuche schreiben ihren Fehler mit - stillschweigend aufgeben waere
+ * genau der Grund, warum die Kassen beim ersten Anlauf gefehlt haben.
+ */
+function kontoWaehleWeg(konto, uuid) {
+    try {
+        konto["isAuthorized(java.util.UUID)"](uuid);
+        return "signatur";
+    } catch (e) {
+        kontoMerkeFehler("isAuthorized mit ausgeschriebener Signatur nicht aufrufbar: " + e);
+    }
+    try {
+        konto.isAuthorized(uuid);
+        return "uuid";
+    } catch (e) {
+        kontoMerkeFehler("isAuthorized mit UUID nicht aufrufbar: " + e);
+    }
+    return "aus";
+}
+
+/** Darf der Spieler an dieses Konto? Genau die Pruefung der Mod selbst. */
+function kontoDarfAn(konto, uuid) {
+    if (kontoWeg === null) {
+        kontoWeg = kontoWaehleWeg(konto, uuid);
+        // Einmal festhalten, welcher Weg genommen wurde - sonst stuende in der
+        // Datei fuer immer "null", und im gutmuetigen Fall (kein Fehler, also
+        // kein Schreibanlass) waere von aussen gar nicht zu sehen, was laeuft.
+        kontoSchreibeDatei();
+    }
+    if (kontoWeg === "signatur") return konto["isAuthorized(java.util.UUID)"](uuid) ? true : false;
+    if (kontoWeg === "uuid") return konto.isAuthorized(uuid) ? true : false;
+    return false;
+}
+
+/**
  * Die gemeinsamen Kassen, an die der Spieler herankommt.
  *
- * isAuthorized(Player) ist genau die Pruefung der Mod selbst: eigenes Konto
- * oder Vertrauensliste eines Blaze-Banker-Kontos. Die Vertrauensliste selbst
- * ist privat und von hier nicht lesbar.
+ * Die Vertrauensliste eines Kontos ist privat und von hier nicht lesbar -
+ * deshalb fragt dieses Skript die Mod, statt selbst zu vergleichen.
  */
 function kontoKassen(spieler) {
     var kassen = [];
     try {
+        var uuid = spieler.getUuid();
         var bank = KontoNumismatics.BANK;
         bank.accounts.entrySet().forEach(function (eintrag) {
             var konto = eintrag.getValue();
             if (String(konto.type) !== "BLAZE_BANKER") return;
-            if (!konto.isAuthorized(spieler)) return;
+            if (!kontoDarfAn(konto, uuid)) return;
             var name = konto.getLabel();
             kassen.push({ name: name ? String(name) : "Gemeinsame Kasse", spurs: konto.getBalance() });
         });
