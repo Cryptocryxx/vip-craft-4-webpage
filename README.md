@@ -219,6 +219,28 @@ holt sie über den Crafty-Dateizugriff ab ([`src/lib/game-log.ts`](src/lib/game-
   dann auf. Löschen von Hand geht unter „Chat & Befehle“ – nur für Admins. Der Abschnitt in der
   Datenschutzerklärung (Ziffer 9) beschreibt, was aufgezeichnet wird.
 
+## Spielbalance: Jetpacks
+
+Die Jetpacks aus Create: Stuff & Additions verbrauchen auf diesem Server **doppelt so viel Sprit** wie ab Werk –
+geregelt von [`minecraft/kubejs/server_scripts/jetpack-sprit.js`](minecraft/kubejs/server_scripts/jetpack-sprit.js).
+
+Die Mod selbst hat dafür keine Einstellung. Sie zieht fest **10 mB je Zyklus** ab (Zyklus = 5 Ticks in der Luft,
+10 im Wasser) und legt den Füllstand als `Amount0`/`Amount1` samt `Fluid0`/`Fluid1` in der Item-Komponente
+`minecraft:custom_data` ab – nachgelesen im Bytecode von `create-stuff-additions1.21.1_v2.1.4b.jar`
+(`*PropelerBodyTickEventProcedure`, `CustomFluidHandlerItemStack.setStoredFluid`).
+
+Das Skript merkt sich jeden Tick die Füllstände der getragenen Brustplatte und zieht jeden Rückgang **ein zweites Mal**
+ab. Es rechnet also nicht selbst aus, wann verbraucht wird, sondern verdoppelt, was die Mod verbraucht – das bleibt
+auch nach einem Mod-Update richtig und trifft Wasser wie Lava. Der Faktor steht als einzelne Zahl (`SPRIT_FAKTOR`)
+oben in der Datei.
+
+* **Warum nicht die Tankgröße halbieren** (`gadgetCapacity` in `config/create-stuff-additions.toml`): Das wäre nur
+  halb so viel Sprit pro Füllung. Geflogen würde dieselbe Strecke, man müsste bloß doppelt so oft nachtanken.
+* **Gegen Fehlalarm:** Rückgänge über 50 mB in einem Tick gelten nicht als Verbrauch – sonst würde ein Jetpackwechsel
+  mitten im Flug das frische Gerät sofort leeren.
+* **Läuft es?** In `kubejs/data/jetpack-fuel.json` steht `"ready": true`, der eingestellte Faktor und wie viel mB das
+  Skript seit dem Start zusätzlich abgezogen hat.
+
 ## Rechtliches
 
 Impressum, Datenschutzerklärung und Nutzungsbedingungen liegen unter `/impressum`, `/datenschutz` und
