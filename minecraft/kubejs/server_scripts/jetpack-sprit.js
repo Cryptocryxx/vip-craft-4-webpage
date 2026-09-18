@@ -21,7 +21,7 @@
 // WIE DIESES SKRIPT ES MACHT: Es schaut jedem Spieler auf die Brustplatte und
 // merkt sich die Füllstände. Sinkt ein Tank, zieht es das (SPRIT_FAKTOR − 1)-fache
 // noch einmal ab — aus 10 mB werden 100. Es rechnet also nicht selbst aus, wann
-// verbraucht wird, sondern verdoppelt, was die Mod verbraucht. Das bleibt
+// verbraucht wird, sondern vervielfacht, was die Mod verbraucht. Das bleibt
 // richtig, wenn ein Update die Zeiten oder Mengen ändert, und es trifft Wasser
 // und Lava gleichermaßen.
 //
@@ -29,7 +29,7 @@
 // Häufiger brächte nichts, weil die Mod ohnehin nur alle 5 Ticks etwas abzieht;
 // verglichen wird der Füllstand, nicht die Zeit, also geht durch den größeren
 // Abstand kein Verbrauch verloren — er wird nur einen Sekundenbruchteil später
-// verdoppelt. Pro Durchgang sind es je Spieler eine Handvoll Aufrufe (vier
+// vervielfacht. Pro Durchgang sind es je Spieler eine Handvoll Aufrufe (vier
 // Rüstungsteile ansehen, bei einem Jetpack zusätzlich die Komponente lesen).
 // Bei fünf Spielern also grob 50 Aufrufe je Sekunde gegenüber einem Tickbudget
 // von 50 Millisekunden: Das fällt nicht ins Gewicht. Wer ohne Jetpack herumläuft,
