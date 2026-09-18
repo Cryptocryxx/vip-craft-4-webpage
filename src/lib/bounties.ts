@@ -9,6 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { runPlayerCommand } from "@/lib/server-commands";
 import { berlinNachDatum } from "@/lib/zeit";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
+import { organisationenMitMitgliedern } from "@/lib/economy-source";
+import { organisationFuerChat, waehleKill, type OrganisationsMitglieder } from "@/lib/kopfgeld-sperre";
 
 /**
  * Kopfgelder.
@@ -390,6 +392,8 @@ async function zahleAus(): Promise<number> {
       expiresAt: true,
       createdAt: true,
       placerName: true,
+      targetUuid: true,
+      ignoredUntilSeq: true,
       attempts: true,
       lastTryAt: true,
     },
@@ -414,32 +418,70 @@ async function zahleAus(): Promise<number> {
   // Person, sollen nicht drei Zeilen durch den Chat laufen.
   const kassiert = new Map<string, { jaeger: string; ziel: string; spurs: number }>();
 
+  // Derselbe gesperrte Kill steht bei jedem Kopfgeld auf dieses Ziel an - im
+  // Chat soll er trotzdem nur einmal auftauchen.
+  const gesperrtAngesagt = new Set<number>();
+
+  // Höchstens einmal je Durchgang und nur, wenn es überhaupt einen Kill gibt.
+  let organisationen: Promise<OrganisationsMitglieder[] | null> | null = null;
+  const ladeOrganisationen = () => (organisationen ??= organisationenMitMitgliedern());
+
   for (const kopfgeld of offen) {
     if (!darfVersuchen(kopfgeld.attempts, kopfgeld.lastTryAt)) continue;
 
-    const treffer = tode.find((zeile) => {
-      if (zeile.playerName.toLowerCase() !== kopfgeld.targetName.toLowerCase()) return false;
-      if (zeile.at <= kopfgeld.createdAt) return false;
-      if (kopfgeld.expiresAt && zeile.at > kopfgeld.expiresAt) return false;
+    // Alle Kills, die grundsätzlich zählen könnten, in der Reihenfolge des
+    // Protokolls. Was schon als "unter Mitgliedern" vermerkt ist, fällt raus.
+    const bereitsGeprueft = kopfgeld.ignoredUntilSeq ?? -1;
+    const kandidaten = tode.flatMap((zeile) => {
+      if (zeile.seq <= bereitsGeprueft) return [];
+      if (zeile.playerName.toLowerCase() !== kopfgeld.targetName.toLowerCase()) return [];
+      if (zeile.at <= kopfgeld.createdAt) return [];
+      if (kopfgeld.expiresAt && zeile.at > kopfgeld.expiresAt) return [];
 
       const ursache = analysiereTod(zeile.text, zeile.playerName, spieler);
-      if (ursache.art !== "spieler") return false;
+      if (ursache.art !== "spieler") return [];
       // Sich selbst zu erledigen zahlt nicht aus – sonst wäre jedes Kopfgeld
       // ein Geschenk an das Ziel.
-      return ursache.schluessel.toLowerCase() !== zeile.playerName.toLowerCase();
+      if (ursache.schluessel.toLowerCase() === zeile.playerName.toLowerCase()) return [];
+      return [{ ...zeile, jaeger: ursache.schluessel }];
     });
-    if (!treffer) continue;
+    if (kandidaten.length === 0) continue;
 
-    const ursache = analysiereTod(treffer.text, treffer.playerName, spieler);
-    const jaeger = ursache.schluessel;
+    const zielUuid = kopfgeld.targetUuid ?? (await uuidFuerNamen(kopfgeld.targetName));
+    const auswahl = await waehleKill(kandidaten, zielUuid, uuidFuerNamen, ladeOrganisationen);
 
-    const jaegerUuid = await uuidFuerNamen(jaeger);
-    if (!jaegerUuid) {
-      // Zählt als Fehlversuch: Sonst liefe die Mojang-Abfrage bei jedem
-      // Statusabruf erneut, für einen Namen, den es dort offenbar nicht gibt.
-      await merkeFehlversuch(kopfgeld.id, kopfgeld.attempts, `Keine UUID zu ${jaeger} gefunden - Auszahlung steht aus`);
+    // Kills unter Mitgliedern derselben Organisation: vermerken, damit sie
+    // nicht bei jedem Durchgang neu bewertet werden, und einmal ansagen, damit
+    // niemand rätselt, warum der Kill nicht gezählt hat. Das Kopfgeld bleibt
+    // offen – erwischt ein Außenstehender das Ziel, bekommt der es.
+    if (auswahl.gesperrt.length > 0) {
+      const letzter = auswahl.gesperrt[auswahl.gesperrt.length - 1];
+      await prisma.bounty.update({
+        where: { id: kopfgeld.id },
+        data: {
+          ignoredUntilSeq: letzter.kandidat.seq,
+          note: `Kill von ${letzter.kandidat.jaeger} zählt nicht: beide in ${letzter.organisation}`,
+        },
+      });
+      for (const gesperrt of auswahl.gesperrt) {
+        if (gesperrtAngesagt.has(gesperrt.kandidat.seq)) continue;
+        gesperrtAngesagt.add(gesperrt.kandidat.seq);
+        await sageGesperrtAn(gesperrt.kandidat.jaeger, kopfgeld.targetName, gesperrt.organisation);
+      }
+    }
+
+    if (auswahl.art === "warten") {
+      // Zählt als Fehlversuch: Sonst liefe die Nachfrage (Mojang, Bankdatei)
+      // bei jedem Statusabruf erneut. Ausgezahlt wird in dem Fall nie – eine
+      // Sperre, die bei einem Lesefehler aufgeht, wäre keine.
+      await merkeFehlversuch(kopfgeld.id, kopfgeld.attempts, auswahl.grund);
       continue;
     }
+    if (auswahl.art === "keiner") continue;
+
+    const treffer = auswahl.kandidat;
+    const jaeger = treffer.jaeger;
+    const jaegerUuid = auswahl.jaegerUuid;
 
     const belegt = await prisma.bounty.updateMany({
       where: { id: kopfgeld.id, status: "OPEN" },
@@ -501,6 +543,22 @@ async function sageKassiertAn(jaeger: string, ziel: string, cogs: number): Promi
   await runPlayerCommand(
     `vipkopfgeld kassiert ${jaeger} ${ziel} ${cogs}`,
     `Kopfgeld auf ${ziel} im Spiel als kassiert angesagt`,
+    null,
+  );
+}
+
+/**
+ * Sagt Jäger und Ziel, dass ein Kill nicht gezählt hat, weil beide in derselben
+ * Organisation stehen. Nur die beiden – für alle anderen ist nichts passiert.
+ *
+ * Der Name der Organisation stammt vom Blaze Banker und damit von einem
+ * Spieler; er geht nur entschärft in den Befehl (organisationFuerChat).
+ */
+async function sageGesperrtAn(jaeger: string, ziel: string, organisation: string): Promise<void> {
+  if (!GAMERTAG_RE.test(jaeger) || !GAMERTAG_RE.test(ziel)) return;
+  await runPlayerCommand(
+    `vipkopfgeld gesperrt ${jaeger} ${ziel} ${organisationFuerChat(organisation)}`,
+    `Kill von ${jaeger} an ${ziel} zählt nicht: gleiche Organisation`,
     null,
   );
 }

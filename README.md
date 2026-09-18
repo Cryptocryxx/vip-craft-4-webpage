@@ -221,18 +221,20 @@ holt sie über den Crafty-Dateizugriff ab ([`src/lib/game-log.ts`](src/lib/game-
 
 ## Spielbalance: Jetpacks
 
-Die Jetpacks aus Create: Stuff & Additions verbrauchen auf diesem Server **doppelt so viel Sprit** wie ab Werk –
+Die Jetpacks aus Create: Stuff & Additions verbrauchen auf diesem Server **zehnmal so viel Sprit** wie ab Werk –
 geregelt von [`minecraft/kubejs/server_scripts/jetpack-sprit.js`](minecraft/kubejs/server_scripts/jetpack-sprit.js).
+Ein voller 16.000er Tank trägt damit rund **40 Sekunden** Dauerflug statt knapp sieben Minuten.
 
 Die Mod selbst hat dafür keine Einstellung. Sie zieht fest **10 mB je Zyklus** ab (Zyklus = 5 Ticks in der Luft,
 10 im Wasser) und legt den Füllstand als `Amount0`/`Amount1` samt `Fluid0`/`Fluid1` in der Item-Komponente
 `minecraft:custom_data` ab – nachgelesen im Bytecode von `create-stuff-additions1.21.1_v2.1.4b.jar`
 (`*PropelerBodyTickEventProcedure`, `CustomFluidHandlerItemStack.setStoredFluid`).
 
-Das Skript merkt sich jeden Tick die Füllstände der getragenen Brustplatte und zieht jeden Rückgang **ein zweites Mal**
-ab. Es rechnet also nicht selbst aus, wann verbraucht wird, sondern verdoppelt, was die Mod verbraucht – das bleibt
-auch nach einem Mod-Update richtig und trifft Wasser wie Lava. Der Faktor steht als einzelne Zahl (`SPRIT_FAKTOR`)
-oben in der Datei.
+Das Skript merkt sich die Füllstände der getragenen Brustplatte und zieht jeden Rückgang **noch einmal
+(`SPRIT_FAKTOR` − 1)-fach** ab. Es rechnet also nicht selbst aus, wann verbraucht wird, sondern vervielfacht, was die
+Mod verbraucht – das bleibt auch nach einem Mod-Update richtig und trifft Wasser wie Lava. Der Faktor steht als
+einzelne Zahl oben in der Datei; der Testharnisch rechnet seine Erwartungen daraus aus, eine Änderung braucht also
+keine angepassten Tests.
 
 * **Warum nicht die Tankgröße halbieren** (`gadgetCapacity` in `config/create-stuff-additions.toml`): Das wäre nur
   halb so viel Sprit pro Füllung. Geflogen würde dieselbe Strecke, man müsste bloß doppelt so oft nachtanken.
@@ -243,6 +245,25 @@ oben in der Datei.
   bei fünf Spielern rund 50 pro Sekunde, gegenüber 50 Millisekunden Tickbudget.
 * **Läuft es?** In `kubejs/data/jetpack-fuel.json` steht `"ready": true`, der eingestellte Faktor und wie viel mB das
   Skript seit dem Start zusätzlich abgezogen hat.
+
+## Spielbalance: Kopfgeld unter Organisationsmitgliedern
+
+Wer mit dem Ziel zusammen in einer Numismatics-Organisation steht – also auf der Vertrauensliste desselben Blaze
+Bankers –, kassiert kein Kopfgeld auf dieses Ziel. Sonst könnten sich zwei Mitglieder gegenseitig Kopfgelder abholen,
+und die Firmenkasse bezahlte sich über den Umweg des Ausschreibers selbst.
+
+* **Entschieden wird auf der Website**, in [`src/lib/kopfgeld-sperre.ts`](src/lib/kopfgeld-sperre.ts) (ohne Datenbank und
+  Server, deshalb einzeln testbar) und angewendet in `zahleAus()` in [`src/lib/bounties.ts`](src/lib/bounties.ts). Die
+  Mitglieder kommen aus der Bankdatei (`organisationenMitMitgliedern()` in `economy-source.ts`).
+* **Das Kopfgeld bleibt offen.** Der Kill zählt einfach nicht; erwischt danach jemand Außenstehendes das Ziel, bekommt
+  der es. Geprüfte Kills merkt sich die Zeile in `Bounty.ignoredUntilSeq`, damit sie nicht bei jedem Durchgang neu
+  bewertet werden.
+* **Jäger und Ziel erfahren es im Spiel** – einmal, nur die beiden (`vipkopfgeld gesperrt …`, `bounty.js` Fassung 8).
+  Der Name der Organisation stammt von einem Spieler und geht nur entschärft in den Befehl.
+* **Nicht prüfbar heißt warten, nie auszahlen:** Ist die Bankdatei nicht lesbar (der KubeJS-Export kennt keine
+  Mitglieder), bleibt die Auszahlung stehen und wird mit wachsendem Abstand erneut versucht.
+* **Stand der Mitgliedschaft** ist der letzte Weltspeicherpunkt (Autosave, dazu fünf Minuten Zwischenspeicher). Wer
+  sich unmittelbar vor einem Kill in eine Organisation einträgt, fällt unter Umständen noch nicht darunter.
 
 ## Rechtliches
 

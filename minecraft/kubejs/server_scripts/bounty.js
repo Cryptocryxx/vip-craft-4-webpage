@@ -66,9 +66,9 @@
 // INSTALLATION
 //   1. npm run kubejs:deploy -- bounty
 //   2. Konsolenbefehl "reload" (wirft niemanden vom Server)
-//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 7
+//   3. kubejs/data/bounty.json prüfen: "ready": true und "script": 8
 
-var KOPF_FASSUNG = 7; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
+var KOPF_FASSUNG = 8; // hochzaehlen bei Aenderungen, damit sich Alt und Neu unterscheiden
 var KOPF_DATEI = "bounty.json"; // Quittungen, geschrieben von HIER
 var KOPF_LISTE = "bounty-list.json"; // offene Kopfgelder, geschrieben von der WEBSITE
 var KOPF_MAX_BELEGE = 200;
@@ -145,7 +145,10 @@ var kopfWartende = []; // { uuid, faelligTick } - Begruessungen, die noch ansteh
  * bereitsteht - der Tick liefert eins nachweislich (siehe flight-log.js), und
  * eine Verzoegerung von einem Tick merkt niemand.
  */
-var kopfAnsagen = []; // { art: "melden", ziel, cogs, frist, von, grund } oder { art: "kassiert", jaeger, ziel, cogs }
+// { art: "melden", ziel, cogs, frist, von, grund }
+// { art: "kassiert", jaeger, ziel, cogs }
+// { art: "gesperrt", jaeger, ziel, organisation }
+var kopfAnsagen = [];
 
 function kopfSchreibeDatei() {
     try {
@@ -383,6 +386,34 @@ function kopfSageKassiertAn(server, meldung) {
 }
 
 /**
+ * Sagt Jaeger und Ziel, dass ein Kill kein Kopfgeld gebracht hat, weil beide in
+ * derselben Organisation stehen.
+ *
+ * Nur die beiden: Fuer alle anderen ist nichts passiert, das Kopfgeld bleibt
+ * offen. "-" als Organisation heisst, die Website hat den Namen beim
+ * Entschaerfen verworfen - dann ohne Namen.
+ */
+function kopfSageGesperrtAn(server, meldung) {
+    var jaegerKlein = String(meldung.jaeger).toLowerCase();
+    var zielKlein = String(meldung.ziel).toLowerCase();
+    var wo = meldung.organisation && meldung.organisation !== "-" ? "bei " + meldung.organisation : "in derselben Organisation";
+    var fuerJaeger =
+        "Kein Kopfgeld: Du und " + meldung.ziel + " seid beide " + wo + ". Kills unter Mitgliedern zaehlen nicht.";
+    var fuersZiel =
+        meldung.jaeger + " hat dich erwischt, aber ihr seid beide " + wo + " - das Kopfgeld auf dich bleibt offen.";
+
+    server.getPlayers().forEach(function (spieler) {
+        try {
+            var name = String(spieler.getUsername()).toLowerCase();
+            if (name === jaegerKlein) kopfSage(spieler, fuerJaeger);
+            else if (name === zielKlein) kopfSage(spieler, fuersZiel);
+        } catch (e) {
+            /* Einer, der die Nachricht nicht bekommt, darf den anderen nicht kosten. */
+        }
+    });
+}
+
+/**
  * Setzt den Schlusspunkt - aber nur, wenn nicht schon einer da ist.
  *
  * Das deutsche Kurzdatum bringt seinen Punkt selbst mit ("12.09."), sonst
@@ -512,6 +543,7 @@ try {
                 console.log("[bounty] Aufruf: vipkopfgeld <abbuchen|auszahlen> <uuid> <spurs> <belegId>");
                 console.log("[bounty]     oder: vipkopfgeld melden <ziel> <cogs> <frist|->");
                 console.log("[bounty]     oder: vipkopfgeld kassiert <jaeger> <ziel> <cogs>");
+                console.log("[bounty]     oder: vipkopfgeld gesperrt <jaeger> <ziel> <organisation|->");
                 return;
             }
 
@@ -537,6 +569,20 @@ try {
                     // Alles ab hier gehoert zur Begruendung - sie ist das
                     // einzige Feld, in dem Leerzeichen vorkommen duerfen.
                     grund: teile.length > 5 ? teile.slice(5).join(" ") : "",
+                });
+                return;
+            }
+
+            // Nur eine Ansage, keine Buchung: Der Kill hat nicht gezaehlt, weil
+            // Jaeger und Ziel zusammen in einer Numismatics-Organisation stehen
+            // (entschieden auf der Website, lib/kopfgeld-sperre.ts). Der Name der
+            // Organisation steht hinten, weil er Leerzeichen enthalten darf.
+            if (art === "gesperrt") {
+                kopfAnsagen.push({
+                    art: "gesperrt",
+                    jaeger: teile[1],
+                    ziel: teile[2],
+                    organisation: teile.slice(3).join(" "),
                 });
                 return;
             }
@@ -629,6 +675,7 @@ try {
             var ansage = kopfAnsagen.shift();
             try {
                 if (ansage.art === "kassiert") kopfSageKassiertAn(event.server, ansage);
+                else if (ansage.art === "gesperrt") kopfSageGesperrtAn(event.server, ansage);
                 else kopfSageAnsageAn(event.server, ansage);
             } catch (e) {
                 kopfMerkeFehler("Ansage fehlgeschlagen: " + e);

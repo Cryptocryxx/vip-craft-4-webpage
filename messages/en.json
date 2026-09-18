@@ -882,7 +882,7 @@
     "statusPAYING": "paying",
     "statusCLAIMED": "collected",
     "statusEXPIRED": "expired",
-    "rules": "The bounty pays out on the target's first death at another player's hands after it was placed. Environmental deaths and mobs do not count, and killing yourself triggers nothing. If a bounty expires unclaimed, the stake goes back to whoever placed it."
+    "rules": "The bounty pays out on the target's first death at another player's hands after it was placed. Environmental deaths and mobs do not count, and killing yourself triggers nothing. Members of the same organisation as the target (the same Blaze Banker) cannot claim it – the bounty then stays open for everyone else. If a bounty expires unclaimed, the stake goes back to whoever placed it."
   },
   "BountyForm": {
     "targetLabel": "Target",

@@ -1,7 +1,10 @@
 // VIP Craft 4 — Jetpacks verbrauchen mehr Sprit
 //
 // Die Jetpacks aus Create: Stuff & Additions sind zu sparsam: Ein voller Tank
-// trägt ewig. Dieses Skript verdoppelt den Verbrauch, ohne die Mod anzufassen.
+// trägt ewig. Dieses Skript vervielfacht den Verbrauch, ohne die Mod anzufassen.
+// Eingestellt steht er auf dem Zehnfachen (SPRIT_FAKTOR), aus 10 mB werden also
+// 100 — eine volle Füllung von 16.000 mB reicht dann noch etwa 40 Sekunden
+// Dauerflug statt fast sieben Minuten.
 //
 // WIE DIE MOD ES MACHT (Bytecode von create-stuff-additions1.21.1_v2.1.4b.jar,
 // Klassen AndesitePropelerBodyTickEventProcedure, CopperPropelerBodyTickEventProcedure,
@@ -16,8 +19,8 @@
 //     Ist ein Tank leer, werden BEIDE Schlüssel entfernt (setStoredFluid).
 //
 // WIE DIESES SKRIPT ES MACHT: Es schaut jedem Spieler auf die Brustplatte und
-// merkt sich die Füllstände. Sinkt ein Tank, zieht es genau dieselbe Menge noch
-// einmal ab — aus 10 mB werden 20. Es rechnet also nicht selbst aus, wann
+// merkt sich die Füllstände. Sinkt ein Tank, zieht es das (SPRIT_FAKTOR − 1)-fache
+// noch einmal ab — aus 10 mB werden 100. Es rechnet also nicht selbst aus, wann
 // verbraucht wird, sondern verdoppelt, was die Mod verbraucht. Das bleibt
 // richtig, wenn ein Update die Zeiten oder Mengen ändert, und es trifft Wasser
 // und Lava gleichermaßen.
@@ -57,14 +60,18 @@
 //   2. Konsolenbefehl "reload"
 //   3. kubejs/data/jetpack-fuel.json prüfen: Dort muss "ready": true stehen.
 
-var SPRIT_FASSUNG = 1;
+var SPRIT_FASSUNG = 2;
 var SPRIT_DATEI = "jetpack-fuel.json";
 
 /**
- * Der Gesamtverbrauch, gemessen am Wert der Mod: 2 heißt doppelt so viel.
- * Nur diese eine Zahl ändern, wenn es mehr sein soll.
+ * Der Gesamtverbrauch, gemessen am Wert der Mod: 10 heißt zehnmal so viel.
+ * Nur diese eine Zahl ändern, wenn es mehr oder weniger sein soll.
+ *
+ * Was das in Flugzeit bedeutet: Die Mod zieht 10 mB je Zyklus (5 Ticks), das
+ * sind 40 mB in der Sekunde. Mit Faktor 10 werden daraus 400 mB — ein voller
+ * 16.000er Tank trägt damit rund 40 Sekunden statt knapp sieben Minuten.
  */
-var SPRIT_FAKTOR = 2;
+var SPRIT_FAKTOR = 10;
 
 /**
  * Abstand zwischen zwei Kontrollen in Ticks. 5 ist der Takt, in dem die Mod

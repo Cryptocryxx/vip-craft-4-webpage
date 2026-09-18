@@ -125,6 +125,13 @@ model Bounty {
   /// GameLog-Zeile (seq), die die Auszahlung ausgeloest hat.
   claimedSeq Int?
 
+  /// Kills bis einschliesslich dieser GameLog-Zeile (seq) sind geprueft und
+  /// zaehlen nicht: Jaeger und Ziel standen zusammen in einer
+  /// Numismatics-Organisation (siehe lib/kopfgeld-sperre.ts). Ohne den Vermerk
+  /// wuerde derselbe Kill bei jedem Durchgang neu bewertet und im Spiel jedes
+  /// Mal wieder angesagt.
+  ignoredUntilSeq Int?
+
   /// Warum die Zeile so steht, wie sie steht - fuer den Fall, dass eine
   /// Abbuchung oder Auszahlung nicht durchging.
   note String?

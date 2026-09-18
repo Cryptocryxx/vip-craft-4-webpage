@@ -882,7 +882,7 @@
     "statusPAYING": "läuft",
     "statusCLAIMED": "kassiert",
     "statusEXPIRED": "abgelaufen",
-    "rules": "Ausgezahlt wird beim ersten Tod des Ziels durch einen anderen Spieler nach dem Aussetzen. Umgebungstode und Kreaturen zählen nicht, und wer sich selbst erledigt, löst nichts aus. Läuft ein Kopfgeld ab, ohne dass es jemand holt, bekommt der Ausschreiber seinen Einsatz zurück."
+    "rules": "Ausgezahlt wird beim ersten Tod des Ziels durch einen anderen Spieler nach dem Aussetzen. Umgebungstode und Kreaturen zählen nicht, und wer sich selbst erledigt, löst nichts aus. Wer mit dem Ziel zusammen in einer Organisation steht (derselbe Blaze Banker), kassiert nicht – das Kopfgeld bleibt dann für alle anderen offen. Läuft ein Kopfgeld ab, ohne dass es jemand holt, bekommt der Ausschreiber seinen Einsatz zurück."
   },
   "BountyForm": {
     "targetLabel": "Auf wen",

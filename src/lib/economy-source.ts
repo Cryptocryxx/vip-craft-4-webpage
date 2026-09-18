@@ -9,6 +9,7 @@ import {
   type Vermoegen,
 } from "@/lib/economy-types";
 import { buildUuidToName, type UserCacheEntry } from "@/lib/minecraft-stats";
+import type { OrganisationsMitglieder } from "@/lib/kopfgeld-sperre";
 import { leseBargeld, type BargeldErgebnis } from "@/lib/muenzen";
 import { alsCompound, alsListe, alsText, alsZahl, leseNbt, uuidAusNbt, type NbtCompound } from "@/lib/nbt";
 
@@ -362,4 +363,28 @@ export async function vermoegenFuer(name: string): Promise<{ zeile: Vermoegen | 
       organisation.mitglieder.some((mitglied) => mitglied.toLowerCase() === gesucht),
     ),
   };
+}
+
+/**
+ * Die gemeinsamen Kassen mit den UUIDs ihrer Mitglieder – für die
+ * Kopfgeld-Regel (siehe lib/kopfgeld-sperre.ts).
+ *
+ * null heißt „nicht prüfbar": Die Bankdatei war nicht lesbar und nur der
+ * KubeJS-Export ist da, der keine Vertrauenslisten kennt. Wer null bekommt,
+ * soll warten statt auszuzahlen.
+ *
+ * Liest nur die Bank, nicht das Bargeld – das wären 35 Spielerdateien für eine
+ * Frage, die sie nicht brauchen.
+ */
+export async function organisationenMitMitgliedern(): Promise<OrganisationsMitglieder[] | null> {
+  if (!craftyConfigured) return null;
+  const bank = await holeBank();
+  if (!bank || bank.herkunft !== "bankdatei") return null;
+
+  return bank.konten
+    .filter((konto) => konto.organisation)
+    .map((konto) => ({
+      name: konto.label?.trim() || `Konto ${konto.id.slice(0, 8)}`,
+      mitglieder: new Set(konto.vertraute.map((uuid) => uuid.toLowerCase())),
+    }));
 }
