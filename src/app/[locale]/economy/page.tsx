@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { Building2, Coins, Trophy } from "lucide-react";
+import { ArrowRight, Building2, Coins, HandCoins, Trophy } from "lucide-react";
 import { Kennzahlen } from "@/components/economy/Kennzahlen";
 import { Muenzkunde } from "@/components/economy/Muenzkunde";
 import { Organisationen } from "@/components/economy/Organisationen";
@@ -11,9 +11,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Panel } from "@/components/ui/Panel";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { getEconomyData } from "@/lib/economy-source";
-
-/** So viele Spieler stehen in der Rangliste auf der Seite. */
-const RANGLISTE_LAENGE = 10;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("EconomyPage");
@@ -37,6 +34,9 @@ export default async function EconomyPage() {
           </Button>
           <Button href="#organisationen" variant="outline" size="sm">
             <Building2 className="size-4" /> {t("organisations")}
+          </Button>
+          <Button href="/economy/kredite" variant="outline" size="sm">
+            <HandCoins className="size-4" /> {t("credits")}
           </Button>
           <Button href="#muenzen" variant="outline" size="sm">
             <Coins className="size-4" /> {t("coins")}
@@ -62,7 +62,7 @@ export default async function EconomyPage() {
 
             <section id="vermoegen" className="scroll-mt-24">
               <SectionHeading eyebrow={t("wealth")} icon={Trophy} title={t("wealthHeading")} description={t("wealthDescription")} />
-              <Vermoegensrangliste zeilen={overview.vermoegen.slice(0, RANGLISTE_LAENGE)} />
+              <Vermoegensrangliste zeilen={overview.vermoegen} />
             </section>
 
             <section id="organisationen" className="scroll-mt-24">
@@ -81,6 +81,15 @@ export default async function EconomyPage() {
             </section>
           </>
         )}
+
+        {/* Kredite hängen nicht an den Bankdaten oben - auch wenn die gerade
+            nicht lesbar sind, soll der Weg dorthin da sein. */}
+        <section id="kredite" className="scroll-mt-24">
+          <SectionHeading eyebrow={t("credits")} icon={HandCoins} title={t("creditHeading")} description={t("creditDescription")} />
+          <Button href="/economy/kredite">
+            {t("creditButton")} <ArrowRight className="size-4" />
+          </Button>
+        </section>
       </Container>
     </>
   );

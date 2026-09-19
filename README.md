@@ -126,7 +126,8 @@ mit drehendem Zahnrad), unvollständig (Gamertag fehlt) und abgelehnt (rot, mit 
 | `/map` | Großformatige Squaremap-Einbettung (iframe) mit Reload / „neuer Tab“ |
 | `/community` | Event-Kalender (Grid) und Server-Timeline („Die Lore“) |
 | `/leaderboards` | Hall of Fame / Hall of Shame (Tabs), am Ende ein kurzer Blick auf die Wirtschaft |
-| `/economy` | **Wirtschaft**: Umlauf, Vermögensrangliste, Organisationen (Blaze-Banker-Konten) und Münzkunde |
+| `/economy` | **Wirtschaft**: Umlauf, Vermögen aller Spieler, Organisationen (Blaze-Banker-Konten) und Münzkunde |
+| `/economy/kredite` | **Kredite** zwischen Spielern: anbieten, annehmen, begleichen (nur angemeldet, nur für Beteiligte sichtbar) |
 | `/schematics` | Bauplan-Galerie mit Suche, Tag-Filter und `.nbt`-Download |
 | `/streams` | Verknüpfte Twitch-Kanäle mit echtem Live-Status, Player-Embed nach Einwilligung |
 | `/dashboard` | Discord-Login, Profil, **Whitelist-Antrag**, persönliche Stats, **Vorschlags-Board** mit Upvotes |
@@ -433,6 +434,39 @@ Drei Stellen sagen den Spielern ohne Umweg über die Website, wie es um ihr Geld
 
 Der Kontostand kommt in allen Fällen direkt aus Numismatics, nicht aus einer Datei. `getAccount(UUID)` legt bewusst
 kein Konto an, wer noch nie Geld hatte, sieht schlicht `0 Cog`.
+
+## Kredite zwischen Spielern
+
+Unter `/economy/kredite` kann ein Spieler einem anderen einen Kredit anbieten – Betrag (1–10.000 Cog) und Zins
+(0–50 %, einmal auf den Betrag) legt er selbst fest, dazu optional ein Rückzahlungsdatum. Der andere sieht das Angebot
+auf der Website (dazu ein Hinweis im Dashboard) und nimmt an oder lehnt ab; zurückgezahlt wird dort auch, in einem
+Rutsch. Mitmachen kann, wer auf der Website angemeldet, mit Minecraft verknüpft und freigeschaltet ist. Sichtbar ist
+ein Kredit nur für die beiden Beteiligten.
+
+**Wie das Geld fließt** ([`src/lib/kredite.ts`](src/lib/kredite.ts)):
+
+| Schritt | Buchung | Beleg-ID |
+| --- | --- | --- |
+| Anbieten | Betrag vom Kreditgeber abbuchen (Reservierung) | `<id>-res` |
+| Annehmen | Betrag an den Kreditnehmer | `<id>-aus` |
+| Ablehnen, Zurückziehen, Ablauf nach 7 Tagen | Betrag zurück an den Kreditgeber | `<id>-rck` |
+| Begleichen | Betrag + Zins vom Kreditnehmer abbuchen | `<id>-tlg<runde>` |
+| … danach | an den Kreditgeber weitergeben | `<id>-gut` |
+
+* **Reserviert wird sofort.** So nimmt niemand ein Angebot an, hinter dem kein Geld mehr steht.
+* **Jede Buchung hat eine feste Beleg-ID**, und das KubeJS-Skript
+  [`credit.js`](minecraft/kubejs/server_scripts/credit.js) bucht jede ID höchstens einmal. Kommt keine Quittung,
+  bleibt der Kredit im Übergangszustand, und `rechneKrediteAb()` (läuft mit dem Statusabruf mit) wiederholt die
+  Buchung mit derselben ID, bis sie bestätigt ist – mit wachsendem Abstand wie beim Kopfgeld.
+* **Nach einem Serverneustart** liest `credit.js` seine Quittungen aus `kubejs/data/credit.json` wieder ein. Ohne das
+  könnte eine Buchung, deren Quittung die Website verpasst hat, nach dem Neustart ein zweites Mal durchgehen.
+* **Die Tilgung zählt ihre Runden mit** (`repayRound`): Scheitert ein Versuch an zu wenig Geld, braucht der nächste
+  eine neue Beleg-ID – unter der alten stünde für immer „zu wenig".
+* **Im Spiel** gibt es kurze Ansagen: das Angebot an den Kreditnehmer, Annahme, Ablehnung, Ablauf und Rückzahlung an
+  den Kreditgeber (`vipkredit sag …`).
+
+Getestet mit einer Wegwerf-SQLite-Datenbank und einer nachgebauten Bank, die Quittungen verschlucken und Befehle
+verlieren kann (Scratchpad, `kredite-ablauf-test.ts`), dazu ein Harnisch für `credit.js` samt Neustart.
 
 ## Twitch-Streams
 

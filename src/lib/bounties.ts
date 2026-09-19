@@ -10,6 +10,7 @@ import { runPlayerCommand } from "@/lib/server-commands";
 import { berlinNachDatum } from "@/lib/zeit";
 import { GAMERTAG_RE } from "@/lib/whitelist-types";
 import { organisationenMitMitgliedern } from "@/lib/economy-source";
+import { eigeneUuid } from "@/lib/minecraft-konto";
 import { organisationFuerChat, waehleKill, type OrganisationsMitglieder } from "@/lib/kopfgeld-sperre";
 
 /**
@@ -92,31 +93,6 @@ export type AussetzErgebnis =
       grund: "kein-konto" | "ziel-unbekannt" | "skript-fehlt" | "zu-wenig" | "nicht-angekommen" | "doppelt";
       detail?: string;
     };
-
-/**
- * Die eigene Minecraft-UUID, notfalls bei Mojang nachgeschlagen.
- *
- * Wie beim Gehalt: Wer seinen Namen verknüpft hat, aber noch nie im Protokoll
- * auftauchte, hat keine gespeicherte UUID – und bekäme sonst die irreführende
- * Auskunft, sein Account sei nicht verknüpft.
- */
-async function eigeneUuid(user: {
-  id: string;
-  minecraftName: string | null;
-  minecraftUuid: string | null;
-}): Promise<string | null> {
-  if (!user.minecraftName || !GAMERTAG_RE.test(user.minecraftName)) return null;
-  if (user.minecraftUuid) return mitBindestrichen(user.minecraftUuid);
-
-  const treffer = await lookupMinecraftName(user.minecraftName);
-  if (treffer.status !== "gefunden") return null;
-
-  const uuid = mitBindestrichen(treffer.uuid);
-  await prisma.user
-    .update({ where: { id: user.id }, data: { minecraftUuid: uuid } })
-    .catch((error) => console.error("[kopfgeld] UUID konnte nicht gespeichert werden:", error));
-  return uuid;
-}
 
 /**
  * Setzt ein Kopfgeld aus und bucht den Einsatz ab.

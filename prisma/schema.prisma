@@ -68,6 +68,8 @@ model User {
   gameLogs            GameLog[]
   salaryClaims        SalaryClaim[]
   bounties            Bounty[]
+  loansGiven          Loan[] @relation("LoanLender")
+  loansTaken          Loan[] @relation("LoanBorrower")
 }
 
 // ---------------------------------------------------------------------------
@@ -607,4 +609,73 @@ model Translation {
   createdAt DateTime @default(now())
 
   @@id([hash, locale])
+}
+
+/// Ein Kredit zwischen zwei Spielern, siehe lib/kredite.ts.
+///
+/// Das Geld bewegt sich nur ueber das KubeJS-Skript credit.js, jede Buchung mit
+/// eigener Beleg-ID (id plus Endung, siehe lib/kredit-types.ts). Die
+/// Uebergangszustaende (RESERVING, PAYING_OUT, REFUNDING, REPAYING, SETTLING)
+/// werden im Hintergrund mit DERSELBEN Beleg-ID wiederholt, bis sie aufgeloest
+/// sind - das Skript bucht eine ID nie zweimal, auch nicht nach einem
+/// Serverneustart.
+model Loan {
+  id String @id @default(cuid())
+
+  /// Wer leiht. Name und UUID festgehalten wie beim Kopfgeld: Die Verknuepfung
+  /// am Account kann sich aendern, der Vertrag soll bleiben.
+  lenderId   String
+  lender     User   @relation("LoanLender", fields: [lenderId], references: [id], onDelete: Cascade)
+  lenderName String
+  lenderUuid String
+
+  /// Wer das Geld bekommt und zurueckzahlt.
+  borrowerId   String
+  borrower     User   @relation("LoanBorrower", fields: [borrowerId], references: [id], onDelete: Cascade)
+  borrowerName String
+  borrowerUuid String
+
+  /// Geliehener Betrag in Spurs (siehe lib/currency.ts).
+  principalSpurs Int
+  /// Zinssatz in ganzen Prozent, einmal auf den Betrag - kein Zinseszins.
+  interestPercent Int
+  /// Zurueckzuzahlen: Betrag plus Zins, beim Anbieten festgeschrieben.
+  dueSpurs Int
+
+  /// Optional: bis wann zurueckgezahlt sein soll. Nur Anzeige ("ueberfaellig"),
+  /// eingetrieben wird nichts.
+  repayBy DateTime?
+
+  /// RESERVING | OFFERED | PAYING_OUT | ACTIVE | REPAYING | SETTLING | REPAID |
+  /// REFUNDING | DECLINED | WITHDRAWN | EXPIRED | FAILED, siehe lib/kredit-types.ts
+  status String @default("RESERVING")
+  /// Warum ein Angebot endet, solange die Rueckbuchung laeuft:
+  /// DECLINED | WITHDRAWN | EXPIRED
+  closeReason String?
+
+  /// Bis wann das Angebot angenommen werden kann. Danach geht der reservierte
+  /// Betrag automatisch an den Kreditgeber zurueck.
+  offerExpiresAt DateTime
+
+  /// Jeder Tilgungsversuch braucht eine eigene Beleg-ID. Ein gescheiterter
+  /// (zu wenig Geld) bliebe unter derselben ID sonst fuer immer gescheitert.
+  repayRound Int @default(0)
+
+  /// Was zuletzt schiefging oder warum die Zeile so steht.
+  note String?
+
+  /// Fehlgeschlagene Buchungsversuche - fuer den wachsenden Abstand beim
+  /// Wiederholen, wie beim Kopfgeld.
+  attempts  Int       @default(0)
+  lastTryAt DateTime?
+
+  acceptedAt DateTime?
+  repaidAt   DateTime?
+  closedAt   DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([lenderId, status])
+  @@index([borrowerId, status])
+  @@index([status])
 }

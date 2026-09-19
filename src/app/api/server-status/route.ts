@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { rechneKopfgelderAb } from "@/lib/bounties";
+import { rechneKrediteAb } from "@/lib/kredite";
 import { holeDiscordNachrichten } from "@/lib/discord-chat";
 import { holeFlugdaten } from "@/lib/flight";
 import { holeEreignisse } from "@/lib/game-log";
@@ -51,6 +52,11 @@ export async function GET() {
    * Reihenfolge stellt die eigene Sperre in lib/bounties.ts sicher.
    */
   void rechneKopfgelderAb();
+  /*
+   * Kredite: abgelaufene Angebote zurückbuchen und hängende Buchungen
+   * nachholen (eigene Sperre, höchstens alle 15 Sekunden, siehe lib/kredite.ts).
+   */
+  void rechneKrediteAb();
   /*
    * Wer sein Gehalt heute noch nicht geholt hat, wird beim Betreten des
    * Servers daran erinnert. Die Liste dafuer muss regelmaessig neu

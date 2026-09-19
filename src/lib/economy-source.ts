@@ -388,3 +388,18 @@ export async function organisationenMitMitgliedern(): Promise<OrganisationsMitgl
       mitglieder: new Set(konto.vertraute.map((uuid) => uuid.toLowerCase())),
     }));
 }
+
+/**
+ * Das Guthaben eines persönlichen Kontos in Spurs, aus der Bankdatei – für
+ * Hinweise wie „reicht dein Geld zum Begleichen?". Stand ist der letzte
+ * Weltspeicherpunkt; ob es wirklich reicht, entscheidet die Buchung im Spiel.
+ *
+ * null: Bank gerade nicht lesbar. 0: Es gibt (noch) kein Konto.
+ */
+export async function kontostandSpurs(uuid: string): Promise<number | null> {
+  if (!craftyConfigured) return null;
+  const bank = await holeBank();
+  if (!bank) return null;
+  const gesucht = uuid.toLowerCase();
+  return bank.konten.find((konto) => !konto.organisation && konto.id.toLowerCase() === gesucht)?.spurs ?? 0;
+}

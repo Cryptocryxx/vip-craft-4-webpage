@@ -5,6 +5,7 @@ import { Cog, LayoutDashboard } from "lucide-react";
 import { auth, authConfigured } from "@/auth";
 import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
 import { DailySalaryCard } from "@/components/dashboard/DailySalaryCard";
+import { KreditHinweisKarte } from "@/components/dashboard/KreditHinweisKarte";
 import { PersonalStats } from "@/components/dashboard/PersonalStats";
 import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { ShopManagerCard } from "@/components/dashboard/ShopManagerCard";
@@ -18,6 +19,7 @@ import { serverStartZeit } from "@/lib/event-types";
 import { discordCheckEnabled, ensureMembershipFresh } from "@/lib/discord";
 import { ensureNameChecked } from "@/lib/name-check";
 import { prisma } from "@/lib/prisma";
+import { kreditHinweis } from "@/lib/kredite";
 import { imTeam } from "@/lib/roles";
 import { gehaltsStand } from "@/lib/salary";
 import { getSiteSettings } from "@/lib/settings";
@@ -72,7 +74,7 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
   // Discord-Mitgliedschaft nebenbei nachziehen: Wer nach dem Login beitritt,
   // sieht den Schritt beim naechsten Aufruf des Dashboards von selbst abgehakt,
   // ohne auf „Erneut pruefen" zu druecken.
-  const [application, settings, roheVorschlaege, shops, discord, name, locale, gehalt] = await Promise.all([
+  const [application, settings, roheVorschlaege, shops, discord, name, locale, gehalt, kredit] = await Promise.all([
     getApplicationForUser(user.id),
     getSiteSettings(),
     listSuggestions(user.id),
@@ -81,6 +83,7 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
     ensureNameChecked(user),
     getLocale(),
     gehaltsStand(user.id),
+    kreditHinweis(user.id),
   ]);
 
   /*
@@ -154,6 +157,10 @@ export default async function DashboardPage(props: PageProps<"/[locale]/dashboar
             wartenBisMs={gehalt.wartenBisMs}
           />
         )}
+
+        {/* Ein wartendes Kreditangebot läuft nach sieben Tagen ab - hier sieht
+            man es beim Einloggen, statt es auf der Kreditseite suchen zu müssen. */}
+        {user.whitelisted && <KreditHinweisKarte angebote={kredit.angebote} schulden={kredit.schulden} />}
 
         <PersonalStats />
 
