@@ -65,12 +65,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: authConfigured
     ? [
         Discord({
-          // Discord hängt an die Rückleitung inzwischen den Parameter "iss" an
-          // (RFC 9207). Ohne eigenen Issuer vergleicht Auth.js ihn mit seinem
-          // Platzhalter "https://authjs.dev" und bricht jeden Login mit
-          // 'unexpected "iss"' ab. Token- und Userinfo-URL sind fest
-          // eingetragen, eine Discovery-Abfrage löst das nicht aus.
-          issuer: "https://discord.com",
           // Zusätzlich zum Standard ("identify email") die Berechtigung, die
           // Mitgliedschaft in genau EINEM Server abzufragen – nicht "guilds",
           // das die komplette Serverliste preisgeben würde. Siehe lib/discord.ts.

@@ -1,1 +1,0 @@
-Neu auf VIP Craft 4: Kredite zwischen Spielern. Betrag und Zins bestimmst du selbst, der Betrag wird beim Anbieten sofort reserviert, und nach 7 Tagen verfällt das Angebot von allein. Nur eintreiben tut die Bank nichts — ein Rückzahlungsdatum ist eine Abmachung.
