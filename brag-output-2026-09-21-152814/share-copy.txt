@@ -1,0 +1,1 @@
+VIP Craft 4 ist online: ein Create-Server, auf dem du dein Flugzeug Block für Block selbst baust — Propellerlager, Chassis, Boiler-Engine. Die Sable-Physik rechnet Gewicht und Auftrieb mit, also stürzt das erste Modell praktisch immer ab. Genau das ist der Spaß daran.

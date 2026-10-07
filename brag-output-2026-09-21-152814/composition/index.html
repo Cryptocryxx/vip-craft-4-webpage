@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>VIP Craft 4 — Bau was, das abhebt.</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/audio-bass.js"></script>
+    <style>
+      /* ---------------------------------------------------------------
+         Design-Tokens 1:1 aus src/app/globals.css des Projekts
+      --------------------------------------------------------------- */
+      @font-face {
+        font-family: "Chakra Petch";
+        src: url("assets/fonts/ChakraPetch-600.woff2") format("woff2");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Chakra Petch";
+        src: url("assets/fonts/ChakraPetch-700.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/Inter-var.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("assets/fonts/JetBrainsMono-var.woff2") format("woff2");
+        font-weight: 100 800;
+        font-style: normal;
+        font-display: block;
+      }
+
+      :root {
+        --wood-950: #170e08;
+        --wood-900: #24170d;
+        --wood-800: #352314;
+        --wood-700: #4a321b;
+        --wood-100: #ecd9b5;
+        --brass-500: #c48d28;
+        --brass-400: #d9a83f;
+        --brass-300: #e6c15f;
+        --brass-200: #f0d78d;
+        --diamond-400: #3dd3ea;
+        --diamond-200: #b3f1fb;
+        --copper-400: #d4855a;
+        --cream: #f3e9d6;
+        --emerald: #4ade9a;
+        --shadow-brass: 0 0 0 1px rgb(196 141 40 / 0.35), 0 14px 34px -18px rgb(0 0 0 / 0.8);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--wood-950);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--wood-950);
+        color: var(--cream);
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* --- Kulisse: Holzmaserung + warmer Lichtschein, wie body in globals.css --- */
+      #stage {
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(1400px 620px at 50% -8%, rgb(196 141 40 / 0.12), transparent 70%),
+          repeating-linear-gradient(90deg, rgb(255 255 255 / 0.014) 0 2px, transparent 2px 9px),
+          repeating-linear-gradient(0deg, rgb(0 0 0 / 0.12) 0 1px, transparent 1px 120px);
+      }
+      #cyanwash {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(60% 50% at 72% 40%, rgba(61, 211, 234, 0.1), transparent 70%);
+      }
+      .gear {
+        position: absolute;
+        display: block;
+      }
+      #gear-a {
+        top: -260px;
+        left: -240px;
+        width: 760px;
+        height: 760px;
+        color: rgb(196 141 40 / 0.075);
+      }
+      #gear-b {
+        top: -40px;
+        left: 440px;
+        width: 300px;
+        height: 300px;
+        color: rgb(196 141 40 / 0.09);
+      }
+      #gear-c {
+        right: -330px;
+        bottom: -400px;
+        width: 960px;
+        height: 960px;
+        color: rgb(61 211 234 / 0.06);
+      }
+      #vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(75% 65% at 50% 45%, transparent 55%, rgb(0 0 0 / 0.55) 100%);
+      }
+
+      /* --- Szenen --- */
+      .clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+      }
+      .mono {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Szene 1 — Hook */
+      #s1-l1 {
+        font-size: 92px;
+        color: var(--cream);
+        opacity: 0.92;
+      }
+      #s1-l2 {
+        font-size: 152px;
+        line-height: 1.02;
+        color: var(--brass-400);
+        margin-top: 6px;
+        text-shadow: 0 18px 44px rgb(0 0 0 / 0.6);
+      }
+      #s1-l3 {
+        margin-top: 34px;
+        font-size: 38px;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        color: var(--brass-300);
+        opacity: 0.85;
+      }
+
+      /* Szene 2 — Reveal */
+      #s2-logowrap {
+        position: relative;
+        display: block;
+        width: 430px;
+        height: 430px;
+      }
+      #s2-glow {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 520px;
+        height: 520px;
+        margin: -260px 0 0 -260px;
+        opacity: 0;
+      }
+      /* Innere Hülle: nur die Audio-Reaktion fasst sie an, damit sie sich
+         nicht mit dem Auftritts-Tween auf der äußeren Hülle überschreibt. */
+      #s2-glow-in {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(61, 211, 234, 0.34), transparent 66%);
+        filter: blur(26px);
+      }
+      #s2-logo {
+        position: relative;
+        display: block;
+        width: 430px;
+        height: 430px;
+        object-fit: contain;
+        filter: drop-shadow(0 26px 52px rgba(0, 0, 0, 0.7));
+      }
+      #s2-badges {
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        border-radius: 999px;
+        border: 1px solid;
+        padding: 12px 26px;
+        font-size: 27px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+      }
+      .chip-diamond {
+        border-color: rgb(61 211 234 / 0.4);
+        background: rgb(20 184 212 / 0.1);
+        color: var(--diamond-200);
+      }
+      .chip-brass {
+        border-color: rgb(196 141 40 / 0.4);
+        background: rgb(196 141 40 / 0.1);
+        color: var(--brass-200);
+      }
+      .chip-wood {
+        border-color: rgb(160 116 63 / 0.4);
+        background: rgb(74 50 27 / 0.4);
+        color: var(--wood-100);
+      }
+      .chip .gearicon {
+        display: block;
+        width: 22px;
+        height: 22px;
+        color: var(--brass-300);
+      }
+      #s2-tag {
+        margin-top: 30px;
+        font-size: 46px;
+        font-weight: 600;
+        color: var(--cream);
+        opacity: 0.88;
+      }
+
+      /* Panel im Werkstatt-Look (Holz + Messingrahmen + Nieten) */
+      .panel {
+        position: relative;
+        border-radius: 22px;
+        background:
+          linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 42%),
+          repeating-linear-gradient(90deg, rgb(255 255 255 / 0.016) 0 2px, transparent 2px 9px), var(--wood-800);
+        box-shadow: var(--shadow-brass);
+        border: 1px solid rgb(196 141 40 / 0.22);
+      }
+      .rivet {
+        position: absolute;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, var(--brass-200), var(--brass-500) 58%, #6d4a11);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+      }
+      .r-tl {
+        left: 18px;
+        top: 18px;
+      }
+      .r-tr {
+        right: 18px;
+        top: 18px;
+      }
+      .r-bl {
+        left: 18px;
+        bottom: 18px;
+      }
+      .r-br {
+        right: 18px;
+        bottom: 18px;
+      }
+      .eyebrow {
+        font-size: 25px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--diamond-400);
+      }
+
+      /* Szene 3 — Aeronautics */
+      #s3-panel {
+        width: 1560px;
+        padding: 54px 60px 58px;
+      }
+      #s3-head {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 40px;
+      }
+      #s3-title {
+        margin-top: 16px;
+        font-size: 74px;
+        line-height: 1.05;
+        color: var(--cream);
+      }
+      #s3-title .hl {
+        color: var(--diamond-400);
+      }
+      #s3-physics {
+        flex: none;
+        font-size: 24px;
+        color: var(--brass-300);
+        opacity: 0.8;
+        padding-bottom: 12px;
+        white-space: nowrap;
+      }
+      #s3-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 22px;
+        margin-top: 46px;
+      }
+      .part {
+        display: block;
+        border-radius: 16px;
+        background: var(--wood-900);
+        border: 1px solid rgb(196 141 40 / 0.2);
+        padding: 28px 24px 30px;
+        box-shadow: 0 12px 26px -18px rgb(0 0 0 / 0.9);
+      }
+      .part .ic {
+        display: block;
+        width: 54px;
+        height: 54px;
+        color: var(--brass-400);
+        margin-bottom: 20px;
+      }
+      .part .t {
+        font-family: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+        font-weight: 600;
+        font-size: 33px;
+        letter-spacing: -0.01em;
+        color: var(--cream);
+      }
+
+      /* Szene 4 — Kredit */
+      #s4-panel {
+        width: 1360px;
+        padding: 46px 56px 52px;
+      }
+      #s4-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 40px;
+      }
+      #s4-title {
+        margin-top: 14px;
+        font-size: 60px;
+        color: var(--cream);
+      }
+      #s4-konto {
+        flex: none;
+        text-align: right;
+      }
+      #s4-konto .lbl {
+        font-size: 22px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--cream);
+        opacity: 0.55;
+      }
+      #s4-konto .val {
+        font-size: 52px;
+        font-weight: 700;
+        color: var(--brass-300);
+        margin-top: 6px;
+      }
+      #s4-offer {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 34px;
+        margin-top: 40px;
+        border-radius: 18px;
+        background: var(--wood-900);
+        border: 1px solid rgb(196 141 40 / 0.22);
+        padding: 32px 36px;
+      }
+      #s4-av {
+        flex: none;
+        width: 82px;
+        height: 82px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 40px;
+        color: var(--wood-950);
+        background: linear-gradient(150deg, var(--brass-300), var(--brass-500));
+      }
+      #s4-who {
+        flex: 1;
+        text-align: left;
+      }
+      #s4-who .n {
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 600;
+        font-size: 38px;
+        color: var(--cream);
+      }
+      #s4-who .s {
+        font-size: 25px;
+        color: var(--cream);
+        opacity: 0.62;
+        margin-top: 4px;
+      }
+      #s4-amount {
+        flex: none;
+        text-align: right;
+        margin-right: 10px;
+      }
+      #s4-amount .big {
+        font-size: 56px;
+        font-weight: 700;
+        color: var(--brass-300);
+      }
+      #s4-amount .sub {
+        font-size: 23px;
+        color: var(--cream);
+        opacity: 0.6;
+        margin-top: 6px;
+      }
+      #s4-actions {
+        flex: none;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      #s4-decline {
+        border-radius: 12px;
+        border: 1px solid rgb(243 233 214 / 0.18);
+        padding: 16px 26px;
+        font-size: 25px;
+        font-weight: 600;
+        color: var(--cream);
+        opacity: 0.5;
+      }
+      #s4-accept {
+        display: block;
+        border-radius: 12px;
+        padding: 17px 34px;
+        font-size: 27px;
+        font-weight: 700;
+        color: var(--wood-950);
+        background: linear-gradient(180deg, var(--brass-300), var(--brass-500));
+        box-shadow: 0 10px 24px -14px rgb(196 141 40 / 0.9);
+      }
+      #s4-done {
+        opacity: 0;
+        position: absolute;
+        right: 36px;
+        top: 50%;
+        margin-top: -30px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border-radius: 12px;
+        border: 1px solid rgb(74 222 154 / 0.45);
+        background: rgb(74 222 154 / 0.12);
+        padding: 15px 30px;
+        font-size: 27px;
+        font-weight: 700;
+        color: var(--emerald);
+      }
+      #s4-cursor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 42px;
+        height: 42px;
+        color: var(--cream);
+        filter: drop-shadow(0 4px 8px rgb(0 0 0 / 0.8));
+      }
+
+      /* Szene 5 — Whitelist + Outro */
+      #s5-card {
+        width: 860px;
+        padding: 46px 52px 50px;
+        text-align: left;
+      }
+      #s5-row {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-top: 22px;
+      }
+      /* Beide Zustände liegen gestapelt im selben Kasten — der eine geht,
+         der andere kommt, ohne dass die Zeile springt. */
+      #s5-icbox {
+        position: relative;
+        flex: none;
+        display: block;
+        width: 62px;
+        height: 62px;
+      }
+      #s5-textbox {
+        position: relative;
+        flex: 1;
+        display: block;
+        height: 82px;
+      }
+      #s5-ic,
+      #s5-check {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        width: 62px;
+        height: 62px;
+      }
+      #s5-ic {
+        color: var(--brass-400);
+      }
+      #s5-check {
+        color: var(--emerald);
+        opacity: 0;
+      }
+      #s5-state,
+      #s5-state2 {
+        position: absolute;
+        left: 0;
+        top: 0;
+        display: block;
+        width: 100%;
+        line-height: 82px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 64px;
+        white-space: nowrap;
+      }
+      #s5-state {
+        color: var(--brass-300);
+      }
+      #s5-state2 {
+        color: var(--emerald);
+        opacity: 0;
+      }
+      #s5-pulse {
+        position: absolute;
+        inset: -2px;
+        border-radius: 24px;
+        border: 2px solid var(--diamond-400);
+        opacity: 0;
+      }
+      #s6-logowrap {
+        position: relative;
+        display: block;
+        width: 300px;
+        height: 300px;
+      }
+      #s6-glow {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 400px;
+        height: 400px;
+        margin: -200px 0 0 -200px;
+        opacity: 0;
+      }
+      #s6-glow-in {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(61, 211, 234, 0.3), transparent 66%);
+        filter: blur(24px);
+      }
+      #s6-logo {
+        position: relative;
+        display: block;
+        width: 300px;
+        height: 300px;
+        object-fit: contain;
+        filter: drop-shadow(0 22px 46px rgba(0, 0, 0, 0.7));
+      }
+      #s6-line {
+        margin-top: 26px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 78px;
+        color: var(--cream);
+      }
+      #s6-sub {
+        margin-top: 18px;
+        font-size: 31px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        color: var(--brass-300);
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="22.12"
+      data-width="1920"
+      data-height="1080"
+      data-fps="30"
+    >
+      <!-- Kulisse: untimed, eigene Positionierung (siehe core: untimed Kinder bekommen kein Auto-Layout) -->
+      <div id="stage">
+        <svg id="gear-a" class="gear" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+          <path id="gear-a-p" fill-rule="evenodd" />
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <line x1="50" y1="18.8" x2="50" y2="81.2" />
+            <line x1="18.8" y1="50" x2="81.2" y2="50" />
+          </g>
+          <circle cx="50" cy="50" r="14.4" />
+        </svg>
+        <svg id="gear-b" class="gear" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+          <path id="gear-b-p" fill-rule="evenodd" />
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <line x1="50" y1="18.8" x2="50" y2="81.2" />
+            <line x1="18.8" y1="50" x2="81.2" y2="50" />
+          </g>
+          <circle cx="50" cy="50" r="14.4" />
+        </svg>
+        <svg id="gear-c" class="gear" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+          <path id="gear-c-p" fill-rule="evenodd" />
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <line x1="50" y1="18.8" x2="50" y2="81.2" />
+            <line x1="18.8" y1="50" x2="81.2" y2="50" />
+          </g>
+          <circle cx="50" cy="50" r="14.4" />
+        </svg>
+        <div id="cyanwash"></div>
+        <div id="vignette"></div>
+      </div>
+
+      <!-- ============ Szene 1 — Hook (0.00 – 3.70) ============ -->
+      <section id="s1" class="clip" data-start="0" data-duration="3.70" data-track-index="0">
+        <div class="inner">
+          <h1 id="s1-l1">Dein erstes Flugzeug</h1>
+          <h1 id="s1-l2">stürzt ab.</h1>
+          <div id="s1-l3">So ist es gedacht.</div>
+        </div>
+      </section>
+
+      <!-- ============ Szene 2 — Reveal (3.70 – 8.00) ============ -->
+      <section id="s2" class="clip" data-start="3.70" data-duration="4.30" data-track-index="1">
+        <div class="inner">
+          <span id="s2-logowrap">
+            <span id="s2-glow"><span id="s2-glow-in"></span></span>
+            <img id="s2-logo" src="assets/img/logo.png" alt="VIP Craft 4" />
+          </span>
+          <div id="s2-badges">
+            <span class="chip chip-diamond" id="s2-b1">Season 4</span>
+            <span class="chip chip-brass" id="s2-b2">
+              <svg class="gearicon" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+                <path id="chip-gear-p" fill-rule="evenodd" />
+                <circle cx="50" cy="50" r="14.4" />
+              </svg>
+              Create 6
+            </span>
+            <span class="chip chip-wood" id="s2-b3">Minecraft 1.21.1</span>
+          </div>
+          <div id="s2-tag">Fabriken, Züge und Flugmaschinen.</div>
+        </div>
+      </section>
+
+      <!-- ============ Szene 3 — Flugmaschinen (8.00 – 13.18) ============ -->
+      <section id="s3" class="clip" data-start="8.00" data-duration="5.18" data-track-index="2">
+        <div id="s3-panel" class="panel">
+          <span class="rivet r-tl"></span><span class="rivet r-tr"></span>
+          <span class="rivet r-bl"></span><span class="rivet r-br"></span>
+          <div id="s3-headwrap">
+            <div id="s3-head">
+              <div>
+                <div class="eyebrow">Create: Aeronautics</div>
+                <h2 id="s3-title"><span class="hl">Flugzeuge</span>, die wirklich fliegen</h2>
+              </div>
+              <div id="s3-physics" class="mono">Sable-Physik</div>
+            </div>
+          </div>
+          <div id="s3-cards">
+            <span class="part" id="p1">
+              <svg class="ic" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+                <path id="p1-gear" fill-rule="evenodd" />
+                <circle cx="50" cy="50" r="14.4" />
+              </svg>
+              <span class="t">Propellerlager</span>
+            </span>
+            <span class="part" id="p2">
+              <svg class="ic" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="7" aria-hidden="true">
+                <rect x="14" y="14" width="72" height="72" rx="10" />
+                <path d="M14 50h72M50 14v72" />
+              </svg>
+              <span class="t">Aeronautics-Chassis</span>
+            </span>
+            <span class="part" id="p3">
+              <svg class="ic" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" aria-hidden="true">
+                <rect x="24" y="30" width="52" height="56" rx="12" />
+                <path d="M38 30V18M62 30V18M40 56h20" />
+              </svg>
+              <span class="t">Boiler-Engine</span>
+            </span>
+            <span class="part" id="p4">
+              <svg class="ic" viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" aria-hidden="true">
+                <path d="M50 14c17 0 30 13 30 29 0 17-19 30-30 41C39 73 20 60 20 43c0-16 13-29 30-29Z" />
+                <path d="M42 84h16" />
+              </svg>
+              <span class="t">Ballons</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Szene 4 — Kredit (13.18 – 17.38) ============ -->
+      <section id="s4" class="clip" data-start="13.18" data-duration="4.20" data-track-index="3">
+        <div id="s4-panel" class="panel">
+          <span class="rivet r-tl"></span><span class="rivet r-tr"></span>
+          <span class="rivet r-bl"></span><span class="rivet r-br"></span>
+          <div id="s4-headwrap">
+            <div id="s4-head">
+              <div>
+                <div class="eyebrow">Wirtschaft</div>
+                <h2 id="s4-title">Kredite zwischen Spielern</h2>
+              </div>
+              <div id="s4-konto">
+                <div class="lbl">Konto</div>
+                <div class="val mono"><span id="s4-num">40</span> Cog</div>
+              </div>
+            </div>
+          </div>
+          <div id="s4-offerwrap">
+            <div id="s4-offer">
+              <span id="s4-av">M</span>
+              <span id="s4-who">
+                <span class="n">Mira</span>
+                <span class="s" style="display: block">bietet dir einen Kredit an</span>
+              </span>
+              <span id="s4-amount">
+                <span class="big mono" style="display: block">500 Cog</span>
+                <span class="sub mono" style="display: block">10 % Zins · fällig 550 Cog</span>
+              </span>
+              <span id="s4-actions">
+                <span id="s4-decline">Ablehnen</span>
+                <span id="s4-accept">Annehmen</span>
+              </span>
+              <span id="s4-done">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width: 26px; height: 26px; display: block">
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Angenommen
+              </span>
+              <svg id="s4-cursor" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M5 2.5 19.5 12l-6.4 1.3 3.4 6.6-2.6 1.4-3.4-6.6-4.5 4.4z" stroke="#170e08" stroke-width="1.2" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Szene 5 — Freigeschaltet (17.38 – 20.19) ============ -->
+      <section id="s5" class="clip" data-start="17.38" data-duration="2.81" data-track-index="4">
+        <div id="s5-card" class="panel">
+          <span class="rivet r-tl"></span><span class="rivet r-tr"></span>
+          <span class="rivet r-bl"></span><span class="rivet r-br"></span>
+          <span id="s5-pulse"></span>
+          <div class="eyebrow">Whitelist-Status</div>
+          <div id="s5-row">
+            <span id="s5-icbox">
+              <svg id="s5-ic" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+                <path id="s5-gear" fill-rule="evenodd" />
+                <circle cx="50" cy="50" r="14.4" />
+              </svg>
+              <svg id="s5-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9.5" />
+                <path d="M7.8 12.2 11 15.4l5.4-6.2" />
+              </svg>
+            </span>
+            <span id="s5-textbox">
+              <span id="s5-state">In Prüfung</span>
+              <span id="s5-state2">Freigeschaltet</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Szene 6 — Outro (20.19 – 22.12) ============ -->
+      <section id="s6" class="clip" data-start="20.19" data-duration="1.93" data-track-index="5">
+        <div class="inner">
+          <span id="s6-logowrap">
+            <span id="s6-glow"><span id="s6-glow-in"></span></span>
+            <img id="s6-logo" src="assets/img/logo-outro.png" alt="VIP Craft 4" />
+          </span>
+          <div id="s6-line">Bau was, das abhebt.</div>
+          <div id="s6-sub">Zugang per Discord-Login</div>
+        </div>
+      </section>
+
+      <!-- ============ Audio ============ -->
+      <audio
+        id="music"
+        src="assets/music/happy-beats-business-moves-vol-9-by-ende-dot-app.mp3"
+        data-start="0"
+        data-duration="22.12"
+        data-track-index="20"
+        data-volume="0.9"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0.3},{"t":0.6,"v":0.38},{"t":3.6,"v":0.42},{"t":3.75,"v":1},{"t":20.62,"v":1},{"t":22.12,"v":0}]}]}'
+      ></audio>
+
+      <!-- SFX: bewegungsgebunden, je ein Element pro Einsatz -->
+      <audio id="sfx-thud" src="assets/sfx/impactWood_medium_000.ogg" data-start="1.25" data-track-index="21" data-volume="0.85"></audio>
+      <audio id="sfx-logo" src="assets/sfx/impactSoft_heavy_002.ogg" data-start="3.70" data-track-index="22" data-volume="0.95"></audio>
+      <audio id="sfx-b1" src="assets/sfx/click_005.ogg" data-start="4.23" data-track-index="23" data-volume="0.5"></audio>
+      <audio id="sfx-b2" src="assets/sfx/click_005.ogg" data-start="4.75" data-track-index="24" data-volume="0.5"></audio>
+      <audio id="sfx-b3" src="assets/sfx/click_005.ogg" data-start="5.28" data-track-index="25" data-volume="0.5"></audio>
+      <audio id="sfx-c1" src="assets/sfx/card-slide-1.ogg" data-start="8.44" data-track-index="26" data-volume="0.4"></audio>
+      <audio id="sfx-c2" src="assets/sfx/card-slide-1.ogg" data-start="9.50" data-track-index="27" data-volume="0.4"></audio>
+      <audio id="sfx-c3" src="assets/sfx/card-slide-1.ogg" data-start="10.54" data-track-index="28" data-volume="0.52"></audio>
+      <audio id="sfx-c4" src="assets/sfx/card-slide-1.ogg" data-start="11.60" data-track-index="29" data-volume="0.4"></audio>
+      <audio id="sfx-click" src="assets/sfx/click_003.ogg" data-start="14.22" data-track-index="30" data-volume="0.8"></audio>
+      <audio id="sfx-coins" src="assets/sfx/chips-handle-1.ogg" data-start="14.44" data-track-index="31" data-volume="0.55"></audio>
+      <audio id="sfx-ok" src="assets/sfx/impactBell_heavy_000.ogg" data-start="18.96" data-track-index="32" data-volume="0.7"></audio>
+    </div>
+
+    <script>
+      /* ---------------------------------------------------------------
+         Zahnradpfade — dieselbe Erzeugung wie src/components/ui/Gear.tsx
+      --------------------------------------------------------------- */
+      function gearPath(teeth, outer, inner, cx, cy) {
+        var step = (Math.PI * 2) / teeth,
+          tipHalf = step * 0.19,
+          baseHalf = step * 0.31,
+          pts = [];
+        for (var i = 0; i < teeth; i++) {
+          var a = i * step - Math.PI / 2;
+          var corners = [
+            [a - baseHalf, inner],
+            [a - tipHalf, outer],
+            [a + tipHalf, outer],
+            [a + baseHalf, inner],
+          ];
+          for (var k = 0; k < corners.length; k++) {
+            pts.push((cx + Math.cos(corners[k][0]) * corners[k][1]).toFixed(2) + " " + (cy + Math.sin(corners[k][0]) * corners[k][1]).toFixed(2));
+          }
+        }
+        return "M" + pts.join(" L") + " Z";
+      }
+      function ringPath(cx, cy, r) {
+        return "M" + (cx + r) + " " + cy + " A" + r + " " + r + " 0 1 0 " + (cx - r) + " " + cy + " A" + r + " " + r + " 0 1 0 " + (cx + r) + " " + cy + " Z";
+      }
+      function gearD(teeth) {
+        return gearPath(teeth, 48, 40, 50, 50) + " " + ringPath(50, 50, 31.2);
+      }
+      document.getElementById("gear-a-p").setAttribute("d", gearD(18));
+      document.getElementById("gear-b-p").setAttribute("d", gearD(12));
+      document.getElementById("gear-c-p").setAttribute("d", gearD(22));
+      document.getElementById("chip-gear-p").setAttribute("d", gearD(10));
+      document.getElementById("p1-gear").setAttribute("d", gearD(12));
+      document.getElementById("s5-gear").setAttribute("d", gearD(12));
+
+      /* --------------------------------------------------------------- */
+      var DUR = 22.12;
+      var tl = gsap.timeline({ paused: true });
+
+      /* ===== Kulisse: Zahnräder drehen über die volle Laufzeit =====
+         (gear-spin 40s / gear-spin-reverse 52s aus globals.css, auf DUR skaliert) */
+      tl.fromTo("#gear-a", { rotation: 0 }, { rotation: (360 / 40) * DUR, duration: DUR, ease: "none" }, 0)
+        .fromTo("#gear-b", { rotation: 0 }, { rotation: -(360 / 52) * DUR, duration: DUR, ease: "none" }, 0)
+        .fromTo("#gear-c", { rotation: 0 }, { rotation: -(360 / 52) * DUR, duration: DUR, ease: "none" }, 0);
+
+      /* ===== Szene 1 — Hook ===== */
+      tl.fromTo("#s1-l1", { y: 44, opacity: 0 }, { y: 0, opacity: 0.92, duration: 0.5, ease: "power3.out" }, 0.35)
+        // "stürzt ab." schlägt ein — trockener Holz-Thud liegt auf demselben Zeitpunkt
+        .fromTo("#s1-l2", { y: 26, scale: 1.14, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.35, ease: "power4.out" }, 1.25)
+        // kurzer Ruck der Kulisse auf den Einschlag
+        .fromTo("#stage", { y: 0 }, { y: 9, duration: 0.07, ease: "power2.out" }, 1.25)
+        .to("#stage", { y: 0, duration: 0.42, ease: "elastic.out(1, 0.45)" }, 1.32)
+        .fromTo("#s1-l3", { y: 16, opacity: 0 }, { y: 0, opacity: 0.85, duration: 0.45, ease: "power2.out" }, 2.35)
+        .to("#s1 .inner", { opacity: 0, duration: 0.2, ease: "power1.in" }, 3.48);
+
+      /* ===== Szene 2 — Reveal ===== */
+      // beat-locked: 3.70s (strongCue 0.99) — der Logo-Einschlag
+      tl.fromTo("#s2-logowrap", { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(1.7)" }, 3.7)
+        .fromTo("#s2-glow", { scale: 0.5, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.6, ease: "power2.out" }, 3.7)
+        // beat-grid: Badge 1 at 4.23s, Badge 2 at 4.75s, Badge 3 at 5.28s (kurze Labels, bleiben stehen)
+        .fromTo("#s2-b1", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 4.23)
+        .fromTo("#s2-b2", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 4.75)
+        .fromTo("#s2-b3", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 5.28)
+        // beat-grid: 6.34s — Tagline, hält danach 1.26s still
+        .fromTo("#s2-tag", { y: 22, opacity: 0 }, { y: 0, opacity: 0.88, duration: 0.4, ease: "power3.out" }, 6.34)
+        .to("#s2 .inner", { opacity: 0, duration: 0.22, ease: "power1.in" }, 7.78);
+
+      /* ===== Szene 3 — Flugmaschinen ===== */
+      tl.fromTo("#s3-panel", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 8.0)
+        .fromTo("#s3-headwrap", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 8.12);
+      // beat-grid: Karte 1 at 8.44s, 2 at 9.50s, 3 at 10.54s, 4 at 11.60s — jeder zweite Beat, damit die Titel lesbar bleiben
+      // beat-locked: 8.44s (strongCue 0.99) und 10.54s (strongCue 1.00)
+      var cardTimes = [8.44, 9.5, 10.54, 11.6];
+      for (var ci = 0; ci < cardTimes.length; ci++) {
+        tl.fromTo("#p" + (ci + 1), { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.34, ease: "power3.out" }, cardTimes[ci]);
+      }
+      tl.to("#s3-panel", { opacity: 0, y: -18, duration: 0.24, ease: "power1.in" }, 12.94);
+
+      /* ===== Szene 4 — Kredit ===== */
+      tl.fromTo("#s4-panel", { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 13.18)
+        .fromTo("#s4-headwrap", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "power2.out" }, 13.28)
+        .fromTo("#s4-offerwrap", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 13.38)
+        // Cursor fährt auf den Knopf — beat-grid: Klick auf 14.22s
+        .fromTo("#s4-cursor", { x: 1180, y: 250, opacity: 0 }, { opacity: 1, duration: 0.18, ease: "power1.out" }, 13.76)
+        .to("#s4-cursor", { x: 1074, y: 78, duration: 0.42, ease: "power2.inOut" }, 13.8)
+        .to("#s4-cursor", { scale: 0.82, duration: 0.07, ease: "power2.out" }, 14.22)
+        .to("#s4-cursor", { scale: 1, duration: 0.12, ease: "power2.out" }, 14.3)
+        .to("#s4-accept", { scale: 0.94, duration: 0.07, ease: "power2.out" }, 14.22)
+        // Knopfpaar geht, Statusband kommt
+        .to("#s4-actions", { opacity: 0, scale: 0.94, duration: 0.16, ease: "power2.in" }, 14.3)
+        .to("#s4-cursor", { opacity: 0, duration: 0.2, ease: "power1.in" }, 14.36)
+        .fromTo("#s4-done", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 14.44)
+        .fromTo("#s4-offer", { borderColor: "rgba(196,141,40,0.22)" }, { borderColor: "rgba(74,222,154,0.45)", duration: 0.35, ease: "power2.out" }, 14.44)
+        .to("#s4-panel", { opacity: 0, y: -16, duration: 0.24, ease: "power1.in" }, 17.14);
+
+      /* Kontostand zählt 40 → 540 Cog, während die Münzen klirren */
+      var kontoObj = { v: 40 };
+      var kontoEl = document.getElementById("s4-num");
+      tl.to(
+        kontoObj,
+        {
+          v: 540,
+          duration: 1.1,
+          ease: "power2.out",
+          onUpdate: function () {
+            kontoEl.textContent = String(Math.round(kontoObj.v));
+          },
+        },
+        14.44,
+      ).fromTo("#s4-konto", { scale: 1 }, { scale: 1.06, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" }, 14.44);
+
+      /* ===== Szene 5 — Freigeschaltet ===== */
+      tl.fromTo("#s5-card", { y: 34, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 17.38)
+        // das Zahnrad dreht, solange der Antrag läuft
+        .fromTo("#s5-ic", { rotation: 0 }, { rotation: 300, duration: 1.7, ease: "none" }, 17.38)
+        // beat-grid: 18.96s — Umschlag auf „Freigeschaltet"
+        .to("#s5-ic", { opacity: 0, scale: 0.7, duration: 0.18, ease: "power2.in" }, 18.88)
+        .to("#s5-state", { opacity: 0, y: -14, duration: 0.18, ease: "power2.in" }, 18.88)
+        .fromTo("#s5-check", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.34, ease: "back.out(2.2)" }, 18.96)
+        .fromTo("#s5-state2", { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 18.96)
+        .fromTo("#s5-pulse", { opacity: 0.85, scale: 1 }, { opacity: 0, scale: 1.035, duration: 0.7, ease: "power2.out" }, 18.96)
+        .to("#s5-card", { opacity: 0, scale: 0.94, duration: 0.26, ease: "power2.in" }, 19.93);
+
+      /* ===== Szene 6 — Outro ===== */
+      tl.fromTo("#s6-logowrap", { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.5)" }, 20.19)
+        .fromTo("#s6-glow", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" }, 20.19)
+        .fromTo("#s6-line", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 20.42)
+        .fromTo("#s6-sub", { y: 16, opacity: 0 }, { y: 0, opacity: 0.8, duration: 0.38, ease: "power2.out" }, 20.92);
+
+      /* ===== Audio-reaktiv (subtil) =====
+         Bass lässt den Cyan-Schein hinter dem Logo und den warmen Lichtschein
+         der Kulisse atmen. Keine Balken, keine Wellenform — nur Präsenz. */
+      var glow2 = document.getElementById("s2-glow-in");
+      var glow6 = document.getElementById("s6-glow-in");
+      var wash = document.getElementById("cyanwash");
+      function sampleAudio(i) {
+        var b = AUDIO_DATA.bass[i] || 0;
+        var r = AUDIO_DATA.rms[i] || 0;
+        // Hintergrund darf kräftiger schwingen als alles in Textnähe
+        wash.style.opacity = (0.72 + b * 0.5).toFixed(3);
+        // Logo-Schein: 3–6 % Skalenhub, sanfte Helligkeit
+        var s = (1 + b * 0.055).toFixed(4);
+        var o = (0.8 + r * 0.22).toFixed(3);
+        glow2.style.transform = "scale(" + s + ")";
+        glow2.style.opacity = o;
+        glow6.style.transform = "scale(" + s + ")";
+        glow6.style.opacity = o;
+      }
+      for (var f = 0; f < AUDIO_DATA.totalFrames; f++) {
+        tl.call(
+          (function (idx) {
+            return function () {
+              sampleAudio(idx);
+            };
+          })(f),
+          [],
+          f / AUDIO_DATA.fps,
+        );
+      }
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

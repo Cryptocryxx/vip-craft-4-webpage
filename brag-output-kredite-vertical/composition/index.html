@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <title>VIP Craft 4 — Kredite</title>
+    <script src="assets/vendor/gsap.min.js"></script>
+    <script src="assets/audio-bass.js"></script>
+    <style>
+      /* Design-Tokens 1:1 aus src/app/globals.css */
+      @font-face {
+        font-family: "Chakra Petch";
+        src: url("assets/fonts/ChakraPetch-600.woff2") format("woff2");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Chakra Petch";
+        src: url("assets/fonts/ChakraPetch-700.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Inter";
+        src: url("assets/fonts/Inter-var.woff2") format("woff2");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("assets/fonts/JetBrainsMono-var.woff2") format("woff2");
+        font-weight: 100 800;
+        font-style: normal;
+        font-display: block;
+      }
+
+      :root {
+        --wood-950: #170e08;
+        --wood-900: #24170d;
+        --wood-800: #352314;
+        --wood-700: #4a321b;
+        --wood-100: #ecd9b5;
+        --brass-500: #c48d28;
+        --brass-400: #d9a83f;
+        --brass-300: #e6c15f;
+        --brass-200: #f0d78d;
+        --diamond-400: #3dd3ea;
+        --diamond-200: #b3f1fb;
+        --cream: #f3e9d6;
+        --emerald: #4ade9a;
+        --rose: #fb7185;
+        --shadow-brass: 0 0 0 1px rgb(196 141 40 / 0.35), 0 14px 34px -18px rgb(0 0 0 / 0.8);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--wood-950);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--wood-950);
+        color: var(--cream);
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Kulisse */
+      #stage {
+        position: absolute;
+        inset: 0;
+        background-image:
+          radial-gradient(900px 620px at 50% -6%, rgb(196 141 40 / 0.13), transparent 70%),
+          repeating-linear-gradient(90deg, rgb(255 255 255 / 0.014) 0 2px, transparent 2px 9px),
+          repeating-linear-gradient(0deg, rgb(0 0 0 / 0.12) 0 1px, transparent 1px 120px);
+      }
+      #cyanwash {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(52% 34% at 62% 62%, rgba(61, 211, 234, 0.1), transparent 70%);
+      }
+      .gear {
+        position: absolute;
+        display: block;
+      }
+      #gear-a {
+        top: -200px;
+        left: -230px;
+        width: 680px;
+        height: 680px;
+        color: rgb(196 141 40 / 0.075);
+      }
+      #gear-b {
+        right: -250px;
+        top: 620px;
+        width: 720px;
+        height: 720px;
+        color: rgb(61 211 234 / 0.055);
+      }
+      #gear-c {
+        left: -270px;
+        bottom: -280px;
+        width: 800px;
+        height: 800px;
+        color: rgb(196 141 40 / 0.06);
+      }
+      #vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(72% 58% at 50% 46%, transparent 52%, rgb(0 0 0 / 0.6) 100%);
+      }
+
+      .clip {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0 80px;
+      }
+      h1,
+      h2 {
+        font-family: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+        letter-spacing: -0.02em;
+        font-weight: 700;
+      }
+      .mono {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ---- Szene 1: Hook ---- */
+      #h-eyebrow {
+        font-size: 40px;
+        font-weight: 700;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--diamond-400);
+      }
+      #h-word {
+        margin-top: 14px;
+        font-size: 210px;
+        line-height: 1;
+        color: var(--brass-400);
+        text-shadow: 0 20px 52px rgb(0 0 0 / 0.65);
+      }
+      #h-sub {
+        margin-top: 44px;
+        font-size: 58px;
+        font-weight: 600;
+        color: var(--cream);
+        opacity: 0.9;
+      }
+
+      /* ---- Schrittkopf (Szenen 2-4) ---- */
+      .stepwrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 56px;
+      }
+      .stepchip {
+        display: inline-block;
+        border-radius: 999px;
+        border: 1px solid rgb(196 141 40 / 0.45);
+        background: rgb(196 141 40 / 0.12);
+        padding: 12px 30px;
+        font-size: 30px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--brass-200);
+      }
+      .steptitle {
+        margin-top: 22px;
+        font-size: 92px;
+        color: var(--cream);
+      }
+
+      /* ---- Panels / Karten ---- */
+      .panel {
+        position: relative;
+        width: 100%;
+        border-radius: 26px;
+        background:
+          linear-gradient(180deg, rgb(255 255 255 / 0.03), transparent 42%),
+          repeating-linear-gradient(90deg, rgb(255 255 255 / 0.016) 0 2px, transparent 2px 9px), var(--wood-800);
+        box-shadow: var(--shadow-brass);
+        border: 1px solid rgb(196 141 40 / 0.22);
+      }
+      .rivet {
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 34% 30%, var(--brass-200), var(--brass-500) 58%, #6d4a11);
+        box-shadow: 0 1px 2px rgb(0 0 0 / 0.6);
+      }
+      .r-tl {
+        left: 20px;
+        top: 20px;
+      }
+      .r-tr {
+        right: 20px;
+        top: 20px;
+      }
+      .r-bl {
+        left: 20px;
+        bottom: 20px;
+      }
+      .r-br {
+        right: 20px;
+        bottom: 20px;
+      }
+
+      /* ---- Szene 2: Formular ---- */
+      #f-panel {
+        padding: 46px 48px 44px;
+      }
+      .frow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        border-bottom: 1px solid rgb(243 233 214 / 0.09);
+        padding: 26px 4px;
+      }
+      .frow:first-of-type {
+        padding-top: 8px;
+      }
+      .flabel {
+        font-size: 33px;
+        color: var(--cream);
+        opacity: 0.6;
+      }
+      .fval {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 44px;
+        font-weight: 700;
+        color: var(--cream);
+      }
+      .ftag {
+        display: inline-block;
+        border-radius: 8px;
+        border: 1px solid rgb(61 211 234 / 0.4);
+        background: rgb(20 184 212 / 0.1);
+        padding: 7px 16px;
+        font-family: "Inter", sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--diamond-200);
+      }
+      #f-preview {
+        display: block;
+        margin-top: 34px;
+        font-size: 40px;
+        font-weight: 700;
+        line-height: 1.3;
+        color: var(--brass-300);
+      }
+      #f-warn {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 28px;
+        border-radius: 12px;
+        border: 1px solid rgb(212 133 90 / 0.4);
+        background: rgb(184 106 63 / 0.14);
+        padding: 14px 24px;
+        font-size: 30px;
+        font-weight: 600;
+        color: #f0b894;
+      }
+      #f-warn svg {
+        display: block;
+        width: 30px;
+        height: 30px;
+      }
+
+      /* ---- Kredit-Karte (Szenen 3+4), Aufbau wie KreditKarte.tsx ---- */
+      .kcard {
+        padding: 40px 42px 38px;
+        background: var(--wood-900);
+      }
+      .khead {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+      }
+      .khead .who {
+        flex: 1;
+        min-width: 0;
+      }
+      .khead .who .n {
+        display: block;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 42px;
+        color: var(--cream);
+      }
+      .khead .who .d {
+        display: block;
+        margin-top: 4px;
+        font-size: 25px;
+        color: var(--cream);
+        opacity: 0.5;
+      }
+      .head8 {
+        flex: none;
+        display: block;
+        width: 68px;
+        height: 68px;
+        border-radius: 5px;
+        box-shadow: 0 0 0 2px rgb(0 0 0 / 0.6);
+        image-rendering: pixelated;
+      }
+      .badgebox {
+        position: relative;
+        flex: none;
+        display: block;
+        width: 232px;
+        height: 56px;
+      }
+      .badge {
+        position: absolute;
+        right: 0;
+        top: 0;
+        display: inline-block;
+        border-radius: 999px;
+        border: 1px solid;
+        padding: 11px 26px;
+        font-size: 28px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .b-brass {
+        border-color: rgb(196 141 40 / 0.4);
+        background: rgb(196 141 40 / 0.1);
+        color: var(--brass-200);
+      }
+      .b-diamond {
+        border-color: rgb(61 211 234 / 0.4);
+        background: rgb(20 184 212 / 0.1);
+        color: var(--diamond-200);
+      }
+      #s3-badge2,
+      #s4-badge2 {
+        opacity: 0;
+      }
+      .b-emerald {
+        border-color: rgb(74 222 154 / 0.45);
+        background: rgb(74 222 154 / 0.12);
+        color: var(--emerald);
+      }
+      .kgrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-top: 34px;
+      }
+      .kgrid dt {
+        font-size: 24px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cream);
+        opacity: 0.45;
+      }
+      .kgrid dd {
+        margin-top: 8px;
+        font-family: "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 42px;
+        font-weight: 600;
+        color: var(--cream);
+      }
+      .kgrid .due dd {
+        color: var(--brass-300);
+      }
+      .kvalid {
+        margin-top: 26px;
+        font-size: 27px;
+        color: var(--cream);
+        opacity: 0.5;
+      }
+      .kactions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 18px;
+        margin-top: 34px;
+      }
+      .btn-ghost {
+        border-radius: 14px;
+        border: 1px solid rgb(243 233 214 / 0.18);
+        padding: 18px 32px;
+        font-size: 31px;
+        font-weight: 600;
+        color: var(--cream);
+        opacity: 0.5;
+      }
+      .btn-brass {
+        display: block;
+        border-radius: 14px;
+        padding: 19px 40px;
+        font-size: 33px;
+        font-weight: 700;
+        color: var(--wood-950);
+        background: linear-gradient(180deg, var(--brass-300), var(--brass-500));
+        box-shadow: 0 10px 26px -14px rgb(196 141 40 / 0.9);
+      }
+      .cursor {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 54px;
+        height: 54px;
+        color: var(--cream);
+        filter: drop-shadow(0 4px 9px rgb(0 0 0 / 0.85));
+      }
+
+      /* Kontostand über der Karte */
+      .konto {
+        display: flex;
+        align-items: baseline;
+        justify-content: flex-end;
+        gap: 16px;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+      .konto .lbl {
+        font-size: 26px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--cream);
+        opacity: 0.5;
+      }
+      .konto .val {
+        font-family: "JetBrains Mono", monospace;
+        font-variant-numeric: tabular-nums;
+        font-size: 46px;
+        font-weight: 700;
+        color: var(--brass-300);
+      }
+
+      /* ---- Szene 5: Pointe + Outro ---- */
+      #p-l1,
+      #p-l2 {
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 82px;
+        line-height: 1.12;
+        color: var(--cream);
+        text-align: center;
+      }
+      #p-l3 {
+        margin-top: 46px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 66px;
+        color: var(--brass-400);
+        text-align: center;
+      }
+      #o-logowrap {
+        position: relative;
+        display: block;
+        width: 340px;
+        height: 340px;
+      }
+      #o-glow {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 460px;
+        height: 460px;
+        margin: -230px 0 0 -230px;
+        opacity: 0;
+      }
+      #o-glow-in {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(61, 211, 234, 0.32), transparent 66%);
+        filter: blur(26px);
+      }
+      #o-logo {
+        position: relative;
+        display: block;
+        width: 340px;
+        height: 340px;
+        object-fit: contain;
+        filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.7));
+      }
+      #o-line {
+        margin-top: 30px;
+        font-family: "Chakra Petch", sans-serif;
+        font-weight: 700;
+        font-size: 70px;
+        color: var(--cream);
+        text-align: center;
+      }
+      #o-sub {
+        margin-top: 20px;
+        font-size: 33px;
+        font-weight: 500;
+        letter-spacing: 0.1em;
+        color: var(--brass-300);
+        opacity: 0.8;
+      }
+      #p-stack {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      #o-stack {
+        position: absolute;
+        inset: 0;
+        padding: 0 80px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      #o-logowrap,
+      #o-line,
+      #o-sub {
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="22.64"
+      data-width="1080"
+      data-height="1920"
+      data-fps="30"
+    >
+      <div id="stage">
+        <svg id="gear-a" class="gear" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+          <path id="gear-a-p" fill-rule="evenodd" />
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <line x1="50" y1="18.8" x2="50" y2="81.2" />
+            <line x1="18.8" y1="50" x2="81.2" y2="50" />
+          </g>
+          <circle cx="50" cy="50" r="14.4" />
+        </svg>
+        <svg id="gear-b" class="gear" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+          <path id="gear-b-p" fill-rule="evenodd" />
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <line x1="50" y1="18.8" x2="50" y2="81.2" />
+            <line x1="18.8" y1="50" x2="81.2" y2="50" />
+          </g>
+          <circle cx="50" cy="50" r="14.4" />
+        </svg>
+        <svg id="gear-c" class="gear" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+          <path id="gear-c-p" fill-rule="evenodd" />
+          <g stroke="currentColor" stroke-width="7" stroke-linecap="round">
+            <line x1="50" y1="18.8" x2="50" y2="81.2" />
+            <line x1="18.8" y1="50" x2="81.2" y2="50" />
+          </g>
+          <circle cx="50" cy="50" r="14.4" />
+        </svg>
+        <div id="cyanwash"></div>
+        <div id="vignette"></div>
+      </div>
+
+      <!-- ===== Szene 1 — Hook (0.00–3.70) ===== -->
+      <section id="s1" class="clip" data-start="0" data-duration="3.70" data-track-index="0">
+        <div id="h-eyebrow">Neu</div>
+        <h1 id="h-word">Kredite</h1>
+        <div id="h-sub">Mit Zins. Ohne Inkasso.</div>
+      </section>
+
+      <!-- ===== Szene 2 — Schritt 1: Anbieten (3.70–8.44) ===== -->
+      <section id="s2" class="clip" data-start="3.70" data-duration="4.74" data-track-index="1">
+        <div class="stepwrap" id="s2-step">
+          <span class="stepchip">Schritt 1</span>
+          <h2 class="steptitle">Anbieten</h2>
+        </div>
+        <div id="f-panel" class="panel">
+          <span class="rivet r-tl"></span><span class="rivet r-tr"></span>
+          <span class="rivet r-bl"></span><span class="rivet r-br"></span>
+          <div class="frow">
+            <span class="flabel">An wen</span>
+            <span class="fval" id="f-v1">Tobi</span>
+          </div>
+          <div class="frow">
+            <span class="flabel">Betrag</span>
+            <span class="fval mono" id="f-v2">500 Cog</span>
+          </div>
+          <div class="frow">
+            <span class="flabel">Zins</span>
+            <span class="fval" id="f-v3">
+              <span class="ftag">einmalig</span>
+              <span class="mono">10 %</span>
+            </span>
+          </div>
+          <span id="f-preview">500 Cog verleihen, 550 Cog zurückbekommen.</span>
+          <span id="f-warn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="10.5" width="16" height="10" rx="2.5" />
+              <path d="M8 10.5V7a4 4 0 1 1 8 0v3.5" />
+            </svg>
+            sofort reserviert
+          </span>
+        </div>
+      </section>
+
+      <!-- ===== Szene 3 — Schritt 2: Annehmen (8.44–13.18) ===== -->
+      <section id="s3" class="clip" data-start="8.44" data-duration="4.74" data-track-index="2">
+        <div class="stepwrap" id="s3-step">
+          <span class="stepchip">Schritt 2</span>
+          <h2 class="steptitle">Annehmen</h2>
+        </div>
+        <div id="s3-kontowrap" class="konto">
+          <span class="lbl">Konto</span>
+          <span class="val"><span id="s3-num">40</span> Cog</span>
+        </div>
+        <div id="s3-card" class="panel kcard">
+          <div class="khead">
+            <svg class="head8" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+              <g id="head-mira"></g>
+            </svg>
+            <span class="who">
+              <span class="n">Von Mira</span>
+              <span class="d">Angeboten am 21.09.2026</span>
+            </span>
+            <span class="badgebox" data-layout-allow-overlap="true">
+              <span class="badge b-brass" id="s3-badge1">Angeboten</span>
+              <span class="badge b-diamond" id="s3-badge2">Läuft</span>
+            </span>
+          </div>
+          <dl class="kgrid">
+            <div><dt>Betrag</dt><dd>500 Cog</dd></div>
+            <div><dt>Zins</dt><dd>10 %</dd></div>
+            <div class="due"><dt>Zurück</dt><dd>550 Cog</dd></div>
+          </dl>
+          <div class="kvalid">Angebot gültig bis 28.09.2026</div>
+          <div class="kactions" id="s3-actions">
+            <span class="btn-ghost">Ablehnen</span>
+            <span class="btn-brass" id="s3-accept">Annehmen</span>
+          </div>
+          <svg id="s3-cursor" class="cursor" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M5 2.5 19.5 12l-6.4 1.3 3.4 6.6-2.6 1.4-3.4-6.6-4.5 4.4z" stroke="#170e08" stroke-width="1.2" />
+          </svg>
+        </div>
+      </section>
+
+      <!-- ===== Szene 4 — Schritt 3: Begleichen (13.18–17.38) ===== -->
+      <section id="s4" class="clip" data-start="13.18" data-duration="4.20" data-track-index="3">
+        <div class="stepwrap" id="s4-step">
+          <span class="stepchip">Schritt 3</span>
+          <h2 class="steptitle">Begleichen</h2>
+        </div>
+        <div id="s4-card" class="panel kcard">
+          <div class="khead">
+            <svg class="head8" viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+              <g id="head-mira2"></g>
+            </svg>
+            <span class="who">
+              <span class="n">An Mira</span>
+              <span class="d">Angenommen am 21.09.2026</span>
+            </span>
+            <span class="badgebox" data-layout-allow-overlap="true">
+              <span class="badge b-diamond" id="s4-badge1">Läuft</span>
+              <span class="badge b-emerald" id="s4-badge2">Beglichen</span>
+            </span>
+          </div>
+          <dl class="kgrid">
+            <div><dt>Betrag</dt><dd>500 Cog</dd></div>
+            <div><dt>Zins</dt><dd>10 %</dd></div>
+            <div class="due"><dt>Zurück</dt><dd>550 Cog</dd></div>
+          </dl>
+          <div class="kactions" id="s4-actions">
+            <span class="btn-brass" id="s4-pay">550 Cog begleichen</span>
+          </div>
+          <svg id="s4-cursor" class="cursor" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M5 2.5 19.5 12l-6.4 1.3 3.4 6.6-2.6 1.4-3.4-6.6-4.5 4.4z" stroke="#170e08" stroke-width="1.2" />
+          </svg>
+        </div>
+      </section>
+
+      <!-- ===== Szene 5 — Pointe + Outro (17.38–22.64) ===== -->
+      <section id="s5" class="clip" data-start="17.38" data-duration="5.26" data-track-index="4">
+        <div id="p-stack">
+          <div id="p-l1">Ein Rückzahlungsdatum</div>
+          <div id="p-l2">ist eine Abmachung.</div>
+          <div id="p-l3">Eingetrieben wird nichts.</div>
+        </div>
+        <div id="o-stack">
+          <span id="o-logowrap">
+            <span id="o-glow"><span id="o-glow-in"></span></span>
+            <img id="o-logo" src="assets/img/logo.png" alt="VIP Craft 4" />
+          </span>
+          <div id="o-line">Jetzt auf der Website</div>
+          <div id="o-sub">Wirtschaft → Kredite</div>
+        </div>
+      </section>
+
+      <!-- ===== Audio ===== -->
+      <audio
+        id="music"
+        src="assets/music/happy-beats-business-moves-vol-9-by-ende-dot-app.mp3"
+        data-start="0"
+        data-duration="22.64"
+        data-track-index="20"
+        data-volume="0.9"
+        data-automation='{"version":1,"lanes":[{"target":"volume","points":[{"t":0,"v":0.3},{"t":0.6,"v":0.38},{"t":3.6,"v":0.42},{"t":3.75,"v":1},{"t":17.2,"v":1},{"t":17.6,"v":0.6},{"t":21.14,"v":0.6},{"t":22.64,"v":0}]}]}'
+      ></audio>
+
+      <audio id="sfx-thud" src="assets/sfx/impactWood_medium_000.ogg" data-start="0.55" data-track-index="21" data-volume="0.85"></audio>
+      <audio id="sfx-cut" src="assets/sfx/impactSoft_heavy_002.ogg" data-start="3.70" data-track-index="22" data-volume="0.8"></audio>
+      <audio id="sfx-f1" src="assets/sfx/click_005.ogg" data-start="4.23" data-track-index="23" data-volume="0.5"></audio>
+      <audio id="sfx-f2" src="assets/sfx/click_005.ogg" data-start="4.75" data-track-index="24" data-volume="0.5"></audio>
+      <audio id="sfx-f3" src="assets/sfx/click_005.ogg" data-start="5.28" data-track-index="25" data-volume="0.5"></audio>
+      <audio id="sfx-lock" src="assets/sfx/chips-stack-2.ogg" data-start="6.86" data-track-index="26" data-volume="0.5"></audio>
+      <audio id="sfx-card" src="assets/sfx/card-slide-1.ogg" data-start="8.44" data-track-index="27" data-volume="0.45"></audio>
+      <audio id="sfx-click1" src="assets/sfx/click_003.ogg" data-start="10.54" data-track-index="28" data-volume="0.8"></audio>
+      <audio id="sfx-coins" src="assets/sfx/chips-handle-1.ogg" data-start="10.78" data-track-index="29" data-volume="0.55"></audio>
+      <audio id="sfx-card2" src="assets/sfx/card-slide-1.ogg" data-start="13.18" data-track-index="30" data-volume="0.45"></audio>
+      <audio id="sfx-click2" src="assets/sfx/click_003.ogg" data-start="14.76" data-track-index="31" data-volume="0.8"></audio>
+      <audio id="sfx-ok" src="assets/sfx/impactBell_heavy_000.ogg" data-start="15.0" data-track-index="32" data-volume="0.7"></audio>
+    </div>
+
+    <script>
+      /* Zahnradpfade — dieselbe Erzeugung wie src/components/ui/Gear.tsx */
+      function gearPath(teeth, outer, inner, cx, cy) {
+        var step = (Math.PI * 2) / teeth,
+          tipHalf = step * 0.19,
+          baseHalf = step * 0.31,
+          pts = [];
+        for (var i = 0; i < teeth; i++) {
+          var a = i * step - Math.PI / 2;
+          var corners = [
+            [a - baseHalf, inner],
+            [a - tipHalf, outer],
+            [a + tipHalf, outer],
+            [a + baseHalf, inner],
+          ];
+          for (var k = 0; k < corners.length; k++) {
+            pts.push((cx + Math.cos(corners[k][0]) * corners[k][1]).toFixed(2) + " " + (cy + Math.sin(corners[k][0]) * corners[k][1]).toFixed(2));
+          }
+        }
+        return "M" + pts.join(" L") + " Z";
+      }
+      function ringPath(cx, cy, r) {
+        return "M" + (cx + r) + " " + cy + " A" + r + " " + r + " 0 1 0 " + (cx - r) + " " + cy + " A" + r + " " + r + " 0 1 0 " + (cx + r) + " " + cy + " Z";
+      }
+      function gearD(t) {
+        return gearPath(t, 48, 40, 50, 50) + " " + ringPath(50, 50, 31.2);
+      }
+      document.getElementById("gear-a-p").setAttribute("d", gearD(18));
+      document.getElementById("gear-b-p").setAttribute("d", gearD(22));
+      document.getElementById("gear-c-p").setAttribute("d", gearD(14));
+
+      /* Generischer 8x8-Pixelkopf als Platzhalter. Die echte Seite lädt den
+         Skin über mc-heads.net — ein Netzabruf beim Rendern wäre weder
+         deterministisch noch wären es unsere Daten. */
+      var HEAD = [
+        "33333333",
+        "32222223",
+        "31144113",
+        "31144113",
+        "32255223",
+        "32552552",
+        "32555552",
+        "32255223",
+      ];
+      var HEAD_COLORS = { 1: "#f3f3f3", 2: "#b5794f", 3: "#3a2a1c", 4: "#3c6ea8", 5: "#8f5b36" };
+      function paintHead(groupId) {
+        var g = document.getElementById(groupId);
+        for (var y = 0; y < HEAD.length; y++) {
+          for (var x = 0; x < 8; x++) {
+            var r = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            r.setAttribute("x", x);
+            r.setAttribute("y", y);
+            r.setAttribute("width", "1");
+            r.setAttribute("height", "1");
+            r.setAttribute("fill", HEAD_COLORS[HEAD[y][x]]);
+            g.appendChild(r);
+          }
+        }
+      }
+      paintHead("head-mira");
+      paintHead("head-mira2");
+
+      /* ------------------------------------------------------------------ */
+      var DUR = 22.64;
+      var tl = gsap.timeline({ paused: true });
+
+      /* Kulisse: Zahnräder drehen über die volle Laufzeit */
+      tl.fromTo("#gear-a", { rotation: 0 }, { rotation: (360 / 40) * DUR, duration: DUR, ease: "none" }, 0)
+        .fromTo("#gear-b", { rotation: 0 }, { rotation: -(360 / 52) * DUR, duration: DUR, ease: "none" }, 0)
+        .fromTo("#gear-c", { rotation: 0 }, { rotation: -(360 / 52) * DUR, duration: DUR, ease: "none" }, 0);
+
+      /* ===== Szene 1 — Hook ===== */
+      tl.fromTo("#h-eyebrow", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "power2.out" }, 0.3)
+        .fromTo("#h-word", { scale: 1.16, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "power4.out" }, 0.55)
+        .fromTo("#stage", { y: 0 }, { y: 10, duration: 0.07, ease: "power2.out" }, 0.55)
+        .to("#stage", { y: 0, duration: 0.45, ease: "elastic.out(1, 0.45)" }, 0.63)
+        .fromTo("#h-sub", { y: 22, opacity: 0 }, { y: 0, opacity: 0.9, duration: 0.4, ease: "power3.out" }, 1.9)
+        .to("#s1", { opacity: 0, duration: 0.18, ease: "power1.in" }, 3.5);
+
+      /* ===== Szene 2 — Schritt 1: Anbieten =====
+         beat-locked: 3.70s (strongCue 0.99) — Schnitt aus dem Hook */
+      tl.fromTo("#s2-step", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 3.7)
+        .fromTo("#f-panel", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 3.78)
+        // beat-grid: Zeile 1 at 4.23s, Zeile 2 at 4.75s, Zeile 3 at 5.28s
+        .fromTo("#f-v1", { x: 26, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 4.23)
+        .fromTo("#f-v2", { x: 26, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 4.75)
+        .fromTo("#f-v3", { x: 26, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "power3.out" }, 5.28)
+        // beat-grid: 5.80s — die Vorschauzeile der Seite
+        .fromTo("#f-preview", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out" }, 5.8)
+        // beat-grid: 6.86s — der Warnchip
+        .fromTo("#f-warn", { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.36, ease: "back.out(1.8)" }, 6.86)
+        .to("#s2", { opacity: 0, duration: 0.2, ease: "power1.in" }, 8.24);
+
+      /* ===== Szene 3 — Schritt 2: Annehmen =====
+         beat-locked: 8.44s (strongCue 0.99) — Schnitt in Schritt 2 */
+      tl.fromTo("#s3-step", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 8.44)
+        .fromTo("#s3-kontowrap", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.34, ease: "power2.out" }, 8.56)
+        .fromTo("#s3-card", { y: 44, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, ease: "power3.out" }, 8.5)
+        // Cursor fährt auf „Annehmen" — beat-locked: 10.54s (strongCue 1.00)
+        .fromTo("#s3-cursor", { x: 862, y: 566, opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 10.0)
+        .to("#s3-cursor", { x: 742, y: 381, duration: 0.5, ease: "power2.inOut" }, 10.04)
+        .to("#s3-cursor", { scale: 0.82, duration: 0.07, ease: "power2.out" }, 10.54)
+        .to("#s3-cursor", { scale: 1, duration: 0.12, ease: "power2.out" }, 10.62)
+        .to("#s3-accept", { scale: 0.94, duration: 0.07, ease: "power2.out" }, 10.54)
+        .to("#s3-actions", { opacity: 0, scale: 0.95, duration: 0.18, ease: "power2.in" }, 10.62)
+        .to("#s3-cursor", { opacity: 0, duration: 0.2, ease: "power1.in" }, 10.68)
+        // Badge-Wechsel: „Angeboten" (brass) → „Läuft" (diamond)
+        .to("#s3-badge1", { opacity: 0, scale: 0.9, duration: 0.16, ease: "power2.in" }, 10.66)
+        .fromTo("#s3-badge2", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.28, ease: "back.out(2)" }, 10.78)
+        .fromTo("#s3-card", { borderColor: "rgba(196,141,40,0.22)" }, { borderColor: "rgba(61,211,234,0.45)", duration: 0.35, ease: "power2.out", immediateRender: false }, 10.78)
+        .to("#s3", { opacity: 0, duration: 0.2, ease: "power1.in" }, 12.98);
+
+      /* Kontostand 40 → 540 Cog, während die Münzen klirren */
+      var konto = { v: 40 };
+      var kontoEl = document.getElementById("s3-num");
+      tl.to(
+        konto,
+        {
+          v: 540,
+          duration: 1.0,
+          ease: "power2.out",
+          onUpdate: function () {
+            kontoEl.textContent = String(Math.round(konto.v));
+          },
+        },
+        10.78,
+      ).fromTo("#s3-kontowrap", { scale: 1 }, { scale: 1.06, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out", immediateRender: false }, 10.78);
+
+      /* ===== Szene 4 — Schritt 3: Begleichen ===== */
+      tl.fromTo("#s4-step", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 13.18)
+        .fromTo("#s4-card", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.44, ease: "power3.out" }, 13.24)
+        // beat-grid: Klick auf „begleichen" at 14.76s
+        .fromTo("#s4-cursor", { x: 806, y: 498, opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 14.2)
+        .to("#s4-cursor", { x: 673, y: 319, duration: 0.5, ease: "power2.inOut" }, 14.24)
+        .to("#s4-cursor", { scale: 0.82, duration: 0.07, ease: "power2.out" }, 14.76)
+        .to("#s4-cursor", { scale: 1, duration: 0.12, ease: "power2.out" }, 14.84)
+        .to("#s4-pay", { scale: 0.94, duration: 0.07, ease: "power2.out" }, 14.76)
+        .to("#s4-actions", { opacity: 0, scale: 0.95, duration: 0.18, ease: "power2.in" }, 14.84)
+        .to("#s4-cursor", { opacity: 0, duration: 0.2, ease: "power1.in" }, 14.9)
+        .to("#s4-badge1", { opacity: 0, scale: 0.9, duration: 0.16, ease: "power2.in" }, 14.86)
+        .fromTo("#s4-badge2", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(2)" }, 15.0)
+        .fromTo("#s4-card", { borderColor: "rgba(196,141,40,0.22)" }, { borderColor: "rgba(74,222,154,0.45)", duration: 0.35, ease: "power2.out", immediateRender: false }, 15.0)
+        .to("#s4", { opacity: 0, duration: 0.22, ease: "power1.in" }, 17.16);
+
+      /* ===== Szene 5 — Pointe + Outro ===== */
+      tl.fromTo("#p-l1", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 17.38)
+        .fromTo("#p-l2", { y: 26, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 17.91)
+        .fromTo("#p-l3", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power3.out" }, 18.96)
+        // die Pointe geht, das Logo kommt
+        .to("#p-stack", { opacity: 0, y: -26, duration: 0.3, ease: "power2.in" }, 20.02)
+        .fromTo("#o-logowrap", { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(1.5)" }, 20.02)
+        .fromTo("#o-glow", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "power2.out" }, 20.02)
+        .fromTo("#o-line", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power3.out" }, 20.54)
+        .fromTo("#o-sub", { y: 16, opacity: 0 }, { y: 0, opacity: 0.8, duration: 0.38, ease: "power2.out" }, 20.98);
+
+      /* ===== Audio-reaktiv (subtil) ===== */
+      var glowIn = document.getElementById("o-glow-in");
+      var wash = document.getElementById("cyanwash");
+      function sampleAudio(i) {
+        var b = AUDIO_DATA.bass[i] || 0;
+        var r = AUDIO_DATA.rms[i] || 0;
+        wash.style.opacity = (0.7 + b * 0.5).toFixed(3);
+        glowIn.style.transform = "scale(" + (1 + b * 0.055).toFixed(4) + ")";
+        glowIn.style.opacity = (0.8 + r * 0.22).toFixed(3);
+      }
+      for (var f = 0; f < AUDIO_DATA.totalFrames; f++) {
+        tl.call(
+          (function (idx) {
+            return function () {
+              sampleAudio(idx);
+            };
+          })(f),
+          [],
+          f / AUDIO_DATA.fps,
+        );
+      }
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
